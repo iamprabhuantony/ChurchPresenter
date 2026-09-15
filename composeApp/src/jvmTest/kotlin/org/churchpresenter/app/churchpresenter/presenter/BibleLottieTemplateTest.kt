@@ -48,14 +48,32 @@ class BibleLottieTemplateTest {
         assertEquals(30f, template.frameAt(BibleBandClock(BibleBandPhase.ENTER, 0.5f)), "half way to the hold")
         val heldFrame = template.frameAt(BibleBandClock(BibleBandPhase.HOLD, 0.3f))
         assertEquals(60f, heldFrame, "pinned on the hold's first frame")
-        assertEquals(127.5f, template.frameAt(BibleBandClock(BibleBandPhase.TEXT_OUT, 0.5f)))
-        assertEquals(45f, template.frameAt(BibleBandClock(BibleBandPhase.TEXT_IN, 0.5f)))
+        val swap = BibleBandClock(BibleBandPhase.TEXT_SWAP, 0.5f)
+        assertEquals(45f, template.frameAt(swap), "the incoming text half-way through text_in")
+        assertEquals(127.5f, template.outgoingFrameAt(swap), "the outgoing text half-way through text_out")
+        assertEquals(127.5f / 165f, template.outgoingProgressAt(swap))
+        assertEquals(500L, template.swapMs(), "the longer of text_out and text_in")
         assertEquals(165f, template.frameAt(BibleBandClock(BibleBandPhase.EXIT, 1f)))
         assertEquals(60f / 165f, template.progressAt(BibleBandClock()))
         assertEquals(1f, template.progressAt(BibleBandClock(BibleBandPhase.EXIT, 2f)), "progress is clamped")
         assertEquals(750L, template.segmentMs(BibleLottieTemplate.SEGMENT_TEXT_OUT, BibleLottieTemplate.SEGMENT_BG_OUT))
         assertEquals(0.5f, template.progressWithin(BibleLottieTemplate.SEGMENT_TEXT_IN, 45f))
         assertEquals(1f, template.progressWithin(BibleLottieTemplate.SEGMENT_TEXT_IN, 500f))
+    }
+
+    @Test
+    fun `a crossfade the file names is used, and a file without one is swapped in its text segments' time`() {
+        val named =
+            assertNotNull(parseBibleLottieTemplate(LottieBandTestSupport.templateJson(cfg.copy(swapSeconds = 1.2f))))
+        assertEquals(1200L, named.meta.swapMs)
+        assertEquals(1200L, named.swapMs())
+        val stripped = Json.parseToJsonElement(LottieBandTestSupport.templateJson(cfg)).jsonObject.let { doc ->
+            val meta = doc["cp"]!!.jsonObject.filterKeys { it != "swapMs" }
+            JsonObject(doc.toMutableMap().apply { put("cp", JsonObject(meta)) })
+        }
+        val older = assertNotNull(parseBibleLottieTemplate(stripped.toString()))
+        assertNull(older.meta.swapMs)
+        assertEquals(500L, older.swapMs(), "the longer of text_out and text_in, as before")
     }
 
     @Test

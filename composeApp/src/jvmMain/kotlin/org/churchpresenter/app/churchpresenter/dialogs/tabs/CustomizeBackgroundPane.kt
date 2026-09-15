@@ -132,30 +132,7 @@ private fun BackgroundSurfaceRows(
             )
         }
         Constants.BACKGROUND_GRADIENT -> GradientRows(config, onConfig)
-        Constants.BACKGROUND_LOTTIE -> {
-            var showGenerator by remember { mutableStateOf(false) }
-            val templatesDir = remember { SettingsManager.bibleLowerThirdsDir() }
-            CustomizeRow(stringResource(Res.string.lower_third_animation_file)) {
-                LottieBandPickerRow(
-                    path = config.backgroundLottie,
-                    onPathChange = { onConfig(config.copy(backgroundLottie = it)) },
-                    startDir = templatesDir,
-                    onGenerate = { showGenerator = true },
-                    modifier = Modifier.width(SOURCE_FIELD_WIDTH),
-                )
-            }
-            if (showGenerator) {
-                BibleLottieGeneratorWindow(
-                    outputDir = templatesDir,
-                    seed = lottieBandSeed(settings, scope),
-                    onSaved = { file ->
-                        onConfig(config.copy(backgroundLottie = file.absolutePath))
-                        showGenerator = false
-                    },
-                    onClose = { showGenerator = false },
-                )
-            }
-        }
+        Constants.BACKGROUND_LOTTIE -> LottieRows(scope, settings, config, onConfig)
         else -> Unit
     }
     val hasLook = config.backgroundType != Constants.BACKGROUND_TRANSPARENT &&
@@ -184,6 +161,38 @@ private fun BackgroundSurfaceRows(
     // field rather than on the band's type, so a surface drawing a picture still has a say above it.
     if (scope.lowerThird) {
         AboveBandRows(scope, config, onConfig)
+    }
+}
+
+/** The template picker with the generator behind it. The band draws its own look, so there are no sliders. */
+@Composable
+private fun LottieRows(
+    scope: BackgroundScope,
+    settings: AppSettings,
+    config: BackgroundConfig,
+    onConfig: (BackgroundConfig) -> Unit,
+) {
+    var showGenerator by remember { mutableStateOf(false) }
+    val templatesDir = remember { SettingsManager.bibleLowerThirdsDir() }
+    CustomizeRow(stringResource(Res.string.lower_third_animation_file)) {
+        LottieBandPickerRow(
+            path = config.backgroundLottie,
+            onPathChange = { onConfig(config.copy(backgroundLottie = it)) },
+            templatesDir = templatesDir,
+            onGenerate = { showGenerator = true },
+            modifier = Modifier.width(SOURCE_FIELD_WIDTH),
+        )
+    }
+    if (showGenerator) {
+        BibleLottieGeneratorWindow(
+            outputDir = templatesDir,
+            seed = lottieBandSeed(settings, scope),
+            onSaved = { file ->
+                onConfig(config.copy(backgroundLottie = file.absolutePath))
+                showGenerator = false
+            },
+            onClose = { showGenerator = false },
+        )
     }
 }
 

@@ -596,9 +596,9 @@ private fun BackgroundCoverageFill(
                 BibleLottieStillFrame(config.backgroundLottie, Modifier.fillMaxSize())
             } else {
                 BackgroundConfigFill(config, Modifier.fillMaxSize(), blurRadius)
-            }
-            if (config.dim > 0) {
-                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = config.dim / PERCENT)))
+                if (config.dim > 0) {
+                    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = config.dim / PERCENT)))
+                }
             }
             // Drawn over the fill rather than between the two boxes: a divider in the layout would
             // take a device-independent pixel out of the weights, and the band would come out
