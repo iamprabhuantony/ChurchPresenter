@@ -16,9 +16,6 @@ import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/** Generous: the wait ends on the frame appearing, and only a stuck read ever spends this. */
-private const val LOAD_TIMEOUT_MS = 5_000L
-
 /**
  * The Background tab's stage: a template looping from its hold frame. The loop itself waits on
  * infinite-animation frames, which a test clock never delivers, so the arithmetic is pinned on
