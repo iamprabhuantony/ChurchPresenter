@@ -61,7 +61,7 @@ import org.churchpresenter.settings.BibleTranslationSettings
 import org.churchpresenter.core.models.bible.SelectedVerse
 import org.churchpresenter.app.churchpresenter.composables.LoopingVideoBackground
 import org.churchpresenter.settings.utils.Constants
-import org.churchpresenter.settings.utils.bilingualGrid
+import org.churchpresenter.settings.utils.bilingualColumns
 import org.churchpresenter.app.churchpresenter.utils.Utils.parseHexColor
 import org.churchpresenter.app.churchpresenter.utils.Utils.systemFontFamilyOrDefault
 
@@ -904,16 +904,24 @@ fun BiblePresenter(
                     // below is measured against the bands, so anything it cannot get under would
                     // otherwise draw through the configured margins and off the output.
                     BoxWithConstraints(modifier = innerModifier.fillMaxSize().clipToBounds()) {
-                        // How the stack is arranged. Both arrangements were hardcoded here until
-                        // `BibleSettings` grew the two `bilingualLayout` fields; their defaults are what this
-                        // path already drew, so nothing moves until an operator picks the other option.
-                        val sideBySide = bs.bilingualLayout == Constants.BILINGUAL_SIDE_BY_SIDE
+                        // How the stack is arranged, as real rows and columns rather than the
+                        // side-by-side flag this used to be. The band has read [bilingualGrid] since
+                        // it gained 3- and 4-translation support; the full screen reduced the same
+                        // seven-option setting to a boolean, so every grid an operator picked here --
+                        // 2x2, 4x1, 1x4 -- drew as a plain stack and the control promised what this
+                        // path could not do.
+                        //
+                        // The two original arrangements keep their exact meaning: side by side is one
+                        // row however many translations there are, and top/bottom one column. A named
+                        // grid means what it says.
                         val slots = visible.size.coerceAtLeast(1)
-                        // The spacing between two translations plus the divider's own line, along whichever
-                        // axis they are laid out on. It scales with the fit, so every scale the search probes
-                        // has to recompute it.
-                        fun gapsPx(scale: Float): Int {
-                            val gapCount = (visible.size - 1).coerceAtLeast(0)
+                        val gridCols = bilingualColumns(bs.bilingualLayout, slots)
+                        val gridRows = ((slots + gridCols - 1) / gridCols).coerceAtLeast(1)
+                        // The spacing between two translations plus the divider's own line, along one
+                        // axis. It scales with the fit, so every scale the search probes has to
+                        // recompute it -- and it is per axis now, because a grid has gaps on both.
+                        fun gapsPx(count: Int, scale: Float): Int {
+                            val gapCount = (count - 1).coerceAtLeast(0)
                             val gap = with(density) { (bs.multiTranslationSpacing * scale).dp.roundToPx() }
                             val divider = if (bs.multiTranslationDivider) {
                                 with(density) { 1.dp.roundToPx() }
@@ -922,15 +930,10 @@ fun BiblePresenter(
                             }
                             return gapCount * (gap + divider)
                         }
-                        // Side by side, a translation gets a column of the width and the whole height; stacked,
-                        // the whole width and a band of the height. The measurement below has to agree with
-                        // whichever it is, or the fit search solves for a box the text is not drawn in.
+                        // One cell of the grid. The measurement below has to agree with what is drawn,
+                        // or the fit search solves for a box the text is not laid out in.
                         fun itemWidth(scale: Float): Int =
-                            if (sideBySide) {
-                                ((constraints.maxWidth - gapsPx(scale)) / slots).coerceAtLeast(1)
-                            } else {
-                                constraints.maxWidth
-                            }
+                            ((constraints.maxWidth - gapsPx(gridCols, scale)) / gridCols).coerceAtLeast(1)
                         fun blockHeight(verse: SelectedVerse, item: BibleTranslationSettings, scale: Float): Int {
                             val textSize = (item.textFontSize * scaleFactor * scale).sp
                             val refSize = (item.referenceFontSize * scaleFactor * scale).sp
@@ -948,15 +951,11 @@ fun BiblePresenter(
                                     constraints = widthConstraint,
                                 ).size.height
                         }
-                        // What one translation has to fit in. Stacked that is the frame less the gaps split
-                        // evenly; side by side the gaps come out of the width instead, so each column keeps the
-                        // whole height.
+                        // What one translation has to fit in: the frame less this axis's gaps, split
+                        // over the rows. One row and it is the whole height, which is what side by
+                        // side has always given each column.
                         fun bandHeight(scale: Float): Int =
-                            if (sideBySide) {
-                                constraints.maxHeight
-                            } else {
-                                (constraints.maxHeight - gapsPx(scale)) / slots
-                            }
+                            ((constraints.maxHeight - gapsPx(gridRows, scale)) / gridRows).coerceAtLeast(1)
                         // One scale for the whole stack, so every translation reads at the same size,
                         // and no floor: a full stack of six shrinks until the whole of every one of them
                         // is inside its band. Everything measured here scales with the argument bar the
@@ -977,40 +976,39 @@ fun BiblePresenter(
                         // Half the spacing either side of the divider, so the rule sits on the centre line of
                         // the gap whether or not it is drawn -- as it did when this was one Column.
                         val halfGap = (bs.multiTranslationSpacing * fitScale / 2f).dp
-                        if (sideBySide) {
-                            Row(modifier = Modifier.fillMaxSize()) {
-                                visible.forEachIndexed { index, (verse, item) ->
-                                    Box(
-                                        modifier = Modifier.weight(1f).fillMaxHeight().clipToBounds(),
-                                        contentAlignment = contentAlignment,
-                                    ) {
-                                        translationBlock(verse, item, fitScale)
-                                    }
-                                    if (index < visible.lastIndex) {
-                                        Spacer(modifier = Modifier.width(halfGap))
-                                        if (bs.multiTranslationDivider) {
-                                            VerticalDivider(color = dividerColor, thickness = 1.dp)
+                        // One grid covers all seven arrangements: side by side is a single row, top
+                        // and bottom a single column, and the rest are what they are named. A row
+                        // short of a full one pads with weighted spacers so its cells keep the
+                        // column width the rows above them set.
+                        val rowsOfVisible = visible.chunked(gridCols)
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            rowsOfVisible.forEachIndexed { rowIndex, rowItems ->
+                                Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                    rowItems.forEachIndexed { colIndex, (verse, item) ->
+                                        Box(
+                                            modifier = Modifier.weight(1f).fillMaxHeight().clipToBounds(),
+                                            contentAlignment = contentAlignment,
+                                        ) {
+                                            translationBlock(verse, item, fitScale)
                                         }
-                                        Spacer(modifier = Modifier.width(halfGap))
+                                        if (colIndex < rowItems.lastIndex) {
+                                            Spacer(modifier = Modifier.width(halfGap))
+                                            if (bs.multiTranslationDivider) {
+                                                VerticalDivider(color = dividerColor, thickness = 1.dp)
+                                            }
+                                            Spacer(modifier = Modifier.width(halfGap))
+                                        }
+                                    }
+                                    repeat(gridCols - rowItems.size) {
+                                        Spacer(modifier = Modifier.weight(1f))
                                     }
                                 }
-                            }
-                        } else {
-                            Column(modifier = Modifier.fillMaxSize()) {
-                                visible.forEachIndexed { index, (verse, item) ->
-                                    Box(
-                                        modifier = Modifier.weight(1f).fillMaxWidth().clipToBounds(),
-                                        contentAlignment = contentAlignment,
-                                    ) {
-                                        translationBlock(verse, item, fitScale)
+                                if (rowIndex < rowsOfVisible.lastIndex) {
+                                    Spacer(modifier = Modifier.height(halfGap))
+                                    if (bs.multiTranslationDivider) {
+                                        HorizontalDivider(color = dividerColor, thickness = 1.dp)
                                     }
-                                    if (index < visible.lastIndex) {
-                                        Spacer(modifier = Modifier.height(halfGap))
-                                        if (bs.multiTranslationDivider) {
-                                            HorizontalDivider(color = dividerColor, thickness = 1.dp)
-                                        }
-                                        Spacer(modifier = Modifier.height(halfGap))
-                                    }
+                                    Spacer(modifier = Modifier.height(halfGap))
                                 }
                             }
                         }
@@ -1022,15 +1020,19 @@ fun BiblePresenter(
                 // both the new 3/4-translation branch and the [bandSplits] gate below agree on it.
                 // A vertical strip has no width to split, so it always stacks (one column) regardless
                 // of what is configured, exactly as the single Top/Bottom choice always has.
-                val (lowerThirdGridRows, lowerThirdGridCols) = bilingualGrid(bs.bilingualLayoutLowerThird)
+                // Every translation this band shows, laid out in whatever the arrangement means for
+                // that many -- not `rows x cols` of them. Capped only by what a band can carry.
+                val lowerThirdSlots = verses.size.coerceAtMost(MAX_BIBLE_BAND_TRANSLATIONS)
+                val lowerThirdGridCols = bilingualColumns(bs.bilingualLayoutLowerThird, lowerThirdSlots)
+                val lowerThirdGridRows =
+                    ((lowerThirdSlots + lowerThirdGridCols - 1) / lowerThirdGridCols).coerceAtLeast(1)
                 // Three or four languages, only when the band is actually configured for that many
                 // and asked to show them. Two keep the layouts proven below, byte-for-byte unchanged
                 // -- this is new capability, not a rewrite of what was already there.
                 val lowerThirdMultiVisible = if (showParallelLayout && !isLowerThirdVertical &&
-                    lowerThirdGridRows * lowerThirdGridCols > 2
+                    lowerThirdSlots > 2
                 ) {
-                    val cells = (lowerThirdGridRows * lowerThirdGridCols).coerceAtMost(MAX_BIBLE_BAND_TRANSLATIONS)
-                    verses.take(cells).mapIndexedNotNull { index, verse ->
+                    verses.take(lowerThirdSlots).mapIndexedNotNull { index, verse ->
                         val style = when (index) {
                             0 -> t0
                             1 -> t1
