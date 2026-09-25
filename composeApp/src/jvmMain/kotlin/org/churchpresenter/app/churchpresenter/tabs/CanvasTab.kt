@@ -1,7 +1,13 @@
 package org.churchpresenter.app.churchpresenter.tabs
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import java.awt.Cursor
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.window.WindowPlacement
 import org.churchpresenter.app.churchpresenter.LocalWentLive
@@ -32,14 +38,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import org.churchpresenter.theme.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import org.churchpresenter.theme.components.KeyIconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -56,6 +61,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.focusable
@@ -139,6 +146,7 @@ import churchpresenter.composeapp.generated.resources.canvas_fix_aspect_ratio
 
 private const val SCENE_LIST_WEIGHT = 0.4f
 private const val SOURCE_LIST_WEIGHT = 0.6f
+private const val SELECTION_BAR_WIDTH = 4f
 private const val HIDDEN_SOURCE_ALPHA = 0.5f
 private const val ASPECT_EPSILON = 0.01f
 
@@ -255,8 +263,7 @@ fun CanvasTab(
             modifier = Modifier
                 .width(with(density) { leftPanelPx.toDp() })
                 .fillMaxHeight()
-                .padding(start = 4.dp, top = 4.dp, bottom = 4.dp)
-                .bibleListCard()
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(8.dp)
         ) {
             // Scene selector section
@@ -275,24 +282,24 @@ fun CanvasTab(
             val displayAr0 = if (presentationBounds0.height > 0) presentationBounds0.width.toFloat() / presentationBounds0.height else 0f
 
             @OptIn(ExperimentalFoundationApi::class)
-            LazyColumn(
-                modifier = Modifier.weight(SCENE_LIST_WEIGHT).fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
+            LazyColumn(modifier = Modifier.weight(SCENE_LIST_WEIGHT).fillMaxWidth()) {
                 items(sceneViewModel.scenes) { scene ->
                     val isSelected = scene.id == sceneViewModel.currentSceneId.value
                     val isRenaming = renamingSceneId == scene.id
                     val sceneAr0 = if (scene.canvasHeight > 0) scene.canvasWidth.toFloat() / scene.canvasHeight else 0f
                     val isMismatched = displayAr0 > 0f && kotlin.math.abs(displayAr0 - sceneAr0) > 0.01f
-                    val (sceneHover, sceneHovered) = rememberRowHover()
-                    val sceneColors = bibleRowColors(isSelected, sceneHovered)
+                    val sceneAccentColor = MaterialTheme.colorScheme.primary
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(BibleListRowShape)
-                            .background(sceneColors.background)
-                            .hoverable(sceneHover)
-                            .padding(start = 10.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.surfaceVariant
+                                else Color.Transparent
+                            )
+                            .drawBehind {
+                                if (isSelected) drawRect(color = sceneAccentColor, size = Size(SELECTION_BAR_WIDTH, size.height))
+                            }
+                            .padding(start = 12.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (isRenaming) {
@@ -321,7 +328,7 @@ fun CanvasTab(
                             Text(
                                 scene.name,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = if (isSelected) sceneColors.ink else MaterialTheme.colorScheme.onSurface,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f)
                                     .initialPassCombinedClickable(
                                         onClick = { sceneViewModel.selectScene(scene.id) },
@@ -421,7 +428,7 @@ fun CanvasTab(
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Source list section
             Text(
@@ -432,21 +439,21 @@ fun CanvasTab(
             Spacer(Modifier.height(4.dp))
 
             if (currentScene != null) {
-                LazyColumn(
-                    modifier = Modifier.weight(SOURCE_LIST_WEIGHT).fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
+                LazyColumn(modifier = Modifier.weight(SOURCE_LIST_WEIGHT).fillMaxWidth()) {
                     // Render in reverse order so top item = front
                     items(currentScene.sources.reversed()) { source ->
                         val isSelected = source.id == selectedSourceId
-                        val (sourceHover, sourceHovered) = rememberRowHover()
-                        val sourceColors = bibleRowColors(isSelected, sourceHovered)
+                        val sourceAccentColor = MaterialTheme.colorScheme.secondary
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(BibleListRowShape)
-                                .background(sourceColors.background)
-                                .hoverable(sourceHover)
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.surfaceVariant
+                                    else Color.Transparent
+                                )
+                                .drawBehind {
+                                    if (isSelected) drawRect(color = sourceAccentColor, size = Size(SELECTION_BAR_WIDTH, size.height))
+                                }
                                 .padding(start = 4.dp, end = 4.dp, top = 2.dp, bottom = 2.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -764,17 +771,27 @@ fun CanvasTab(
         }
 
         // Draggable separator: left panel | center
-        DragHandle(onDragEnd = { saveLeftPanel() }) { delta ->
-            leftPanelPx = (leftPanelPx + delta).coerceAtLeast(with(density) { 120.dp.toPx() })
-        }
+        Box(
+            modifier = Modifier
+                .width(6.dp)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
+                .draggable(
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { delta ->
+                        leftPanelPx = (leftPanelPx + delta).coerceAtLeast(with(density) { 120.dp.toPx() })
+                    },
+                    onDragStopped = { saveLeftPanel() }
+                )
+        )
 
         // Center panel: Toolbar + Canvas
         Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
-                .padding(vertical = 4.dp)
-                .bibleListCard()
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -991,17 +1008,27 @@ fun CanvasTab(
         }
 
         // Draggable separator: center | right panel
-        DragHandle(onDragEnd = { saveRightPanel() }) { delta ->
-            rightPanelPx = (rightPanelPx - delta).coerceAtLeast(with(density) { 120.dp.toPx() })
-        }
+        Box(
+            modifier = Modifier
+                .width(6.dp)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
+                .draggable(
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { delta ->
+                        rightPanelPx = (rightPanelPx - delta).coerceAtLeast(with(density) { 120.dp.toPx() })
+                    },
+                    onDragStopped = { saveRightPanel() }
+                )
+        )
 
         // Right panel: Properties
         Column(
             modifier = Modifier
                 .width(with(density) { rightPanelPx.toDp() })
                 .fillMaxHeight()
-                .padding(end = 4.dp, top = 4.dp, bottom = 4.dp)
-                .bibleListCard()
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             if (selectedSource != null) {
                 SourcePropertiesPanel(

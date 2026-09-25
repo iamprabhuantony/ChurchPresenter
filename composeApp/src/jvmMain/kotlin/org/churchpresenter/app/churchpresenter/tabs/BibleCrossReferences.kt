@@ -39,8 +39,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.hoverable
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -77,9 +78,11 @@ import org.churchpresenter.app.churchpresenter.composables.initialPassClickable
 import org.churchpresenter.app.churchpresenter.composables.initialPassCombinedClickable
 import org.churchpresenter.app.churchpresenter.data.formatCrossRefLabel
 import org.churchpresenter.app.churchpresenter.viewmodel.BibleViewModel
+import org.churchpresenter.theme.semantic
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
+private const val SELECTION_BAR_WIDTH = 4f
 
 private val CROSS_REF_POPOVER_WIDTH = 380.dp
 
@@ -139,21 +142,27 @@ internal fun crossRefRow(
 private fun CrossReferenceCard(
     row: CrossRefRow,
     selected: Boolean,
+    striped: Boolean,
     onClick: () -> Unit,
     onDoubleClick: () -> Unit,
     onAddToSchedule: () -> Unit,
 
     showLearnedDot: Boolean = row.learned,
 ) {
-    val (hover, hovered) = rememberRowHover()
-    val colors = bibleRowColors(selected, hovered)
+    val background = when {
+        selected -> MaterialTheme.colorScheme.surfaceVariant
+        striped -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        else -> Color.Transparent
+    }
+    val markerColor = MaterialTheme.semantic.marker
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 6.dp, vertical = 1.dp)
-            .clip(BibleListRowShape)
-            .background(colors.background)
-            .hoverable(hover),
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+            .background(background, RoundedCornerShape(9.dp))
+            .drawBehind {
+                if (selected) drawRect(color = markerColor, size = Size(SELECTION_BAR_WIDTH, size.height))
+            },
         verticalAlignment = Alignment.Top,
     ) {
         Column(
@@ -277,7 +286,7 @@ internal fun CrossReferencePanel(
     val listState = rememberLazyListState()
     val firstLearned = rows.indexOfFirst { it.learned }
 
-    Column(modifier = modifier.bibleListCard()) {
+    Column(modifier = modifier.background(MaterialTheme.colorScheme.surface)) {
         CrossReferenceHeader(
 
             title = passageSpan?.let { stringResource(Res.string.bible_cross_references_passage, it) }
@@ -285,6 +294,7 @@ internal fun CrossReferencePanel(
             onClose = onClose,
             closeTooltip = stringResource(Res.string.bible_cross_references_close),
         )
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
         if (rows.isEmpty()) {
             CrossReferenceEmptyState(modifier = Modifier.fillMaxSize())
@@ -308,6 +318,7 @@ internal fun CrossReferencePanel(
                     CrossReferenceCard(
                         row = row,
                         selected = idx == selectedIndex,
+                        striped = idx % 2 == 1,
                         onClick = { onClick(idx) },
                         onDoubleClick = { onDoubleClick(idx) },
                         onAddToSchedule = { onAddToSchedule(idx) },
@@ -437,7 +448,8 @@ internal fun CrossReferencePopover(
                             CrossReferenceCard(
                                 row = row,
                                 selected = false,
-                                        onClick = { onOpen(row) },
+                                striped = idx % 2 == 1,
+                                onClick = { onOpen(row) },
                                 onDoubleClick = { onGoLive(row) },
                                 onAddToSchedule = { onAddToSchedule(row) },
                             )

@@ -8,6 +8,9 @@ import androidx.compose.foundation.TooltipPlacement
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,9 +28,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -55,6 +55,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -103,6 +105,7 @@ import churchpresenter.composeapp.generated.resources.ic_close
 import churchpresenter.composeapp.generated.resources.ic_search
 import churchpresenter.composeapp.generated.resources.search_clear
 import churchpresenter.composeapp.generated.resources.verse
+import java.awt.Cursor
 import org.churchpresenter.app.churchpresenter.composables.ActionIconButton
 import org.churchpresenter.app.churchpresenter.composables.AddToScheduleButton
 import org.churchpresenter.app.churchpresenter.composables.GoLiveButton
@@ -153,30 +156,35 @@ fun DictionaryTab(
 
     Row(modifier = modifier) {
         DictionaryListPane(
-            modifier = Modifier.width(with(density) { listWidthPx.toDp() }).fillMaxHeight()
-                .padding(start = 4.dp, top = 4.dp, bottom = 4.dp)
-                .bibleListCard(),
+            modifier = Modifier.width(with(density) { listWidthPx.toDp() }).fillMaxHeight(),
             viewModel = viewModel,
             getBookName = getBookName,
         )
-        DragHandle(
-            onDragEnd = {
-                val newWidthDp = with(density) { listWidthPx.toDp().value.toInt() }
-                onSettingsChangeState.value { s ->
-                    s.copy(windowedLayout = s.windowedLayout.copy(dictionaryListWidthDp = newWidthDp))
-                }
-            },
-        ) { delta ->
-            listWidthPx = (listWidthPx + delta)
-                .coerceIn(
-                    with(density) { 180.dp.toPx() },
-                    with(density) { 600.dp.toPx() }
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.outlineVariant)
+                .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
+                .draggable(
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { delta ->
+                        listWidthPx = (listWidthPx + delta)
+                            .coerceIn(
+                                with(density) { 180.dp.toPx() },
+                                with(density) { 600.dp.toPx() }
+                            )
+                    },
+                    onDragStopped = {
+                        val newWidthDp = with(density) { listWidthPx.toDp().value.toInt() }
+                        onSettingsChangeState.value { s ->
+                            s.copy(windowedLayout = s.windowedLayout.copy(dictionaryListWidthDp = newWidthDp))
+                        }
+                    }
                 )
-        }
+        )
         DictionaryDetailPane(
-            modifier = Modifier.weight(1f).fillMaxHeight()
-                .padding(top = 4.dp, end = 4.dp, bottom = 4.dp)
-                .bibleListCard(),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
             entry = viewModel.selectedEntry,
             canGoBack = viewModel.canGoBack,
             canGoForward = viewModel.canGoForward,
@@ -355,11 +363,12 @@ private fun DictionaryListPane(
             )
         }
 
+        HorizontalDivider()
+
         // Results list
-        val listCard = Modifier.fillMaxSize()
         if (!viewModel.isLoading && results.isEmpty()) {
             Box(
-                modifier = listCard,
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -370,13 +379,8 @@ private fun DictionaryListPane(
                 )
             }
         } else {
-            Box(modifier = listCard) {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 6.dp, top = 6.dp, end = 10.dp, bottom = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                     items(results, key = { it.number }) { entry ->
                         DictionaryEntryRow(
                             entry = entry,
@@ -386,6 +390,7 @@ private fun DictionaryListPane(
                                 viewModel.onEntrySelected(entry)
                             },
                         )
+                        HorizontalDivider(thickness = 0.5.dp)
                     }
                 }
                 VerticalScrollbar(
@@ -404,17 +409,15 @@ private fun DictionaryEntryRow(
     onClick: () -> Unit,
 ) {
     val numberColor = if (entry.isHebrew) MaterialTheme.semantic.hebrew else MaterialTheme.semantic.greek
-    val (hover, hovered) = rememberRowHover()
-    val colors = bibleRowColors(isSelected, hovered)
+    val bgColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+    else Color.Transparent
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(BibleListRowShape)
-            .background(colors.background)
-            .hoverable(hover)
-            .clickable(interactionSource = hover, indication = null, onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .background(bgColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -439,7 +442,7 @@ private fun DictionaryEntryRow(
                 text = entry.word,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
-                color = if (isSelected) colors.ink else MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

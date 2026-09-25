@@ -20,9 +20,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Box
@@ -65,7 +63,6 @@ import kotlinx.coroutines.flow.first
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -272,8 +269,8 @@ fun DragHandle(colId: String, onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
             // Bible's search-row inset (BibleSearchRow.kt), so the two tabs' top bars sit on the
             // same margins instead of Songs starting 8.dp further left and 6.dp higher.
             modifier = Modifier.fillMaxWidth()
-                .searchBarCard(end = 0.dp)
-                .heightIn(min = SongsTopBarMinHeight),
+                .heightIn(min = SongsTopBarMinHeight)
+                .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
             itemVerticalAlignment = Alignment.CenterVertically
@@ -390,6 +387,8 @@ fun DragHandle(colId: String, onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
 
         }
 
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
         // Shared horizontal scroll state for header + song list
         val hScrollState = rememberScrollState()
 
@@ -400,14 +399,13 @@ fun DragHandle(colId: String, onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
             (colsW + handlesW).toDp() + 16.dp
         }
 
-        // The header and the list share one card.
-        Column(modifier = Modifier.weight(1f).fillMaxWidth().padding(start = 4.dp, bottom = 4.dp).bibleListCard()) {
         // Column header row — scrolls horizontally with the song list
         // Wrapped in a Box so the right-click DropdownMenu can anchor here
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(36.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
                 .pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) {
@@ -434,7 +432,7 @@ fun DragHandle(colId: String, onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
             modifier = Modifier
                 .width(contentMinWidthDp)
                 .fillMaxHeight()
-                .padding(start = 6.dp, end = 8.dp),
+                .padding(end = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             visibleCols.forEach { colId ->
@@ -556,7 +554,7 @@ fun DragHandle(colId: String, onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
         } // end header Row
 
         // Floating column filter button — right side
-        Box(modifier = Modifier.align(Alignment.CenterEnd).background(bibleListCardFill())) {
+        Box(modifier = Modifier.align(Alignment.CenterEnd).background(MaterialTheme.colorScheme.surfaceVariant)) {
             TooltipIconButton(
                 painter = rememberVectorPainter(Icons.Default.Tune),
                 text = stringResource(Res.string.song_columns),
@@ -659,23 +657,21 @@ fun DragHandle(colId: String, onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
                 modifier = Modifier
                     .width(contentMinWidthDp)
                     .fillMaxHeight()
-                    .padding(start = 6.dp, end = 8.dp),
-                contentPadding = PaddingValues(bottom = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(1.dp),
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(end = 8.dp)
             ) {
                 itemsIndexed(filteredSongs) { index, song ->
                     var showContextMenu by remember { mutableStateOf(false) }
                     var contextMenuOffset by remember { mutableStateOf(DpOffset.Zero) }
                     val isRowSelected = index == selectedSongIndex
-                    val (rowHover, rowHovered) = rememberRowHover()
-                    val rowColors = bibleRowColors(isRowSelected, rowHovered)
                     Box {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(BibleListRowShape)
-                            .background(rowColors.background)
-                            .hoverable(rowHover)
+                            .background(
+                                if (isRowSelected) MaterialTheme.colorScheme.surfaceVariant
+                                else MaterialTheme.colorScheme.surface
+                            )
                             .finalPassCombinedClickable(
                                 onClick = {
                                     onSelectSong(index)
@@ -713,7 +709,10 @@ fun DragHandle(colId: String, onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
                             },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val textColor = if (isRowSelected) rowColors.ink else MaterialTheme.colorScheme.onSurface
+                        val textColor = if (isRowSelected)
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        else
+                            MaterialTheme.colorScheme.onSurface
                         // All columns in visibleCols order — data cols use per-cell initialPassClickable,
                         // action cols are inline so reordering them is reflected in both header and rows
                         visibleCols.forEach { colId ->
@@ -918,6 +917,7 @@ fun DragHandle(colId: String, onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
                         )
                     }
                     } // Box
+                    HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
                 }
             }
             } // end horizontalScroll Box
@@ -935,12 +935,11 @@ fun DragHandle(colId: String, onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
             )
         }
         } // end Column (song list + horizontal scrollbar)
-        } // end card
 
         // ── Favorites panel ───────────────────────────────────────
         val favoriteSongs = favoriteSongs()
         if (favoriteSongs.isNotEmpty()) {
-            Spacer(Modifier.height(8.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(
                 modifier = Modifier.fillMaxWidth()
                     .clickable { onFavoritesExpandedChange(!favoritesExpanded) }

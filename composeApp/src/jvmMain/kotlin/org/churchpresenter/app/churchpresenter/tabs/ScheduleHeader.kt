@@ -134,8 +134,7 @@ internal fun ScheduleHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            // Flush against the splitter on the right, like every other panel's cards.
-            .topBarCard(end = 0.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -372,7 +371,8 @@ internal fun ScheduleAddFilesButton(onClick: () -> Unit, modifier: Modifier = Mo
                        else MaterialTheme.colorScheme.outlineVariant
     val contentColor = if (hovered) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant
-    // The same fill as the cards around it; the accent wash on hover sits over it.
+    // A sunken well like the other inputs, rather than a lighter block on the schedule; the accent
+    // wash on hover sits over the well.
     val hoverWash = if (hovered) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) else Color.Transparent
     val strokeWidthPx = with(LocalDensity.current) { 1.dp.toPx() }
     val cornerRadiusPx = with(LocalDensity.current) { 8.dp.toPx() }
@@ -382,7 +382,7 @@ internal fun ScheduleAddFilesButton(onClick: () -> Unit, modifier: Modifier = Mo
             .fillMaxWidth()
             .height(32.dp)
             .hoverable(interactionSource)
-            .background(bibleListCardFill(), shape)
+            .sunken(shape, elevationPalette())
             .background(hoverWash, shape)
             .drawWithContent {
                 drawContent()

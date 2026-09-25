@@ -1,21 +1,16 @@
 package org.churchpresenter.app.churchpresenter.composables
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.hoverable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import org.churchpresenter.theme.components.KeyIconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,13 +25,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import java.awt.Cursor
 
-private const val GRIP_ALPHA = 0.16f
-private const val HOVER_ALPHA = 0.05f
+private const val GRIP_DOT_COUNT = 3
 
-/** The strip's width, and the size of its two grips. */
+/** The strip's width, and the size of its grip dots. */
 private val HANDLE_WIDTH = 16.dp
-private val GRIP_WIDTH = 3.dp
-private val GRIP_LENGTH = 40.dp
+private val DOT_SIZE = 3.dp
 
 /**
  * The new width a panel takes after a drag of [dragAmount] pixels.
@@ -58,7 +51,7 @@ internal fun resizedPanelWidth(
 }
 
 /**
- * The draggable strip between a side panel and the content beside it: two grips, a resize cursor,
+ * The draggable strip between a side panel and the content beside it: grip dots, a resize cursor,
  * and the button that collapses the panel.
  *
  * Extracted from `MainDesktop` so the gesture can be driven by a test. Both splitters — schedule on
@@ -80,31 +73,18 @@ internal fun PanelResizeHandle(
     contentDescription: String,
     modifier: Modifier = Modifier,
 ) {
-    val interaction = remember { MutableInteractionSource() }
-    val hovered by interaction.collectIsHoveredAsState()
-    var dragging by remember { mutableStateOf(false) }
     Box(
         modifier = modifier
             .width(HANDLE_WIDTH)
             .fillMaxHeight()
-            .padding(vertical = 8.dp)
-            .background(
-                if (hovered && !collapsed) MaterialTheme.colorScheme.onSurface.copy(alpha = HOVER_ALPHA)
-                else Color.Transparent,
-                RoundedCornerShape(6.dp),
-            )
-            .hoverable(interaction)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             // Keyed only on `collapsed` -- never on the width being dragged. The caller persists
             // that width in onResizeEnd, so keying on it would tear this coroutine down and
             // relaunch it at the end of every gesture, which is what made the second drag onward
             // unreliable before. Matches SongsTab's column-resize handles.
             .pointerInput(collapsed) {
                 if (!collapsed) {
-                    detectHorizontalDragGestures(
-                        onDragStart = { dragging = true },
-                        onDragEnd = { dragging = false; onResizeEnd() },
-                        onDragCancel = { dragging = false },
-                    ) { _, amount ->
+                    detectHorizontalDragGestures(onDragEnd = onResizeEnd) { _, amount ->
                         onResize(amount)
                     }
                 }
@@ -115,10 +95,9 @@ internal fun PanelResizeHandle(
         contentAlignment = Alignment.Center
     ) {
         if (!collapsed) {
-            val gripColor = if (dragging) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurface.copy(alpha = GRIP_ALPHA)
-            Grip(gripColor, Modifier.align(Alignment.TopCenter).padding(top = 8.dp))
-            Grip(gripColor, Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
+            val dotColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+            GripDots(dotColor, Modifier.align(Alignment.TopCenter).padding(top = 8.dp))
+            GripDots(dotColor, Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
         }
         KeyIconButton(onClick = onToggleCollapsed, modifier = Modifier.wrapContentHeight()) {
             Icon(
@@ -131,6 +110,10 @@ internal fun PanelResizeHandle(
 }
 
 @Composable
-private fun Grip(color: Color, modifier: Modifier) {
-    Box(modifier.size(width = GRIP_WIDTH, height = GRIP_LENGTH).background(color, RoundedCornerShape(3.dp)))
+private fun GripDots(color: Color, modifier: Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) { repeat(GRIP_DOT_COUNT) { Box(Modifier.size(DOT_SIZE).background(color, CircleShape)) } }
 }

@@ -3,8 +3,6 @@ package org.churchpresenter.app.churchpresenter.tabs
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -61,6 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import churchpresenter.composeapp.generated.resources.Res
 import churchpresenter.composeapp.generated.resources.bible_load_failed_detail
 import churchpresenter.composeapp.generated.resources.bible_load_failed_partial_hint
@@ -77,6 +75,13 @@ import org.churchpresenter.app.churchpresenter.viewmodel.indexOfFirstLiveVerse
 import org.churchpresenter.app.churchpresenter.viewmodel.verseNumberOf
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.foundation.layout.width
+import java.awt.Cursor
 import org.churchpresenter.theme.elevationPalette
 import org.churchpresenter.theme.hoverTint
 import org.churchpresenter.theme.sunken
@@ -162,43 +167,36 @@ internal fun LiveChapterPanel(
         if (scrollAmount > 0f) listState.scroll { scrollBy(scrollAmount) }
     }
 
-    Box(modifier = modifier.fillMaxWidth().fillMaxHeight().bibleListCard()) {
+    Box(modifier = modifier.fillMaxWidth().padding(top = 8.dp).fillMaxHeight()) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(start = 8.dp, top = 8.dp, end = 12.dp, bottom = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(start = 4.dp, top = 4.dp, bottom = 4.dp, end = 12.dp)
         ) {
             itemsIndexed(verses) { _, verseStr ->
                 val verseNum = verseNumberOf(verseStr)
                 val isLive = verseNum != null && verseNum in liveVerseNumbers
-                val (hover, hovered) = rememberRowHover()
-                val numberInk = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 Text(
-                    text = styledVerseLine(verseStr, null, Color.Unspecified, numberInk),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        lineHeight = MaterialTheme.typography.bodyMedium.fontSize * 1.55f,
+                    text = verseStr,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 13.5.sp,
+                        lineHeight = 13.5.sp * 1.6f
                     ),
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(BibleVerseRowShape)
                         .background(
-                            when {
-                                isLive -> bibleLiveTint()
-                                hovered -> bibleRowColors(selected = false, hovered = true).background
-                                else -> Color.Transparent
-                            }
+                            if (isLive) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surface
                         )
-                        .hoverable(hover)
                         .then(
                             if (onVerseClicked != null && verseNum != null)
-                                Modifier.clickable(interactionSource = hover, indication = null) {
-                                    onVerseClicked(verseNum)
-                                }
+                                Modifier.clickable { onVerseClicked(verseNum) }
                             else Modifier
                         )
-                        .padding(start = 12.dp, top = 8.dp, end = 10.dp, bottom = 8.dp)
+                        .padding(6.dp)
                 )
             }
         }
@@ -284,7 +282,7 @@ internal fun BibleBrowserColumn(
     selectedIndex: Int,
     singleLine: Boolean = false,
     centerText: Boolean = false,
-    rowHeight: Dp = 32.dp,
+    rowHeight: Dp = 28.dp,
     onItemSelected: (Int) -> Unit
 ) {
     val listState = rememberLazyListState()
@@ -294,32 +292,22 @@ internal fun BibleBrowserColumn(
         }
     }
     Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 6.dp, end = 10.dp, bottom = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
+        LazyColumn(state = listState, modifier = Modifier.fillMaxSize().padding(end = 8.dp)) {
             itemsIndexed(items) { index, item ->
                 val isSelected = index == selectedIndex
-                val (hover, hovered) = rememberRowHover()
-                val colors = bibleRowColors(isSelected, hovered)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(rowHeight)
-                        .clip(BibleListRowShape)
-                        .background(colors.background)
-                        .hoverable(hover)
-                        .clickable(interactionSource = hover, indication = null) { onItemSelected(index) }
-                        .padding(horizontal = 10.dp),
+                        .background(if (isSelected) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)
+                        .clickable { onItemSelected(index) }
+                        .padding(start = 12.dp, end = 4.dp),
                     contentAlignment = if (centerText) Alignment.Center else Alignment.CenterStart
                 ) {
                     Text(
                         text = item,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = colors.ink,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                         maxLines = if (singleLine) 1 else Int.MAX_VALUE,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = if (centerText) TextAlign.Center else TextAlign.Start
@@ -390,9 +378,10 @@ internal fun BibleVerseColumn(
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 8.dp, end = 12.dp, bottom = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(start = 4.dp, top = 4.dp, bottom = 4.dp, end = 12.dp)
         ) {
             itemsIndexed(verses) { index, verseStr ->
                 VerseRow(
@@ -448,23 +437,25 @@ private fun VerseRow(
 ) {
     val mark = LocalVerseSplitMark.current?.takeIf { verseNumberOf(verseStr) == it.verseNumber }
     val offScreenHalf = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-    val (hover, hovered) = rememberRowHover()
-    val colors = bibleRowColors(isSelected, hovered)
-    val numberInk = if (isSelected) colors.ink else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(BibleVerseRowShape)
-            .background(colors.background)
-            .hoverable(hover),
+            .background(
+                if (isSelected) MaterialTheme.colorScheme.surfaceVariant
+                else MaterialTheme.colorScheme.surface
+            ),
         verticalAlignment = Alignment.Top,
     ) {
         Text(
-            text = styledVerseLine(verseStr, mark, offScreenHalf, numberInk),
-            style = MaterialTheme.typography.bodyMedium.copy(
-                lineHeight = MaterialTheme.typography.bodyMedium.fontSize * 1.55f,
+            text = if (mark == null) AnnotatedString(verseStr)
+                   else verseWithLiveHalf(verseStr, mark, offScreenHalf),
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontSize = 13.5.sp,
+                lineHeight = 13.5.sp * 1.6f,
+                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
             ),
-            color = if (isSelected) colors.ink else MaterialTheme.colorScheme.onSurface,
+            color = if (isSelected) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .weight(1f)
                 .pointerInput(onPointerAction) {
@@ -490,10 +481,10 @@ private fun VerseRow(
                         }
                     }
                 }
-                .padding(start = 12.dp, top = 8.dp, end = 10.dp, bottom = 8.dp)
+                .padding(6.dp)
         )
         if (refCount > 0) {
-            Box(modifier = Modifier.padding(top = 10.dp, end = 8.dp)) {
+            Box(modifier = Modifier.padding(top = 6.dp, end = 2.dp)) {
                 CrossRefChip(
                     count = refCount,
                     active = refsOpen,
@@ -503,21 +494,6 @@ private fun VerseRow(
                 if (refsOpen) refPopover()
             }
         }
-    }
-}
-
-/** [line] with its leading `"N."` drawn bold in [numberInk], and the off-screen half of a split dimmed. */
-private fun styledVerseLine(
-    line: String,
-    mark: VerseSplitMark?,
-    offScreenHalf: Color,
-    numberInk: Color,
-): AnnotatedString {
-    val base = if (mark == null) AnnotatedString(line) else verseWithLiveHalf(line, mark, offScreenHalf)
-    val numberEnd = line.indexOf(". ").takeIf { it > 0 && verseNumberOf(line) != null } ?: return base
-    return buildAnnotatedString {
-        append(base)
-        addStyle(SpanStyle(color = numberInk, fontWeight = FontWeight.Bold), 0, numberEnd + 1)
     }
 }
 
@@ -539,4 +515,20 @@ private fun verseWithLiveHalf(line: String, mark: VerseSplitMark, offScreenHalf:
             withStyle(dimmed) { append(line.substring(breakAt)) }
         }
     }
+}
+
+@Composable
+internal fun DragHandle(onDragEnd: () -> Unit, onDrag: (Float) -> Unit) {
+    Box(
+        modifier = Modifier
+            .width(4.dp)
+            .fillMaxHeight()
+            .background(MaterialTheme.colorScheme.outlineVariant)
+            .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
+            .draggable(
+                orientation = Orientation.Horizontal,
+                state = rememberDraggableState { delta -> onDrag(delta) },
+                onDragStopped = { onDragEnd() }
+            )
+    )
 }
