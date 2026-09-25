@@ -37,11 +37,8 @@ data class CalendarDocument(
      * it was deleted elsewhere is kept, which is the answer somebody would expect.
      *
      * Pruned by [mergedWith] once they are older than anything a merge could still resurrect.
-     * [deletedVersions] holds each one's [PlannedService.version], which is what orders it against
-     * an edit; the stamp only breaks a tie.
      */
     val deletedServices: Map<String, String> = emptyMap(),
-    val deletedVersions: Map<String, Long> = emptyMap(),
 ) {
     /** Every service planned for [date], earliest start first. */
     fun servicesOn(date: String): List<PlannedService> =
@@ -65,10 +62,8 @@ data class CalendarDocument(
 
     fun withoutService(id: String, at: Instant = Instant.now()): CalendarDocument = copy(
         services = services.filterNot { it.id == id },
-        // Remembered rather than simply dropped -- see [deletedServices]. The deletion is one more
-        // edit to the service, so it outranks every copy of it that came before.
+        // Remembered rather than simply dropped -- see [deletedServices].
         deletedServices = deletedServices + (id to at.toString()),
-        deletedVersions = deletedVersions + (id to (serviceById(id)?.version ?: deletedVersions[id] ?: 0L) + 1),
     )
 
     /** Every occurrence of the series [seriesId], in date order. Empty for a blank id. */
@@ -99,14 +94,8 @@ data class CalendarDocument(
      * anything at all. Services and templates are keyed by id, so each one is decided on its own:
      *
      * - on one side only, and not deleted on the other → kept
-     * - on both → the one with the higher [PlannedService.version]; on a tie, the later
-     *   [PlannedService.updatedAt]
-     * - deleted on one side → gone, unless the other side's copy outranks the deletion the same way
-     *
-     * The version decides, not the clock: a copy can only outrank another by being an edit of it,
-     * so an old copy handed back -- by a relay replaying what it stored, or a machine restored from
-     * a backup -- can never overwrite what came after it. The stamp only settles two edits made
-     * independently from the same copy.
+     * - on both → the one edited later, by [PlannedService.updatedAt]
+     * - deleted on one side → gone, unless the other side edited it *after* the deletion
      *
      * [preferences] is deliberately not merged: the clock format and the default start time are
      * about the machine that set them, not about the plan.
@@ -115,22 +104,14 @@ data class CalendarDocument(
         val tombstones = (deletedServices + other.deletedServices).mapValues { (id, stamp) ->
             maxOf(stamp, deletedServices[id] ?: stamp, other.deletedServices[id] ?: stamp)
         }
-        val tombstoneVersions = tombstones.keys.associateWith { id ->
-            maxOf(deletedVersions[id] ?: 0L, other.deletedVersions[id] ?: 0L)
-        }
         val merged = (services + other.services)
             .groupBy { it.id }
             .mapNotNull { (id, both) ->
-                val newest = both.maxWith(EDIT_ORDER)
-                val deletedAt = tombstones[id] ?: return@mapNotNull newest
-                val deletedVersion = tombstoneVersions[id] ?: 0L
-                // An edit of the copy that was deleted, made without knowing about the deletion:
-                // somebody went back to it, so it stays.
-                val outranks = newest.version > deletedVersion ||
-                    (newest.version == deletedVersion && newest.updatedAt > deletedAt)
-                if (outranks) newest else null
+                val newest = both.maxBy { it.updatedAt }
+                val deletedAt = tombstones[id]
+                // Edited after it was deleted elsewhere: somebody went back to it, so it stays.
+                if (deletedAt != null && newest.updatedAt <= deletedAt) null else newest
             }
-        val keptTombstones = tombstones.filterValues { it > storedInstant(now.minus(TOMBSTONE_LIFETIME)) }
         return copy(
             version = maxOf(version, other.version),
             // Ordered by id last, so the two machines produce *byte-identical* merges: a stable
@@ -138,8 +119,7 @@ data class CalendarDocument(
             // differ only in order are two machines writing merges at each other for ever.
             services = merged.sortedWith(compareBy({ it.date }, { it.startTime }, { it.id })),
             templates = (templates + other.templates).distinctBy { it.id },
-            deletedServices = keptTombstones,
-            deletedVersions = tombstoneVersions.filterKeys { it in keptTombstones },
+            deletedServices = tombstones.filterValues { it > storedInstant(now.minus(TOMBSTONE_LIFETIME)) },
         )
     }
 }
@@ -158,9 +138,6 @@ fun CalendarDocument.withServices(added: List<PlannedService>): CalendarDocument
  */
 internal val TOMBSTONE_LIFETIME: Duration = Duration.ofDays(90)
 
-/** Which of two copies of one service is newer: more edits first, then the later edit. */
-private val EDIT_ORDER: Comparator<PlannedService> = compareBy({ it.version }, { it.updatedAt })
-
 /** An instant as the file stores it. */
 fun storedInstant(at: Instant): String = at.toString()
 
@@ -176,12 +153,7 @@ fun CalendarDocument.stampingChanged(previous: CalendarDocument, at: Instant): C
     val before = previous.services.associateBy { it.id }
     val stamped = services.map { service ->
         val old = before[service.id]
-        if (old != null && old == service) {
-            service
-        } else {
-            // One more edit than the copy it was made from -- see [CalendarDocument.mergedWith].
-            service.copy(updatedAt = storedInstant(at), version = maxOf(service.version, old?.version ?: 0L) + 1)
-        }
+        if (old != null && old == service) service else service.copy(updatedAt = storedInstant(at))
     }
     return if (stamped == services) this else copy(services = stamped)
 }
@@ -247,7 +219,6 @@ data class PlannedService(
      * since wins over it, which is the right way round.
      */
     val updatedAt: String = "",
-    val version: Long = 0L,
     /**
      * Rows that arrived from a phone and could not be matched here -- a song title not in the
      * library, a preset since deleted -- as row id to reason. Beside the list, like
