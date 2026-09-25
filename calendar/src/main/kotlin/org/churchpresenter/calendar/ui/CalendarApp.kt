@@ -80,7 +80,6 @@ import androidx.compose.material.icons.filled.Settings
 import org.churchpresenter.calendar.generated.resources.calendar_cloud_invite
 import org.churchpresenter.calendar.generated.resources.calendar_settings_open
 import org.churchpresenter.calendar.model.exportRunOfShowPdf
-import org.churchpresenter.calendar.model.safeFileName
 import org.churchpresenter.calendar.model.PdfAudience
 import org.churchpresenter.calendar.model.PlannedService
 import org.churchpresenter.calendar.model.countImages
@@ -143,11 +142,6 @@ fun CalendarApp(
      * merging reload calls `CalendarState.reloadMerging` itself, which is what the watch calls.
      */
     watchStoreFolder: Boolean = true,
-    /**
-     * Raised by one each time the app asks for the Schedule tab to become a new service: the window
-     * opens the new-service sheet on today, starting from the Schedule's rows. 0 asks for nothing.
-     */
-    newServiceFromSchedule: Int = 0,
     io: CoroutineDispatcher = Dispatchers.IO,
 ) {
     // The watcher is made first so the state can tell it which writes were this window's own.
@@ -175,13 +169,6 @@ fun CalendarApp(
     LaunchedEffect(songFolder) { state.loadSongsAsync(io) }
 
     val dialogs = remember { CalendarDialogState() }
-    LaunchedEffect(newServiceFromSchedule) {
-        if (newServiceFromSchedule > 0) {
-            state.select(today)
-            dialogs.startFromSchedule = true
-            dialogs.creatingService = true
-        }
-    }
     // Fetched when the picker is first opened, not up front and not per recomposition. The host's
     // CalendarHost is rebuilt by the app on every recomposition, so keying an effect on it would
     // re-walk every chapter of every book each time; and at first composition the Bible may not be
@@ -224,7 +211,6 @@ fun CalendarApp(
     val firedCues by CueFeed.fired.collectAsState()
     var dismissedToast by remember { mutableStateOf<String?>(null) }
     val toast = firedCues.firstOrNull()?.takeUnless { it.key == dismissedToast }
-    var exportOutcome by remember { mutableStateOf<ExportOutcome?>(null) }
 
     CompositionLocalProvider(LocalUse24HourClock provides state.document.preferences.use24HourClock) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -235,18 +221,17 @@ fun CalendarApp(
                     dialogs = dialogs,
                     clock = clock,
                     today = today,
-                    onExport = exportAction(state, host, io, scope, onOutcome = { exportOutcome = it }),
+                    onExport = exportAction(state, host, io, scope),
                     exportAudience = state.document.preferences.pdfExport.lastAudience,
                     onClose = onClose,
                     modifier = Modifier.fillMaxSize(),
                 )
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalAlignment = Alignment.End,
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(TOAST_MARGIN),
-                ) {
-                    exportOutcome?.let { outcome -> ExportToast(outcome, onDismiss = { exportOutcome = null }) }
-                    if (toast != null) CueToast(event = toast, onDismiss = { dismissedToast = toast.key })
+                if (toast != null) {
+                    CueToast(
+                        event = toast,
+                        onDismiss = { dismissedToast = toast.key },
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(TOAST_MARGIN),
+                    )
                 }
             }
         }
@@ -257,7 +242,6 @@ fun CalendarApp(
             colorPicker = colorPicker,
             songEditor = songEditor,
             onLoaded = { onClose?.invoke() },
-            today = today,
         )
     }
 }
@@ -285,19 +269,10 @@ private fun CalendarBody(
             // Only while the cloud sync is on: an invite to a relay this computer is not talking
             // to would be a code that leads nowhere.
             onInvite = host.cloudSync?.takeIf { it.enabled() }?.invitePhone,
-            nextSyncAt = host.cloudSync?.takeIf { it.enabled() }?.nextSyncAt,
             onSettings = dialogs::openSettings,
         )
         HorizontalDivider()
         RecoveryBanner(source = state.source, onDismiss = state::acknowledgeSource)
-        val preferences = state.document.preferences
-        var autoLoadNoteDismissed by remember { mutableStateOf(false) }
-        if (!preferences.autoLoadService && !autoLoadNoteDismissed) {
-            AutoLoadOffBanner(
-                onTurnOn = { state.updatePreferences(preferences.copy(autoLoadService = true)) },
-                onDismiss = { autoLoadNoteDismissed = true },
-            )
-        }
 
         Row(Modifier.fillMaxSize().weight(1f)) {
             val service = state.selectedService
@@ -431,9 +406,8 @@ private suspend fun relocate(item: ScheduleItem, fix: ProblemFix, host: Calendar
 
 /**
  * The header's Export action, or null when no service is open. It writes the chosen copy of the
- * run of show wherever the host's file chooser points; a cancelled chooser does nothing. Either
- * way it ends, [onOutcome] hears -- saved, or why not -- so the window can say so; a failure is
- * also reported through the host rather than crashing the window.
+ * run of show wherever the host's file chooser points; a cancelled chooser does nothing, and a
+ * failure to write is reported through the host rather than crashing the window.
  *
  * Built here rather than inline because a `let` whose last expression is a lambda reads as a
  * trailing-lambda call to the compiler, not as the value it returns.
@@ -444,7 +418,6 @@ private fun exportAction(
     host: CalendarHost,
     io: CoroutineDispatcher,
     scope: CoroutineScope,
-    onOutcome: (ExportOutcome) -> Unit,
 ): ((PdfAudience) -> Unit)? {
     val service = state.selectedService ?: return null
     val label = shortDate(state.selectedDate)
@@ -457,8 +430,7 @@ private fun exportAction(
         }
         scope.launch {
             val lastFolder = File(preferences.pdfExport.lastFolder).takeIf { it.path.isNotEmpty() && it.isDirectory }
-            val suggested = safeFileName("${service.name} - ${service.date}") + ".pdf"
-            val target = host.chooseExportFile(suggested, lastFolder) ?: return@launch
+            val target = host.chooseExportFile("${service.name} - ${service.date}.pdf", lastFolder) ?: return@launch
             target.parentFile?.path?.let { folder ->
                 val current = state.document.preferences
                 if (folder != current.pdfExport.lastFolder) {
@@ -466,7 +438,7 @@ private fun exportAction(
                 }
             }
             // Off the composing thread: this embeds a font and writes a file.
-            val written = withContext(io) {
+            withContext(io) {
                 runCatching {
                     exportRunOfShowPdf(
                         service = service,
@@ -480,12 +452,6 @@ private fun exportAction(
                 }.onSuccess { host.recordUsage(CalendarUsage.EXPORTED) }
                     .onFailure { host.reportError("Calendar run-of-show PDF export", it) }
             }
-            onOutcome(
-                written.fold(
-                    onSuccess = { ExportOutcome.Saved(target) },
-                    onFailure = { ExportOutcome.Failed(it.message ?: it::class.simpleName.orEmpty()) },
-                ),
-            )
         }
     }
 }
@@ -506,7 +472,6 @@ private fun Header(
     onExport: ((PdfAudience) -> Unit)?,
     exportAudience: PdfAudience,
     onInvite: (() -> Unit)?,
-    nextSyncAt: (() -> Long?)?,
     onSettings: () -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -566,9 +531,6 @@ private fun Header(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        if (nextSyncAt != null) {
-            SyncCountdown(nextSyncAt)
-        }
         if (onExport != null) {
             ExportSplitButton(audience = exportAudience, height = HEADER_BUTTON, onExport = onExport)
         }

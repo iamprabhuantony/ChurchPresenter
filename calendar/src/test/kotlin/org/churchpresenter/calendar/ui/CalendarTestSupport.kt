@@ -45,8 +45,6 @@ internal fun withCalendar(
     document: CalendarDocument = CalendarDocument(),
     host: CalendarHost = CalendarHost(),
     songFolder: File? = null,
-    /** The app's request to open a new service on the Schedule tab's rows -- see `CalendarApp`. */
-    newServiceFromSchedule: Int = 0,
     body: ComposeUiTest.(folder: File) -> Unit,
 ) {
     val folder = Files.createTempDirectory("calendar-ui").toFile()
@@ -68,7 +66,6 @@ internal fun withCalendar(
                         watchStoreFolder = false,
                     io = Dispatchers.Unconfined,
                         today = TODAY,
-                        newServiceFromSchedule = newServiceFromSchedule,
                         onClose = {},
                     )
                 }
