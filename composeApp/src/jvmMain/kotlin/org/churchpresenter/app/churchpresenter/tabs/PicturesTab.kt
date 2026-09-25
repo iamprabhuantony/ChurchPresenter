@@ -1,5 +1,8 @@
 package org.churchpresenter.app.churchpresenter.tabs
 
+import org.churchpresenter.app.churchpresenter.utils.sharedScaleMode
+import org.churchpresenter.app.churchpresenter.utils.scaleButtonLabel
+import org.churchpresenter.app.churchpresenter.utils.withPictureScaleEverywhere
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.Image
@@ -89,7 +92,6 @@ import androidx.compose.ui.unit.sp
 import churchpresenter.composeapp.generated.resources.Res
 import churchpresenter.composeapp.generated.resources.ic_refresh
 import churchpresenter.composeapp.generated.resources.add_to_schedule
-import churchpresenter.composeapp.generated.resources.output_scale_mode
 import churchpresenter.composeapp.generated.resources.save_preset
 import churchpresenter.composeapp.generated.resources.animation_crossfade
 import churchpresenter.composeapp.generated.resources.animation_fade
@@ -165,6 +167,7 @@ private val RECENT_BAR_HEIGHT = 40.dp
 private val TRANSPORT_KEY_SIZE = 30.dp
 private val PLAY_KEY_SIZE = 38.dp
 private val LOOP_KEY_SIZE = 28.dp
+private val SETTING_BOX_WIDTH = 150.dp
 private const val MIN_TRANSITION_MS = 100
 private const val MAX_TRANSITION_MS = 2000
 private const val DRAGGED_ITEM_ALPHA = 0.35f
@@ -542,11 +545,15 @@ fun PicturesTab(
                 }
             }
 
-            // Scale button: each click moves Fit → Fill → Stretch, lit whenever it is not Fit
-            val scaleMode = appSettings?.pictureSettings?.scaleMode ?: OutputScaleMode.FIT
-            val scaled = scaleMode != OutputScaleMode.FIT
-            val scaleName = stringResource(scaleMode.label)
-            val scaleLabel = stringResource(Res.string.output_scale_mode, scaleName)
+            // Scale button: each click moves Fit → Fill → Stretch on every profile at once -- the
+            // scaling is per profile, and this is the shortcut over all of them. Lit whenever it is
+            // not Fit, or while the profiles disagree, which it says rather than naming one of them.
+            val shared = appSettings?.let { s ->
+                sharedScaleMode(s.projectionSettings.outputProfiles) { it.pictureScaleMode }
+            }
+            val scaleMode = shared ?: OutputScaleMode.FIT
+            val scaled = shared != OutputScaleMode.FIT
+            val scaleLabel = scaleButtonLabel(shared, scaleMode)
             TooltipArea(
                 tooltip = {
                     Surface(
@@ -566,9 +573,8 @@ fun PicturesTab(
             ) {
                 RaisedIconButton(
                     onClick = {
-                        onSettingsChange { s ->
-                            s.copy(pictureSettings = s.pictureSettings.copy(scaleMode = scaleMode.next()))
-                        }
+                        val next = if (shared == null) scaleMode else scaleMode.next()
+                        onSettingsChange { s -> s.withPictureScaleEverywhere(next) }
                     },
                     modifier = Modifier.size(LOOP_KEY_SIZE),
                     colors = if (scaled) accentKeyColors else neutralKeyColors
@@ -599,14 +605,14 @@ fun PicturesTab(
                 Column(
                     modifier = Modifier
                         .height(42.dp)
-                        .width(170.dp)
+                        .width(SETTING_BOX_WIDTH)
                         .sunken(RoundedCornerShape(8.dp), elevationPalette())
                         .clickable { editingInterval = true }
                         .padding(start = 11.dp, end = 11.dp, top = 4.dp, bottom = 4.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = stringResource(Res.string.auto_scroll_interval).uppercase(),
+                        text = stringResource(Res.string.auto_scroll_interval).removeSuffix(":").uppercase(),
                         fontSize = 10.sp,
                         lineHeight = 11.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -666,14 +672,14 @@ fun PicturesTab(
                 Column(
                     modifier = Modifier
                         .height(42.dp)
-                        .width(170.dp)
+                        .width(SETTING_BOX_WIDTH)
                         .sunken(RoundedCornerShape(8.dp), elevationPalette())
                         .clickable { editingTransition = true }
                         .padding(start = 11.dp, end = 11.dp, top = 4.dp, bottom = 4.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = stringResource(Res.string.transition_duration).uppercase(),
+                        text = stringResource(Res.string.transition_duration).removeSuffix(":").uppercase(),
                         fontSize = 10.sp,
                         lineHeight = 11.sp,
                         fontWeight = FontWeight.SemiBold,
