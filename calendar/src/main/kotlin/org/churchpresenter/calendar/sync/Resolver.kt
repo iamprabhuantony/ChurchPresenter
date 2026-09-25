@@ -34,7 +34,6 @@ class Resolver(
     private val songs: List<SongItem>,
     private val presets: List<ItemPreset>,
     private val today: LocalDate,
-    private val now: Instant = Instant.now(),
 ) {
     private val songsById = songs.associateBy { it.songId }
     private val songsByTitle = songs.groupBy { it.title.trim().lowercase() }
@@ -79,10 +78,7 @@ class Resolver(
             armed = remote.armed,
             seriesId = remote.seriesId.takeIf(Sanitize::isId).orEmpty(),
             repeat = local?.repeat.orEmpty(),
-            // Sealed by the writer, so the relay cannot move either; a clock ahead of ours is
-            // taken as now, so a phone set to next year cannot make its copy win for a year.
-            updatedAt = editedAt(remote.editedAt),
-            version = remote.version.coerceAtLeast(0L),
+            updatedAt = cleanInstant(remote.updatedAt),
             unresolvedRows = unresolved,
         )
         return ResolvedService(service, unresolved, dropped)
@@ -164,9 +160,8 @@ class Resolver(
     )
 
     /** An instant as the file stores it, or empty. */
-    /** A sealed edit time as this machine stores it: parsed, and never later than now. */
-    fun editedAt(text: String): String = try {
-        minOf(Instant.parse(text), now).toString()
+    private fun cleanInstant(text: String): String = try {
+        Instant.parse(text).toString()
     } catch (_: DateTimeParseException) {
         ""
     }

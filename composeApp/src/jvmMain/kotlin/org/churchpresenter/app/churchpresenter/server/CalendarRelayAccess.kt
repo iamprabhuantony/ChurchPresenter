@@ -34,11 +34,7 @@ internal class CalendarRelayAccess(
     private val onSaved: () -> Unit,
     /** How long a song usually runs here, for the catalog the phones plan with; null when never measured. */
     private val typicalSeconds: (SongItem) -> Int? = { null },
-    private val endpoints: RelayEndpoints = RelayEndpoints.BUILT_IN,
 ) {
-    /** The relay this desktop talks to: the one in its settings, or else the one it was built with. */
-    fun relayUrl(): String = settings().relayUrl.ifBlank { endpoints.relayUrl }
-
     /**
      * Runs [block] with a client key, fetching one first if none is cached and once more if the
      * relay refuses it. Never with none: a call without a key is a wrong-key attempt as far as the
@@ -58,8 +54,7 @@ internal class CalendarRelayAccess(
     }
 
     private fun refreshClientKey(): Boolean {
-        if (endpoints.clientKeyUrl.isBlank()) return false
-        val key = fetchClientKey(endpoints.clientKeyUrl, transport) ?: return false
+        val key = fetchClientKey(CalendarSyncSettings.CLIENT_KEY_URL, transport) ?: return false
         saveSettings(settings().copy(clientKey = key))
         return true
     }
@@ -73,7 +68,7 @@ internal class CalendarRelayAccess(
         val key = Envelope.encodeKey(Envelope.newKey())
         repeat(REGISTER_ATTEMPTS) {
             try {
-                val client = RelayClient(relayUrl(), instanceId, installId, transport, settings().clientKey)
+                val client = RelayClient(current.relayUrl, instanceId, installId, transport, settings().clientKey)
                 val token = client.register()
                 saveSettings(
                     current.copy(
@@ -94,7 +89,7 @@ internal class CalendarRelayAccess(
 
     fun client(): RelayClient {
         val current = settings()
-        return RelayClient(relayUrl(), current.instanceId, installId(), transport, current.clientKey)
+        return RelayClient(current.relayUrl, current.instanceId, installId(), transport, current.clientKey)
     }
 
     fun coordinator(): SyncCoordinator = SyncCoordinator(
