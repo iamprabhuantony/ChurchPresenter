@@ -1,7 +1,6 @@
 package org.churchpresenter.app.churchpresenter.presenter
 
 import kotlin.math.ceil
-import org.churchpresenter.lottiegen.lottie.LottieTextShaping
 
 /**
  * What each layer of a ticker band shows: every text layer carries its own reference at its head and
@@ -45,7 +44,7 @@ internal fun revealedText(template: BibleLottieTemplate, text: String, frame: Fl
         else -> 0f
     }
     return when (motion) {
-        BandTextMotion.TYPEWRITER -> LottieTextShaping.typedText(text, fraction)
+        BandTextMotion.TYPEWRITER -> text.take(ceil(text.length * fraction).toInt())
         else -> {
             val words = text.split(' ')
             words.take(ceil(words.size * fraction).toInt()).joinToString(" ")

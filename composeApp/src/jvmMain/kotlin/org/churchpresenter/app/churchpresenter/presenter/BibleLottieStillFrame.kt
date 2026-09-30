@@ -12,8 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import io.github.alexzhirkevich.compottie.LottieCompositionSpec
 import io.github.alexzhirkevich.compottie.rememberLottieComposition
-import org.churchpresenter.lottiegen.lottie.LottieTextShaping
-import org.churchpresenter.lottiegen.render.rememberShapedLottiePainter
+import io.github.alexzhirkevich.compottie.rememberLottiePainter
 
 private const val NANOS_PER_SECOND = 1_000_000_000f
 
@@ -51,13 +50,11 @@ internal fun BibleLottieStillFrame(path: String, modifier: Modifier = Modifier) 
             }
         }
     }
-    // Drawn the way the generator's own preview draws it, so the two agree: letter by letter from
-    // the glyph outlines the file embeds, or as whole lines from its fonts (see `TextShaping`).
-    val groupsText = remember(loaded) { LottieTextShaping.groupsText(loaded.json) }
-    val painter = rememberShapedLottiePainter(
+    // No font manager: the sample is drawn from the glyph outlines the generator embedded, which
+    // is exactly how the generator's own preview draws it, so the two agree.
+    val painter = rememberLottiePainter(
         composition = composition,
         progress = { progress },
-        grouped = groupsText,
     )
     Image(painter = painter, contentDescription = null, contentScale = ContentScale.FillBounds, modifier = modifier)
 }

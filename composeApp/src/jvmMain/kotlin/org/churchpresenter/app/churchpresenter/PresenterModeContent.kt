@@ -202,8 +202,7 @@ internal fun PresenterModeContent(
                 LowerThirdPresenter(
                     composition = lottieComposition,
                     progress = { presenterManager.lottieProgress.value },
-                    frame = lottieFrame,
-                    groupsText = presenterManager.lottieGroupsText.value,
+                    frame = lottieFrame
                 )
 
         Presenting.ANNOUNCEMENTS ->
