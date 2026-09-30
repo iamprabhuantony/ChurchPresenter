@@ -32,7 +32,10 @@ demand.
 ### UI icons
 - **NEVER** use text/emoji as icons (`Text("⏸")`). Use `painterResource()` with real icon assets.
 
-### Debugging
+### Debugging and logging
+- Diagnostics go through `Log.info`/`warn`/`error` (`:diagnostics`), never `println` or
+  `System.err` — `bash cleanup_check.sh` counts both. A warning or error also lands in the crash
+  report's breadcrumb trail.
 - Keep debug logs until the fix is confirmed; ask before removing if unsure. Remove them once done.
 
 ### Commit authorship — **NEVER** add yourself
@@ -166,7 +169,7 @@ step of any change that touched Kotlin.** It is the first job in `.github/workfl
 fails on what the compiler only warns about (an unused import). Every finding it prints is yours to
 fix.
 
-`config/detekt/baseline.xml` (1,467 entries) holds findings from the day the size/length rules
+`config/detekt/baseline.xml` (1,139 entries) holds findings from the day the size/length rules
 (`LongMethod`, `LongParameterList`, `TooManyFunctions`, `LargeClass`, `MaxLineLength`,
 `TooGenericExceptionCaught`) were switched on; `:bible-engine` (86) and `:presentation-engine` (55)
 carry their own. They are debt, not absolution:
