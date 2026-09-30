@@ -260,7 +260,7 @@ private fun PreviewCanvas(
                 Text(Strings.generating, fontSize = 13.sp, color = Tokens.UnitText)
                 return@Box
             }
-            val composition by rememberLottieComposition(jsonString) {
+            val composition by rememberLottieComposition(key = jsonString) {
                 LottieCompositionSpec.JsonString(jsonString)
             }
             val progress by animateLottieCompositionAsState(
