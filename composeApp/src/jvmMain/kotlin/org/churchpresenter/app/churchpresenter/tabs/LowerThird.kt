@@ -72,7 +72,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import org.churchpresenter.theme.FixedColors
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -159,6 +159,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import churchpresenter.composeapp.generated.resources.generate_lower_third
 import churchpresenter.composeapp.generated.resources.aspect_ratio_mismatch
+import churchpresenter.composeapp.generated.resources.atem_clip_summary
 import org.churchpresenter.app.churchpresenter.viewmodel.isLottieFile
 import org.churchpresenter.theme.semantic
 import java.awt.Window
@@ -704,7 +705,7 @@ fun LowerThirdTab(
                                 }
                             }
                             Text(
-                                "ATEM: ${parts.joinToString(", ")}",
+                                stringResource(Res.string.atem_clip_summary, parts.joinToString(", ")),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
@@ -1175,7 +1176,7 @@ fun LowerThirdTab(
                     modifier = Modifier
                         .aspectRatio(previewOutput.size.aspectRatio)
                         .testTag(LOWER_THIRD_PREVIEW_TAG)
-                        .background(Color.Black, AppShape(8.dp))
+                        .background(FixedColors.screenBlack, AppShape(8.dp))
                         .border(1.dp, MaterialTheme.colorScheme.outlineVariant, AppShape(8.dp)),
                     contentAlignment = Alignment.Center
                 ) {
