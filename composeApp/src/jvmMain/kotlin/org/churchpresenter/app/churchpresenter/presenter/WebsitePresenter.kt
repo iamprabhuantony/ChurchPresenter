@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import org.churchpresenter.app.churchpresenter.composables.LocalOutputCursorHidden
 import org.churchpresenter.app.churchpresenter.composables.outputCursorScript
 import org.churchpresenter.diagnostics.CrashReporter
-import org.churchpresenter.diagnostics.Log
 import org.churchpresenter.settings.utils.Constants
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
@@ -425,7 +424,7 @@ object CefManager {
         }
         is JcefInstall.Outcome.Blocked -> {
             engineUnavailable()
-            Log.warn("JCEF", "Not installing: ${outcome.reason}")
+            System.err.println("[JCEF] Not installing: ${outcome.reason}")
             // No event: web features simply stay unavailable, which jcef.available already
             // says. The tag rides along on anything else this session reports.
             runCatching { CrashReporter.setTag("jcef.blocked", outcome.reason) }
@@ -471,7 +470,7 @@ object CefManager {
         val policy = JcefInstall.policyBlock(outcome.cause.message)
         if (policy != null) {
             blockedByPolicy = true
-            Log.warn("JCEF", "Blocked by this machine's software policy: ${outcome.cause.message}")
+            System.err.println("[JCEF] Blocked by this machine's software policy: ${outcome.cause.message}")
             runCatching { CrashReporter.setTag("jcef.blocked", policy) }
             return
         }

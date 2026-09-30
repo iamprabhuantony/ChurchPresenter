@@ -110,7 +110,7 @@ internal fun PresenterWindows(
 
     PresenterTransitionEffects(presenterManager, appSettings)
 
-    val lottieComposition by rememberLottieComposition(lottieJsonContent) {
+    val lottieComposition by rememberLottieComposition(key = lottieJsonContent) {
         LottieCompositionSpec.JsonString(lottieJsonContent)
     }
     LottiePlaybackEffect(

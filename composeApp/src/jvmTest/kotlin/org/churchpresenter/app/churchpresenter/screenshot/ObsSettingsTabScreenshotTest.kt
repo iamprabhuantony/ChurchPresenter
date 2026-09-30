@@ -181,8 +181,7 @@ class ObsSettingsTabScreenshotTest {
         val deadline = System.currentTimeMillis() + AWAIT_TIMEOUT_MS
         while (manager.status.value != expected && System.currentTimeMillis() < deadline) Thread.sleep(10)
         check(manager.status.value == expected) {
-            "OBS never reached $expected — it is ${manager.status.value} " +
-                "(\"${manager.errorMessage.value}\")"
+            "OBS never reached $expected — it is ${manager.status.value}"
         }
     }
 

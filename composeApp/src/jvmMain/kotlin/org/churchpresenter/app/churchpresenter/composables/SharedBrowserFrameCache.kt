@@ -38,7 +38,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 import org.churchpresenter.app.churchpresenter.utils.addGuardedShutdownHook
-import org.churchpresenter.diagnostics.Log
 
 private const val HTTP_OK = 200
 private const val MILLIS_PER_SECOND = 1000L
@@ -119,7 +118,7 @@ object SharedBrowserFrameCache {
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    Log.warn("BrowserSource", "Failed to start CDP browser: ${e.message}")
+                    System.err.println("[BrowserSource] Failed to start CDP browser: ${e.message}")
                     entry.error.value = "Browser error: ${e.message}"
                 }
             }
@@ -298,7 +297,7 @@ object SharedBrowserFrameCache {
                 proc.waitFor(WMIC_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)
                 val pids = Regex("\\d+").findAll(output).map { it.value }.toList()
                 for (pid in pids) {
-                    Log.warn("BrowserSource", "Killing zombie browser process: PID $pid")
+                    System.err.println("[BrowserSource] Killing zombie browser process: PID $pid")
                     ProcessBuilder("taskkill", "/F", "/T", "/PID", pid)
                         .redirectErrorStream(true).start()
                         .waitFor(PROCESS_KILL_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)
@@ -317,7 +316,7 @@ object SharedBrowserFrameCache {
     /** The CDP connection to the freshly launched browser, or null once the failure is reported. */
     private suspend fun connectCdp(entry: CacheEntry, port: Int): CdpConnection? {
         if (!waitForCdpReady(port, timeoutMs = 15000)) {
-            Log.warn("BrowserSource", "CDP did not become ready in time")
+            System.err.println("[BrowserSource] CDP did not become ready in time")
             CrashReporter.reportWarning(
                 "BrowserSource: CDP did not become ready in time",
                 tags = mapOf("subsystem" to "browser-source")
@@ -325,25 +324,25 @@ object SharedBrowserFrameCache {
             entry.error.value = "Browser failed to start"
             return null
         }
-        Log.info("BrowserSource", "CDP ready on port $port")
+        System.err.println("[BrowserSource] CDP ready on port $port")
         return openCdpWebSocket(port)
     }
 
     private suspend fun openCdpWebSocket(port: Int): CdpConnection? {
         val wsUrl = withContext(Dispatchers.IO) { getPageWebSocketUrl(port) }
         if (wsUrl == null) {
-            Log.warn("BrowserSource", "Could not get page WebSocket URL")
+            System.err.println("[BrowserSource] Could not get page WebSocket URL")
             CrashReporter.reportWarning(
                 "BrowserSource: Could not get page WebSocket URL",
                 tags = mapOf("subsystem" to "browser-source")
             )
             return null
         }
-        Log.info("BrowserSource", "Connecting WebSocket: $wsUrl")
+        System.err.println("[BrowserSource] Connecting WebSocket: $wsUrl")
         val cdp = CdpConnection()
         val connected = withContext(Dispatchers.IO) { cdp.connect(wsUrl) }
         if (!connected) {
-            Log.warn("BrowserSource", "WebSocket connection failed")
+            System.err.println("[BrowserSource] WebSocket connection failed")
             CrashReporter.reportWarning(
                 "BrowserSource: WebSocket connection to CDP failed",
                 tags = mapOf("subsystem" to "browser-source")
@@ -367,7 +366,7 @@ object SharedBrowserFrameCache {
 
         val browserPath = findBrowserExecutable()
         if (browserPath == null) {
-            Log.warn("BrowserSource", "No Chrome or Edge browser found on system")
+            System.err.println("[BrowserSource] No Chrome or Edge browser found on system")
             CrashReporter.reportWarning(
                 "BrowserSource: No Chrome or Edge browser found on system",
                 tags = mapOf("subsystem" to "browser-source")
@@ -388,9 +387,8 @@ object SharedBrowserFrameCache {
         }
         entry.userDataDir = userDataDir
 
-        Log.info(
-            "BrowserSource",
-            "Launching headless browser: $browserPath on port $port (userData=$userDataDir)"
+        System.err.println(
+            "[BrowserSource] Launching headless browser: $browserPath on port $port (userData=$userDataDir)"
         )
 
         val command = buildBrowserLaunchCommand(browserPath, port, userDataDir.absolutePath, renderWidth, renderHeight)
@@ -417,7 +415,7 @@ object SharedBrowserFrameCache {
         }
         entry.cdpConnection = cdp
         cdp.onUrlChanged = { url -> entry.currentUrl.value = url }
-        Log.info("BrowserSource", "WebSocket connected")
+        System.err.println("[BrowserSource] WebSocket connected")
 
         configurePage(cdp, url, renderWidth, renderHeight, customCss, forceTransparent)
         runCaptureLoop(entry, cdp, fps)
@@ -439,7 +437,7 @@ object SharedBrowserFrameCache {
         put("deviceScaleFactor", 1)
         put("mobile", false)
     })
-    Log.info("BrowserSource", "setDeviceMetricsOverride: $resp")
+    System.err.println("[BrowserSource] setDeviceMetricsOverride: $resp")
 
     if (forceTransparent) {
         resp = cdp.sendAsync("Emulation.setDefaultBackgroundColorOverride", buildJsonObject {
@@ -450,7 +448,7 @@ object SharedBrowserFrameCache {
                 put("a", 0)
             })
         })
-        Log.info("BrowserSource", "setDefaultBackgroundColorOverride: $resp")
+        System.err.println("[BrowserSource] setDefaultBackgroundColorOverride: $resp")
     }
 
     cdp.sendAsync("Page.enable", null)
@@ -458,7 +456,7 @@ object SharedBrowserFrameCache {
     // Navigate to the URL
     if (url.isNotBlank()) {
         resp = cdp.sendAsync("Page.navigate", buildJsonObject { put("url", url) })
-        Log.info("BrowserSource", "Page.navigate($url): $resp")
+        System.err.println("[BrowserSource] Page.navigate($url): $resp")
 
         // Wait for page to load
         delay(PAGE_LOAD_SETTLE_MS)
@@ -489,7 +487,7 @@ object SharedBrowserFrameCache {
         entry.captureIntervalMs = (
             MILLIS_PER_SECOND / fps.coerceIn(MIN_FPS, MAX_FPS)
         ).coerceAtLeast(MIN_STARTUP_CAPTURE_INTERVAL_MS)
-        Log.info("BrowserSource", "Starting capture loop at ${fps}fps")
+        System.err.println("[BrowserSource] Starting capture loop at ${fps}fps")
 
         var frameCount = 0
         while (currentCoroutineContext().isActive) {
@@ -498,7 +496,7 @@ object SharedBrowserFrameCache {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                if (frameCount == 0) Log.warn("BrowserSource", "Capture error: ${e.message}")
+                if (frameCount == 0) System.err.println("[BrowserSource] Capture error: ${e.message}")
             }
             delay(entry.captureIntervalMs)
         }
@@ -516,22 +514,22 @@ object SharedBrowserFrameCache {
         val img = withContext(Dispatchers.IO) { ImageIO.read(ByteArrayInputStream(pngBytes)) }
         if (img == null) {
             if (first) {
-                Log.warn("BrowserSource", "ImageIO.read returned null (${pngBytes.size} bytes)")
+                System.err.println("[BrowserSource] ImageIO.read returned null (${pngBytes.size} bytes)")
             }
             return false
         }
         entry.frame.value = img.toComposeImageBitmap()
         if (first) {
-            Log.info("BrowserSource", "First frame captured: ${img.width}x${img.height}")
+            System.err.println("[BrowserSource] First frame captured: ${img.width}x${img.height}")
         }
         return true
     }
 
     private fun reportMissingScreenshot(response: JsonObject?) {
         if (response == null) {
-            Log.warn("BrowserSource", "captureScreenshot returned null")
+            System.err.println("[BrowserSource] captureScreenshot returned null")
         } else {
-            Log.warn("BrowserSource", "captureScreenshot response has no 'data': ${response.keys}")
+            System.err.println("[BrowserSource] captureScreenshot response has no 'data': ${response.keys}")
         }
     }
 
@@ -567,7 +565,7 @@ object SharedBrowserFrameCache {
             } ?: pages.firstOrNull()
             page?.jsonObject?.get("webSocketDebuggerUrl")?.jsonPrimitive?.contentOrNull
         } catch (e: Exception) {
-            Log.warn("BrowserSource", "getPageWebSocketUrl error: ${e.message}")
+            System.err.println("[BrowserSource] getPageWebSocketUrl error: ${e.message}")
             null
         }
     }
@@ -645,15 +643,14 @@ object SharedBrowserFrameCache {
                     }
 
                     override fun onError(webSocket: WebSocket, error: Throwable) {
-                        Log.warn(
-                            "BrowserSource",
-                            "WebSocket error: ${error::class.simpleName}: ${error.message}"
+                        System.err.println(
+                            "[BrowserSource] WebSocket error: ${error::class.simpleName}: ${error.message}"
                         )
                         pending.values.forEach { it.complete(null) }
                     }
 
                     override fun onClose(webSocket: WebSocket, statusCode: Int, reason: String): CompletionStage<*> {
-                        Log.info("BrowserSource", "WebSocket closed: $statusCode $reason")
+                        System.err.println("[BrowserSource] WebSocket closed: $statusCode $reason")
                         pending.values.forEach { it.complete(null) }
                         return CompletableFuture.completedFuture(null)
                     }
@@ -665,7 +662,7 @@ object SharedBrowserFrameCache {
                     .get(WEBSOCKET_CONNECT_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)
                 true
             } catch (e: Exception) {
-                Log.warn("BrowserSource", "WebSocket connect error: ${e.message}")
+                System.err.println("[BrowserSource] WebSocket connect error: ${e.message}")
                 false
             }
         }
@@ -687,7 +684,7 @@ object SharedBrowserFrameCache {
             try {
                 val socket = ws ?: run {
                     pending.remove(id)
-                    Log.warn("BrowserSource", "CDP send '$method': WebSocket is null")
+                    System.err.println("[BrowserSource] CDP send '$method': WebSocket is null")
                     return null
                 }
                 socket.sendText(
@@ -696,9 +693,8 @@ object SharedBrowserFrameCache {
                 )?.get(WEBSOCKET_SEND_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)
             } catch (e: Exception) {
                 pending.remove(id)
-                Log.warn(
-                    "BrowserSource",
-                    "CDP sendText '$method' failed: ${e::class.simpleName}: ${e.message}"
+                System.err.println(
+                    "[BrowserSource] CDP sendText '$method' failed: ${e::class.simpleName}: ${e.message}"
                 )
                 return null
             }
@@ -713,7 +709,7 @@ object SharedBrowserFrameCache {
                 throw e
             } catch (e: Exception) {
                 pending.remove(id)
-                Log.warn("BrowserSource", "CDP await '$method' failed: ${e::class.simpleName}: ${e.message}")
+                System.err.println("[BrowserSource] CDP await '$method' failed: ${e::class.simpleName}: ${e.message}")
                 null
             }
         }
@@ -722,7 +718,7 @@ object SharedBrowserFrameCache {
             when (val message = parseCdpMessage(text)) {
                 is CdpMessage.Response -> {
                     if (message.error != null) {
-                        Log.warn("BrowserSource", "CDP error for id=${message.id}: ${message.error}")
+                        System.err.println("[BrowserSource] CDP error for id=${message.id}: ${message.error}")
                     }
                     pending.remove(message.id)?.complete(message.result)
                 }
@@ -783,7 +779,7 @@ internal fun parseCdpMessage(text: String): CdpMessage {
         val parentId = frame?.get("parentId")?.jsonPrimitive?.contentOrNull
         if (url != null && parentId == null) CdpMessage.MainFrameNavigated(url) else CdpMessage.Ignored
     } catch (e: Exception) {
-        Log.warn("BrowserSource", "handleMessage error: ${e.message}")
+        System.err.println("[BrowserSource] handleMessage error: ${e.message}")
         CdpMessage.Ignored
     }
 }

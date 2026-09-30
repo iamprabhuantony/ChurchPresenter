@@ -19,7 +19,6 @@ import org.churchpresenter.atem.AtemConnectionManager
 import org.churchpresenter.atem.AtemKey
 import org.churchpresenter.atem.AtemUploadStatus
 import org.churchpresenter.diagnostics.CrashReporter
-import org.churchpresenter.diagnostics.Log
 import org.churchpresenter.settings.AtemSettings
 
 private const val KEY_SETTLE_MS = 800L
@@ -285,7 +284,7 @@ private suspend fun uploadStillFrame(
         AtemUploadStatus.clear(uploadId)
         throw e
     } catch (e: Exception) {
-        Log.warn("CompanionServer", "ATEM still upload failed for '$name': ${e.message}")
+        System.err.println("[CompanionServer] ATEM still upload failed for '$name': ${e.message}")
         CrashReporter.reportWarning(
             "ATEM still upload failed: $name",
             throwable = e,
@@ -357,7 +356,7 @@ private suspend fun uploadClipFrames(
         AtemUploadStatus.clear(uploadId)
         throw e
     } catch (e: Exception) {
-        Log.warn("CompanionServer", "ATEM clip upload failed for '$name': ${e.message}")
+        System.err.println("[CompanionServer] ATEM clip upload failed for '$name': ${e.message}")
         CrashReporter.reportWarning(
             "ATEM clip upload failed: $name",
             throwable = e,

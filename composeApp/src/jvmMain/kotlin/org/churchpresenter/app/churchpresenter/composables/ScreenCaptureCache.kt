@@ -20,7 +20,6 @@ import org.churchpresenter.core.models.scene.SceneSource
 import java.awt.Rectangle
 import java.awt.Robot
 import java.awt.image.BufferedImage
-import org.churchpresenter.diagnostics.Log
 
 /** The floor on how often a capture repeats, whatever the source asks for. */
 private const val MIN_CAPTURE_INTERVAL_MS = 33L
@@ -140,7 +139,7 @@ internal open class ScreenCaptureCache(
         } catch (_: CancellationException) {
             // Ordinary teardown — the last layer let go.
         } catch (e: Exception) {
-            Log.warn("Screen Capture", "${spec.mode}: ${e.message}")
+            System.err.println("[Screen Capture] ${spec.mode}: ${e.message}")
         }
     }
 }
@@ -156,7 +155,7 @@ private val screenRobot: Robot? by lazy {
     try {
         Robot()
     } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
-        Log.warn("Screen Capture", "no Robot available: ${e.message}")
+        System.err.println("[Screen Capture] no Robot available: ${e.message}")
         null
     }
 }

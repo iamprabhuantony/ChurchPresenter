@@ -38,7 +38,6 @@ import org.churchpresenter.app.churchpresenter.utils.InstanceLinkLogSide
 import org.churchpresenter.app.churchpresenter.utils.InstanceLinkLogger
 import org.churchpresenter.core.models.schedule.ScheduleItem
 import org.churchpresenter.diagnostics.CrashReporter
-import org.churchpresenter.diagnostics.Log
 import org.churchpresenter.settings.BackgroundSettings
 import org.churchpresenter.settings.utils.Constants
 import java.net.ConnectException
@@ -230,7 +229,7 @@ class InstanceLinkClient(
                 throw e
             } catch (e: Exception) {
                 consecutiveFailures++
-                Log.warn("InstanceLink", "connect to ws://$host:$port${Constants.ENDPOINT_WS} failed — ${e.message}")
+                System.err.println("InstanceLink: connect to ws://$host:$port${Constants.ENDPOINT_WS} failed — ${e.message}")
                 val failureKind = classifyConnectFailure(e)
                 if (shouldReportConnectFailure(failureKind, consecutiveFailures)) {
                     CrashReporter.reportWarning(

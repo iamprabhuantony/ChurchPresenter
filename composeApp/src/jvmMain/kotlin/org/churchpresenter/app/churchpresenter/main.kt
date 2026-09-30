@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toComposeImageBitmap
-import org.churchpresenter.diagnostics.Log
 import org.jetbrains.skia.Image
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
@@ -297,7 +296,7 @@ fun main() {
         System.setProperty("skiko.renderApi", it)
     }
     if (!acquireSingleInstanceLock()) {
-        Log.info("Startup", "ChurchPresenter is already running.")
+        System.err.println("ChurchPresenter is already running.")
         javax.swing.JOptionPane.showMessageDialog(
             null,
             "ChurchPresenter is already running.",

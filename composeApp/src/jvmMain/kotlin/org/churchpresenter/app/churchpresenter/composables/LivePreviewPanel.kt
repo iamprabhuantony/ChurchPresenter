@@ -534,7 +534,7 @@ private fun SingleDisplayPreview(
     val slideSlideOffset by presenterManager.slideSlideOffset
     val animationType by presenterManager.animationType
     val lottieJsonContent by presenterManager.lottieJsonContent
-    val lottieComposition by rememberLottieComposition(lottieJsonContent) {
+    val lottieComposition by rememberLottieComposition(key = lottieJsonContent) {
         LottieCompositionSpec.JsonString(lottieJsonContent)
     }
     val lottieProgress by presenterManager.lottieProgress

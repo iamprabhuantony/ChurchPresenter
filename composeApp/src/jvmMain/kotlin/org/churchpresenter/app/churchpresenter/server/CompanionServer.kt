@@ -62,7 +62,6 @@ import org.churchpresenter.core.models.songs.LyricSection
 import org.churchpresenter.calendar.sync.Projection
 import org.churchpresenter.core.models.songs.SongItem
 import org.churchpresenter.diagnostics.CrashReporter
-import org.churchpresenter.diagnostics.Log
 import org.churchpresenter.settings.AtemSettings
 import org.churchpresenter.settings.BackgroundSettings
 import org.churchpresenter.settings.PresentationRemoteSettings
@@ -676,7 +675,7 @@ class CompanionServer {
                             ?.sortedBy { it.name }
                             ?.forEach { file ->
                                 try { songs.loadFromSpsAppend(file.absolutePath) } catch (e: Exception) {
-                                    Log.warn("CompanionServer", "Failed to load song ${file.name}: ${e.message}")
+                                    System.err.println("[CompanionServer] Failed to load song ${file.name}: ${e.message}")
                                     CrashReporter.reportWarning(
                                         "Server: Failed to load song ${file.name}",
                                         throwable = e,
@@ -689,7 +688,7 @@ class CompanionServer {
                         }
                     }
                 } catch (e: Exception) {
-                    Log.warn("CompanionServer", "Failed to load songs from $songStorageDir: ${e.message}")
+                    System.err.println("[CompanionServer] Failed to load songs from $songStorageDir: ${e.message}")
                     CrashReporter.reportWarning(
                         "Server: Failed to load songs from storage",
                         throwable = e,
@@ -708,7 +707,7 @@ class CompanionServer {
                         updateBible(bible, primaryBibleFileName)
                     }
                 } catch (e: Exception) {
-                    Log.warn("CompanionServer", "Failed to load bible $primaryBibleFileName: ${e.message}")
+                    System.err.println("[CompanionServer] Failed to load bible $primaryBibleFileName: ${e.message}")
                     CrashReporter.reportWarning(
                         "Server: Failed to load bible $primaryBibleFileName",
                         throwable = e,

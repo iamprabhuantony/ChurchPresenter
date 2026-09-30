@@ -26,7 +26,6 @@ import kotlin.random.Random
 import java.io.File
 import java.time.Instant
 import org.churchpresenter.diagnostics.CrashReporter
-import org.churchpresenter.diagnostics.Log
 import org.json.JSONObject
 
 private const val JITTER_MIN = 0.8
@@ -165,7 +164,7 @@ class BibleEngineClient(
                     // The engine could not start (bad config or — the headline bug — a port collision
                     // that prevents the WS server from binding). Don't enter the connect loop against
                     // a server that will never exist; surface the failure for retry instead.
-                    Log.warn("bible-engine", "in-process engine failed to start on port $port")
+                    System.err.println("bible-engine: in-process engine failed to start on port $port")
                     CrashReporter.reportWarning(
                         "Bible engine: in-process engine failed to start on port $port",
                         tags = mapOf("subsystem" to "bible-engine")
@@ -203,7 +202,7 @@ class BibleEngineClient(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.warn("bible-engine", "connect to ws://$host:$port/bible-engine failed — ${e.message}")
+                System.err.println("bible-engine: connect to ws://$host:$port/bible-engine failed — ${e.message}")
                 logEngineError("connectLoop: connect to ws://$host:$port/bible-engine failed", e.toString())
             }
             session = null

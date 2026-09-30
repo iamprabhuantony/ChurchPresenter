@@ -14,7 +14,6 @@ import org.churchpresenter.app.churchpresenter.composables.createMediaPlayerComp
 import org.churchpresenter.app.churchpresenter.composables.isVlcAvailable
 import org.churchpresenter.app.churchpresenter.composables.mediaPlayer
 import org.churchpresenter.app.churchpresenter.composables.releasePlayer
-import org.churchpresenter.diagnostics.Log
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
@@ -169,7 +168,7 @@ internal class EmbeddedVideoDecoder(
     }
 
     internal fun onErrorEvent() {
-        Log.warn("VLCJ (embedded video)", "playback error for ${videoFile.name}")
+        System.err.println("VLCJ (embedded video): playback error for ${videoFile.name}")
     }
 
     internal fun onPlayingConfirmed() {

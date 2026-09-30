@@ -21,7 +21,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import org.churchpresenter.app.churchpresenter.viewmodel.MediaViewModel
 import org.churchpresenter.app.churchpresenter.viewmodel.SubtitleTrack
-import org.churchpresenter.diagnostics.Log
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
@@ -278,7 +277,7 @@ private fun checkVlcAvailable(): Boolean {
     return try {
         applyCustomVlcPath()
         if (!isVlcInstalledOnSystem()) {
-            Log.warn("VLCJ", "VLC not found on this system. Skipping initialisation.")
+            System.err.println("VLCJ: VLC not found on this system. Skipping initialisation.")
             vlcUnavailableReason = "not_found"
             return false
         }
@@ -442,7 +441,7 @@ internal fun createMediaPlayerComponent(): Component? {
     } catch (e: Throwable) {
         val msg = e.message ?: e.toString()
         vlcUnavailableReason = msg
-        Log.warn("VLCJ", "Could not initialise. Is VLC installed? $msg")
+        System.err.println("VLCJ: Could not initialise. Is VLC installed? $msg")
         // Not reported to CrashReporter: this is a known, expected condition (missing VLC,
         // arch mismatch, or a missing Windows dependency like the VC++ Redistributable) with
         // its own dedicated UI messaging (isVlcArchMismatch / isVlcLoadFailed) — it's already
@@ -535,7 +534,7 @@ fun VideoPlayer(
                 viewModel.markFinished()
             }
             override fun error(mediaPlayer: MediaPlayer) {
-                Log.warn("VLCJ", "Playback error for: ${viewModel.mediaUrl}")
+                System.err.println("VLCJ: Playback error for: ${viewModel.mediaUrl}")
                 SwingUtilities.invokeLater { viewModel.pause() }
             }
             override fun videoOutput(mediaPlayer: MediaPlayer, newCount: Int) {
@@ -827,7 +826,7 @@ internal fun softwarePlayerEvents(
     }
 
     override fun error(mediaPlayer: MediaPlayer) {
-        Log.warn("VLCJ (software)", "Playback error for: ${viewModel.mediaUrl}")
+        System.err.println("VLCJ (software): Playback error for: ${viewModel.mediaUrl}")
         SwingUtilities.invokeLater { viewModel.pause() }
     }
 }
