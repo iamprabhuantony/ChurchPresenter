@@ -1,6 +1,5 @@
 package org.churchpresenter.lottiegen.render
 
-import org.churchpresenter.lottiegen.lottie.LottieTextShaping
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.SideEffect
@@ -15,6 +14,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Density
 import io.github.alexzhirkevich.compottie.LottieCompositionSpec
 import io.github.alexzhirkevich.compottie.rememberLottieComposition
+import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.delay
@@ -60,7 +60,6 @@ object StillFrame {
     suspend fun render(lottieJson: String, width: Int, height: Int, progress: Float): IntArray =
         withContext(Dispatchers.Swing) {
             var compositionLoaded by mutableStateOf(false)
-            val grouped = LottieTextShaping.groupsText(lottieJson)
 
             val scene = ImageComposeScene(width, height, Density(1f)) {
                 val composition by rememberLottieComposition {
@@ -69,7 +68,7 @@ object StillFrame {
                 val loaded = composition != null
                 SideEffect { if (loaded) compositionLoaded = true }
                 Image(
-                    painter = rememberShapedLottiePainter(composition, { progress }, grouped),
+                    painter = rememberLottiePainter(composition = composition, progress = { progress }),
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxSize(),

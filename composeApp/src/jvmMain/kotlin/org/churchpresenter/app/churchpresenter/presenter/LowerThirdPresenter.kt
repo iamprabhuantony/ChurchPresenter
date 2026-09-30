@@ -23,17 +23,13 @@ import org.churchpresenter.app.churchpresenter.utils.LottieFonts
  *
  * Animation progress is driven centrally by main.kt's playback clock so all presenter
  * displays stay in perfect sync.
- *
- * [groupsText] draws the file's text as whole lines rather than letter by letter — what its
- * generator's Text shaping asked for ([PresenterManager.lottieGroupsText]).
  */
 @Composable
 fun LowerThirdPresenter(
     composition: LottieComposition?,
     progress: () -> Float,
     outputRole: String = Constants.OUTPUT_ROLE_NORMAL,
-    frame: LottieFrame? = null,
-    groupsText: Boolean = false,
+    frame: LottieFrame? = null
 ) {
     val isKey = outputRole == Constants.OUTPUT_ROLE_KEY
     if (frame == null && composition == null) return
@@ -60,8 +56,7 @@ fun LowerThirdPresenter(
             val painter = rememberLottiePainter(
                 composition = composition,
                 progress = progress,
-                fontManager = LottieFonts,
-                enableTextGrouping = groupsText,
+                fontManager = LottieFonts
             )
             if (frame != null) {
                 Image(

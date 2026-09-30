@@ -4,7 +4,6 @@ package org.churchpresenter.app.churchpresenter.tabs
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.ui.window.WindowPlacement
-import org.churchpresenter.lottiegen.lottie.LottieTextShaping
 import org.churchpresenter.app.churchpresenter.LocalMainWindowState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -403,7 +402,6 @@ fun LowerThirdTab(
     val composition by rememberLottieComposition(key = jsonContent) {
         LottieCompositionSpec.JsonString(jsonContent.ifBlank { "{}" })
     }
-    val groupsText = remember(jsonContent) { LottieTextShaping.groupsText(jsonContent) }
 
     // True while composition is loading — prevents flashing warning triangle during async load
     var isCompositionLoading by remember(jsonContent) { mutableStateOf(jsonContent.isNotBlank()) }
@@ -1183,17 +1181,7 @@ fun LowerThirdTab(
                     contentAlignment = Alignment.Center
                 ) {
                     if (canPlay) {
-                        Image(
-                            painter = rememberLottiePainter(
-                                composition = composition,
-                                progress = { animatedProgress.value },
-                                fontManager = LottieFonts,
-                                enableTextGrouping = groupsText,
-                            ),
-                            contentDescription = null,
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.fillMaxSize(),
-                        )
+                        Image(painter = rememberLottiePainter(composition = composition, progress = { animatedProgress.value }, fontManager = LottieFonts), contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
                     } else if (selectedFile != null && isCompositionLoading) {
                         CircularProgressIndicator(modifier = Modifier.size(36.dp))
                     } else if (selectedFile != null) {
