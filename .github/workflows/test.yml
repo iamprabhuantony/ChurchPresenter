@@ -214,6 +214,9 @@ jobs:
               - 'calendar/**'
               - 'core-models/**'          # implementation(projects.coreModels)
               - 'theme/**'                # implementation(projects.theme)
+            lintrules:
+              - *shared
+              - 'lintrules/**'            # depends on nothing else: detekt loads it as a plugin
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -243,7 +246,7 @@ jobs:
           :crossword:detekt :companion-satellite:detekt :songlibrary:detekt :settings:detekt
           :diagnostics:detekt :bible-formats:detekt :atem:detekt :ndi:detekt :omt:detekt :planning-center:detekt
           :bible-engine:detekt :presentation-engine:detekt :song-chords:detekt :bible:detekt
-          :calendar:detekt :lottieGenerator:detekt
+          :calendar:detekt :lottieGenerator:detekt :lintrules:detekt
 
       - name: App unit tests
         id: unit_tests
@@ -268,16 +271,7 @@ jobs:
         # headroom for a slower runner. If a legitimate test ever trips this, the answer is to fix
         # the test, not to raise the number: AGENT.md budgets ~1s a test.
         timeout-minutes: 40
-        #
-        # Compiled first, then the Kotlin compile daemon is stopped before a single test forks. It is
-        # idle for the rest of the step but holds ~3-4 GB per instance, and beside the Gradle daemon
-        # and the test forks (each well past its 1 GB heap in native Skia memory) it took the 16 GB
-        # runner to zero with swap full; GitHub then loses the runner and reports the step as
-        # "cancelled", with no test failing and no report uploaded.
-        run: |
-          ./gradlew :composeApp:jvmTestClasses
-          pkill -f KotlinCompileDaemon || true
-          ./gradlew :composeApp:jvmTest -PhangThresholdMs=150000
+        run: ./gradlew :composeApp:jvmTest -PhangThresholdMs=150000
 
       # So an outlier explains itself instead of needing a guess: the one killed run above was
       # attributed to the wrong fixture precisely because nothing recorded where the time went.
@@ -366,21 +360,7 @@ jobs:
         if: ${{ !cancelled() }}
         continue-on-error: ${{ steps.unit_tests.outcome != 'success' }}
         timeout-minutes: 10
-        # WARNING ONLY for now: Kotlin 2.4 emits extra branches in unchanged code and this floor
-        # dips below its minimum on that alone (PR #729). A coverage violation is reported as a
-        # warning annotation; any other failure still fails the step. Restore `run: ./gradlew :composeApp:jacocoTestCoverageVerification -x jvmTest -x jvmTestSerial` once the
-        # floor is dealt with.
-        run: |
-          set +e
-          ./gradlew :composeApp:jacocoTestCoverageVerification -x jvmTest -x jvmTestSerial 2>&1 | tee "$RUNNER_TEMP/floor.log"
-          status=${PIPESTATUS[0]}
-          if [ "$status" -ne 0 ] && grep -q 'Rule violated' "$RUNNER_TEMP/floor.log"; then
-            grep -o 'Rule violated.*' "$RUNNER_TEMP/floor.log" | sort -u | while read -r line; do
-              echo "::warning title=App coverage floor (not enforced)::$line"
-            done
-            exit 0
-          fi
-          exit "$status"
+        run: ./gradlew :composeApp:jacocoTestCoverageVerification -x jvmTest -x jvmTestSerial
 
       # The converter is a module of THIS build (`include(":converter")`), not one of the separate
       # builds below, so it is a task on the root wrapper and shares its daemon -- seconds rather
@@ -467,21 +447,7 @@ jobs:
 
       - name: Song library coverage floor
         if: ${{ !cancelled() && steps.modules.outputs.songlibrary == 'true' }}
-        # WARNING ONLY for now: Kotlin 2.4 emits extra branches in unchanged code and this floor
-        # dips below its minimum on that alone (PR #729). A coverage violation is reported as a
-        # warning annotation; any other failure still fails the step. Restore `run: ./gradlew :songlibrary:jacocoTestCoverageVerification -x test` once the
-        # floor is dealt with.
-        run: |
-          set +e
-          ./gradlew :songlibrary:jacocoTestCoverageVerification -x test 2>&1 | tee "$RUNNER_TEMP/floor.log"
-          status=${PIPESTATUS[0]}
-          if [ "$status" -ne 0 ] && grep -q 'Rule violated' "$RUNNER_TEMP/floor.log"; then
-            grep -o 'Rule violated.*' "$RUNNER_TEMP/floor.log" | sort -u | while read -r line; do
-              echo "::warning title=Song library coverage floor (not enforced)::$line"
-            done
-            exit 0
-          fi
-          exit "$status"
+        run: ./gradlew :songlibrary:jacocoTestCoverageVerification -x test
 
       - name: Settings tests
         if: ${{ !cancelled() && steps.modules.outputs.settingsmodule == 'true' }}
@@ -569,21 +535,15 @@ jobs:
 
       - name: Calendar coverage floor
         if: ${{ !cancelled() && steps.modules.outputs.calendar == 'true' }}
-        # WARNING ONLY for now: Kotlin 2.4 emits extra branches in unchanged code and this floor
-        # dips below its minimum on that alone (PR #729). A coverage violation is reported as a
-        # warning annotation; any other failure still fails the step. Restore `run: ./gradlew :calendar:jacocoTestCoverageVerification -x test` once the
-        # floor is dealt with.
-        run: |
-          set +e
-          ./gradlew :calendar:jacocoTestCoverageVerification -x test 2>&1 | tee "$RUNNER_TEMP/floor.log"
-          status=${PIPESTATUS[0]}
-          if [ "$status" -ne 0 ] && grep -q 'Rule violated' "$RUNNER_TEMP/floor.log"; then
-            grep -o 'Rule violated.*' "$RUNNER_TEMP/floor.log" | sort -u | while read -r line; do
-              echo "::warning title=Calendar coverage floor (not enforced)::$line"
-            done
-            exit 0
-          fi
-          exit "$status"
+        run: ./gradlew :calendar:jacocoTestCoverageVerification -x test
+
+      - name: Lint rules tests
+        if: ${{ !cancelled() && steps.modules.outputs.lintrules == 'true' }}
+        run: ./gradlew :lintrules:test
+
+      - name: Lint rules coverage floor
+        if: ${{ !cancelled() && steps.modules.outputs.lintrules == 'true' }}
+        run: ./gradlew :lintrules:jacocoTestCoverageVerification -x test
 
 
       # Puts the failure message and stack trace of every failed test in the pull request itself,
@@ -621,6 +581,7 @@ jobs:
             song-chords/build/test-results/**/TEST-*.xml
             bible/build/test-results/**/TEST-*.xml
             calendar/build/test-results/**/TEST-*.xml
+            lintrules/build/test-results/**/TEST-*.xml
           # Paired with report_paths BY INDEX -- keep the two lists in the same order, and the same
           # LENGTH. A merge once left eight paths against six names, which does not fail: it shifts
           # every row after the insertion, so core-models was reported under "Companion Satellite"
@@ -640,11 +601,13 @@ jobs:
             Diagnostics
             ATEM client
             NDI client
+            OMT client
             Planning Center
             Bible formats
             Song chords
             Bible
             Calendar
+            Lint rules
           detailed_summary: true
           include_passed: false
           # Without this the second table is one row of "No test annotations available" per
@@ -816,3 +779,5 @@ jobs:
             bible-formats/build/test-results/
             song-chords/build/reports/tests/
             song-chords/build/test-results/
+            lintrules/build/reports/tests/
+            lintrules/build/test-results/
