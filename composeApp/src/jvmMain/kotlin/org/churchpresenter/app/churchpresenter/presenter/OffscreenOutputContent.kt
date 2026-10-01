@@ -271,15 +271,14 @@ internal fun OffscreenOutputContent(
                                 }
                                 Presenting.LOWER_THIRD -> {
                                     val lottieJsonContent = presenterManager.lottieJsonContent.value
-                                    val lottieComposition by rememberLottieComposition(lottieJsonContent) {
+                                    val lottieComposition by rememberLottieComposition(key = lottieJsonContent) {
                                         LottieCompositionSpec.JsonString(lottieJsonContent.ifBlank { "{}" })
                                     }
                                     LowerThirdPresenter(
                                         composition = lottieComposition,
                                         progress = { presenterManager.lottieProgress.value },
                                         outputRole = outputRole,
-                                        frame = presenterManager.lottieFrame.value,
-                                        groupsText = presenterManager.lottieGroupsText.value,
+                                        frame = presenterManager.lottieFrame.value
                                     )
                                 }
                                 Presenting.MEDIA -> {

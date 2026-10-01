@@ -41,7 +41,6 @@ import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import org.churchpresenter.app.churchpresenter.composables.keyColorFilter
 import org.churchpresenter.app.churchpresenter.utils.LottieFonts
-import org.churchpresenter.lottiegen.lottie.LottieTextShaping
 import org.churchpresenter.settings.utils.Constants
 
 /** The output height the Bible font sizes are specified against, as the classic band scales them. */
@@ -243,8 +242,7 @@ private fun BandLayer(
                 null -> style
                 else -> style.copy(justify = pinned.toJustify())
             }
-            val ascent = template.textAscents[name] ?: 0f
-            val geometry = SlotGeometry(box, pxPerPoint, singleLine, template.meta.textMotion, ascent)
+            val geometry = SlotGeometry(box, pxPerPoint, singleLine, template.meta.textMotion)
             val render = remember(effectiveStyle, text, geometry, measurer) {
                 layoutSlot(BandSlotText(text, effectiveStyle), geometry, measurer)
             }
@@ -278,16 +276,11 @@ private fun BandLayer(
         }
     }
 
-    // Judged on the words being shown, not the file's sample: those are the player's to replace.
-    val groupsText = remember(template.meta.textShaping, texts) {
-        LottieTextShaping.groupsText(template.meta.textShaping, texts.values)
-    }
     val painter = rememberLottiePainter(
         composition = composition,
         progress = progress,
         fontManager = LottieFonts,
         dynamicProperties = dynamic,
-        enableTextGrouping = groupsText,
     )
     BoxWithConstraints(modifier) {
         val contentScale = bandContentScale(maxWidth / maxHeight, template.width / template.height)
@@ -315,8 +308,6 @@ private data class SlotGeometry(
     val pxPerPoint: Float,
     val singleLine: Boolean,
     val motion: BandTextMotion,
-    /** The ascent the layer's font declares, as a fraction of the em — 0 when it declares none. */
-    val ascent: Float,
 )
 
 /** The fitted, centred layout of one slot, from its text and style alone. */
@@ -351,8 +342,7 @@ private fun layoutSlot(slot: BandSlotText, geometry: SlotGeometry, measurer: Tex
     val fitted = fitLottieSlot(SlotFitRequest(text, fitBox, baseSize, trackingPx, singleLine && !isTicker), charWidth)
     val lineHeight = fitted.fontSize * LINE_HEIGHT_FACTOR
     val blockHeight = fitted.lines.size * lineHeight
-    // The player draws the first line's top at `ps.y - fontSize * (1 - ascent)`, the ascent being
-    // what the file's font list declares for the layer's font (Compottie 2.3 honours it; 2.0 did not).
+    // The player draws the first line's top at `ps.y - fontSize` when it resolves a real face.
     val top = box.y + ((box.h - blockHeight) / 2f).coerceAtLeast(0f)
     val shadowScale = style.shadowSizePercent / PERCENT
     val shadowPx = SHADOW_OFFSET_PX * pxPerPoint * shadowScale
@@ -364,7 +354,7 @@ private fun layoutSlot(slot: BandSlotText, geometry: SlotGeometry, measurer: Tex
         justify = if (isTicker) TextJustify.Left else style.justify,
         box = if (isTicker) box.copy(w = fitted.lineWidthPx + box.w) else box,
         slot = box,
-        position = Offset(box.x, top + fitted.fontSize * (1f - geometry.ascent)),
+        position = Offset(box.x, top + fitted.fontSize),
         lineWidth = fitted.lineWidthPx,
         ticker = isTicker,
         visible = text.isNotEmpty(),
@@ -411,5 +401,4 @@ private fun tickerPosition(template: BibleLottieTemplate, r: SlotRender, seconds
     val offset = (seconds * template.meta.tickerPxPerSecond) % travel
     return Offset(slot.x + slot.w - offset, r.position.y)
 }
-
 

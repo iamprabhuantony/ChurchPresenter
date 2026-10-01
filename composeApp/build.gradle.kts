@@ -8,9 +8,29 @@ import java.util.Properties
 
 val versionYear = Calendar.getInstance().get(Calendar.YEAR) % 100
 
-fun gitCommitCount(): Int = gitOutput("rev-list", "--count", "HEAD")?.toIntOrNull() ?: 0
+fun gitCommitCount(): Int {
+    return try {
+        val process = ProcessBuilder("git", "rev-list", "--count", "HEAD")
+            .directory(rootProject.projectDir)
+            .redirectErrorStream(true)
+            .start()
+        val output = process.inputStream.bufferedReader().readText().trim()
+        process.waitFor()
+        output.toInt()
+    } catch (_: Exception) { 0 }
+}
 
-fun gitCommitHash(): String = gitOutput("rev-parse", "--short", "HEAD") ?: "unknown"
+fun gitCommitHash(): String {
+    return try {
+        val process = ProcessBuilder("git", "rev-parse", "--short", "HEAD")
+            .directory(rootProject.projectDir)
+            .redirectErrorStream(true)
+            .start()
+        val output = process.inputStream.bufferedReader().readText().trim()
+        process.waitFor()
+        output
+    } catch (_: Exception) { "unknown" }
+}
 
 // ── Build provenance ──────────────────────────────────────────────────────────
 // The app is GPLv3 and hardcodes the live-map ping URL, so a fork built from
@@ -21,21 +41,19 @@ fun gitCommitHash(): String = gitOutput("rev-parse", "--short", "HEAD") ?: "unkn
 // patch these constants out. Every helper falls back to "unknown"/"nogit"
 // rather than failing the build.
 
-/**
- * Runs a git command, returning null when git is missing or exits non-zero. Through
- * `providers.exec`, because starting a process with ProcessBuilder while the build is being
- * configured is deprecated and fails in Gradle 11. Its stderr is captured apart from its output,
- * so git's "fatal: not a git repository" is never handed back as if it were a value.
- */
-fun gitOutput(vararg args: String): String? = try {
-    val git = providers.exec {
-        commandLine("git", *args)
-        workingDir = rootProject.projectDir
-        isIgnoreExitValue = true
-    }
-    if (git.result.get().exitValue != 0) null else git.standardOutput.asText.get().trim()
-} catch (_: Exception) {
-    null
+/** Runs a git command, returning null when git is missing or exits non-zero. */
+fun gitOutput(vararg args: String): String? {
+    return try {
+        val process = ProcessBuilder("git", *args)
+            .directory(rootProject.projectDir)
+            // Deliberately NOT redirectErrorStream(true): git writes "fatal: not a
+            // git repository" to stderr, and merging it would hand back that text
+            // as if it were a real value.
+            .redirectError(ProcessBuilder.Redirect.DISCARD)
+            .start()
+        val output = process.inputStream.bufferedReader().readText().trim()
+        if (process.waitFor() != 0) null else output
+    } catch (_: Exception) { null }
 }
 
 // Matches the server's REPO_RE — anything else is stored as 'unknown' there, so
@@ -262,8 +280,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.sqlite.jdbc)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.compottie)
-            implementation(libs.compottie.dot)
+            implementation("io.github.alexzhirkevich:compottie:2.0.0-rc01")
+            implementation("io.github.alexzhirkevich:compottie-dot:2.0.0-rc01")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -272,7 +290,8 @@ kotlin {
             implementation(libs.roborazzi.composeDesktop)
             implementation(libs.mockk)
             implementation(libs.ktor.client.mock)
-            implementation(libs.compose.uiTest)
+            @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+            implementation(compose.uiTest)
 
             // The suite runs through the JUnit Platform launcher (useJUnitPlatform() below) but the
             // tests themselves are still JUnit 4 -- the launcher is there for the per-fork hook in
@@ -636,7 +655,7 @@ compose.desktop {
     }
 }
 
-val fixDmgIcon = tasks.register("fixDmgIcon") {
+val fixDmgIcon by tasks.registering {
     group = "compose desktop"
     description = "Bakes the app icon into the DMG's own volume (jpackage doesn't set this) so it survives real distribution."
     onlyIf { org.gradle.internal.os.OperatingSystem.current().isMacOsX }
@@ -679,7 +698,7 @@ tasks.withType<JavaExec>().configureEach {
 }
 
 // Generate BuildConfig with version info accessible at runtime
-val generateBuildConfig = tasks.register("generateBuildConfig") {
+val generateBuildConfig by tasks.registering {
     val commitHash = gitCommitHash()
     val commits = gitCommitCount()
     val appVersion = "$versionYear.${commits / 256}.${commits % 256}"
@@ -1004,7 +1023,7 @@ val serialTestClasses = listOf(
     "*AppPreview*ScreenshotTest",
 )
 
-val jvmTestSerial = tasks.register<org.gradle.api.tasks.testing.Test>("jvmTestSerial") {
+val jvmTestSerial by tasks.registering(org.gradle.api.tasks.testing.Test::class) {
     group = "verification"
     description = "The loopback-UDP suites, run in one JVM because they cannot share a busy machine."
     val parallel = tasks.named<org.gradle.api.tasks.testing.Test>("jvmTest").get()
@@ -1479,7 +1498,7 @@ tasks.register("signLinuxDeb") {
 // ── Crossword puzzle sync ─────────────────────────────────────────────────────
 // Copies encrypted .xwp files from the :crossword module into composeResources so they are
 // bundled with the app. Edit the puzzles in that module's `encoded/` directory, then rebuild.
-val syncCrosswordFiles = tasks.register<Copy>("syncCrosswordFiles") {
+val syncCrosswordFiles by tasks.registering(Copy::class) {
     from(rootProject.file("crossword/encoded"))
     include("*.xwp")
     into(layout.projectDirectory.file("src/jvmMain/composeResources/files/crossword"))
@@ -1531,7 +1550,7 @@ fun ffmpegTargetKey(): String {
     return "$osPart-$arch"
 }
 
-val fetchBundledFfmpeg = tasks.register("fetchBundledFfmpeg") {
+val fetchBundledFfmpeg by tasks.registering {
     description = "Downloads the pinned ffmpeg for this platform into appResources."
     group = "build"
 
@@ -1614,7 +1633,7 @@ fun sha256Of(file: File): String =
 // the whole DMG for it: no Developer ID signature, no secure timestamp, no hardened runtime.
 // The signature lives inside the Mach-O file, so signing the fetched copy before
 // prepareAppResources picks it up is enough; Compose does not touch it afterwards.
-val signBundledFfmpeg = tasks.register("signBundledFfmpeg") {
+val signBundledFfmpeg by tasks.registering {
     description = "Codesigns the bundled macOS ffmpeg with the Developer ID identity, for notarization."
     group = "signing"
     dependsOn(fetchBundledFfmpeg)
@@ -1656,7 +1675,7 @@ val omtBuildProps = Properties().apply {
     if (f.exists()) f.inputStream().use { load(it) }
 }
 
-val fetchBundledOmt = tasks.register("fetchBundledOmt") {
+val fetchBundledOmt by tasks.registering {
     description = "Downloads the pinned libomt and libvmx for this platform into appResources."
     group = "build"
 
@@ -1731,7 +1750,7 @@ val fetchBundledOmt = tasks.register("fetchBundledOmt") {
 // The same reason signBundledFfmpeg exists: Compose never codesigns anything under appResources,
 // and the publisher's dylibs are only ad-hoc signed, which notarization rejects. Dylibs load into
 // the app's own process, so they take no entitlements of their own — the app's apply.
-val signBundledOmt = tasks.register("signBundledOmt") {
+val signBundledOmt by tasks.registering {
     description = "Codesigns the bundled macOS OMT libraries with the Developer ID identity, for notarization."
     group = "signing"
     dependsOn(fetchBundledOmt)
@@ -1789,7 +1808,7 @@ tasks.matching { it.name == "prepareAppResources" }.configureEach {
 // is not something the build states — it is whatever the machine happens to have. This checks the
 // one that was actually chosen, and checks the thing that matters rather than the vendor's name:
 // every absolute load path must be macOS's own, because nothing else travels inside the bundle.
-val checkMacRuntimeSelfContained = tasks.register("checkMacRuntimeSelfContained") {
+val checkMacRuntimeSelfContained by tasks.registering {
     description = "Fails when the JDK about to be bundled links to libraries outside macOS's own."
     group = "verification"
 

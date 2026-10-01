@@ -65,6 +65,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
+import org.churchpresenter.theme.FixedColors
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
@@ -534,7 +535,7 @@ private fun SingleDisplayPreview(
     val slideSlideOffset by presenterManager.slideSlideOffset
     val animationType by presenterManager.animationType
     val lottieJsonContent by presenterManager.lottieJsonContent
-    val lottieComposition by rememberLottieComposition(lottieJsonContent) {
+    val lottieComposition by rememberLottieComposition(key = lottieJsonContent) {
         LottieCompositionSpec.JsonString(lottieJsonContent)
     }
     val lottieProgress by presenterManager.lottieProgress
@@ -568,7 +569,7 @@ private fun SingleDisplayPreview(
 
     val isLive = effectiveMode != Presenting.NONE && showsContent
     val borderColor by animateColorAsState(
-        targetValue = if (isLive) Color.Red.copy(alpha = 0.85f)
+        targetValue = if (isLive) FixedColors.live.copy(alpha = 0.85f)
                       else MaterialTheme.colorScheme.outlineVariant,
         animationSpec = tween(300),
         label = "border_color"
@@ -768,8 +769,7 @@ private fun SingleDisplayPreview(
                                 LowerThirdPresenter(
                                     composition = lottieComposition,
                                     progress = { presenterManager.lottieProgress.value },
-                                    frame = presenterManager.lottieFrame.value,
-                                    groupsText = presenterManager.lottieGroupsText.value,
+                                    frame = presenterManager.lottieFrame.value
                                 )
                             Presenting.ANNOUNCEMENTS ->
                                 AnnouncementsPresenter(
@@ -842,7 +842,7 @@ private fun SingleDisplayPreview(
                     Text(
                         text = if (websiteUrl.isBlank()) stringResource(Res.string.live_preview_nothing)
                                else websiteUrl,
-                        color = Color.White.copy(alpha = 0.5f),
+                        color = FixedColors.inkLight.copy(alpha = 0.5f),
                         fontSize = 11.sp,
                         maxLines = 2
                     )
@@ -859,7 +859,7 @@ private fun SingleDisplayPreview(
         if (rawAssignment.hasKeyOutput) {
             Text(
                 text = stringResource(Res.string.fill_badge),
-                color = Color.White,
+                color = FixedColors.inkLight,
                 fontSize = 9.sp,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -876,7 +876,7 @@ private fun SingleDisplayPreview(
             if (lockedMode != null) {
                 Text(
                     text = stringResource(Res.string.screen_locked_badge),
-                    color = Color.White,
+                    color = FixedColors.inkLight,
                     fontSize = 9.sp,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -900,7 +900,7 @@ private fun SingleDisplayPreview(
                     .padding(2.dp)
                     .size(24.dp),
                 colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = if (lockedMode != null) Color(LOCK_BADGE_COLOR) else Color.White.copy(alpha = 0.5f)
+                    contentColor = if (lockedMode != null) Color(LOCK_BADGE_COLOR) else FixedColors.inkLight.copy(alpha = 0.5f)
                 )
             ) {
                 Icon(
@@ -925,14 +925,14 @@ private fun SingleDisplayPreview(
         if (showLabel) {
             Text(
                 text = label,
-                color = Color.White.copy(alpha = 0.6f),
+                color = FixedColors.inkLight.copy(alpha = 0.6f),
                 fontSize = 9.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(4.dp)
-                    .background(Color.Black.copy(alpha = 0.5f), AppShape(3.dp))
+                    .background(FixedColors.inkDark.copy(alpha = 0.5f), AppShape(3.dp))
                     .padding(horizontal = 5.dp, vertical = 2.dp)
             )
         }
@@ -944,7 +944,7 @@ private fun SingleDisplayPreview(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 6.dp)
-                    .background(Color.Black.copy(alpha = 0.6f), AppShape(4.dp))
+                    .background(FixedColors.inkDark.copy(alpha = 0.6f), AppShape(4.dp))
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 AnimatedEqualizer()
@@ -1098,13 +1098,13 @@ private fun LiveBadge(modifier: Modifier = Modifier) {
     )
     Text(
         text = stringResource(Res.string.live_preview_title),
-        color = Color.White,
+        color = FixedColors.inkLight,
         fontSize = 10.sp,
         modifier = modifier
             .padding(4.dp)
             .drawBehind {
                 drawRoundRect(
-                    color = Color.Red.copy(alpha = pulse.value),
+                    color = FixedColors.live.copy(alpha = pulse.value),
                     cornerRadius = CornerRadius(3.dp.toPx()),
                 )
             }
@@ -1175,7 +1175,7 @@ private fun MediaPreviewControls(
                     if (isPlaying) Res.string.pause else Res.string.play
                 ),
                 modifier = Modifier.size(18.dp),
-                tint = Color.White
+                tint = if (isPlaying) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimary
             )
         }
 

@@ -27,12 +27,12 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
 
     implementation(compose.desktop.currentOs)
-    implementation(libs.compose.components.resources)
+    implementation(compose.components.resources)
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.extended)
 
     testImplementation(kotlin("test"))
-    testImplementation(libs.compose.uiTestJunit4)
+    testImplementation(compose.desktop.uiTestJUnit4)
     testImplementation(libs.kotlinx.coroutines.test)
 }
 

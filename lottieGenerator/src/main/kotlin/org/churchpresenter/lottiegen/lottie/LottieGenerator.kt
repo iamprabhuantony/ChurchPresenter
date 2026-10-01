@@ -90,6 +90,6 @@ object LottieGenerator {
 
         style?.generate(builder, cfg)
 
-        return LottieTextShaping.withMode(builder.toJson(), TextShaping.fromKey(cfg.textShaping))
+        return builder.toJson()
     }
 }

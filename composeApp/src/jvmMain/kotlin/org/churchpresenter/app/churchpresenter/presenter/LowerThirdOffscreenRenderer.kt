@@ -21,7 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import org.churchpresenter.lottiegen.lottie.LottieTextShaping
 import org.churchpresenter.app.churchpresenter.utils.LottieFonts
 
 private const val FRAME_INTERVAL_MS = 16L
@@ -115,7 +114,6 @@ class LowerThirdOffscreenRenderer(
         // stays cheap enough for the event queue because this renders a bounded pre-render, not a
         // live feed -- `ComposeScenePump`, which does drive a live feed, has the same hazard and is
         // deliberately left for a change that can measure the cost.
-        val groupsText = LottieTextShaping.groupsText(lottieJson)
         val scene = withContext(sceneDispatcher) {
             ImageComposeScene(width, height, Density(1f)) {
                 val composition by rememberLottieComposition {
@@ -127,8 +125,7 @@ class LowerThirdOffscreenRenderer(
                     painter = rememberLottiePainter(
                         composition = composition,
                         progress = { currentProgress },
-                        fontManager = LottieFonts,
-                        enableTextGrouping = groupsText,
+                        fontManager = LottieFonts
                     ),
                     contentDescription = null,
                     contentScale = ContentScale.Fit,

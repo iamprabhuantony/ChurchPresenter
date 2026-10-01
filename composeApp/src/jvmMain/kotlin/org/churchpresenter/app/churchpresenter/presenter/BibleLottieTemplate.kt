@@ -19,8 +19,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import java.io.File
 import java.io.IOException
-import org.churchpresenter.lottiegen.lottie.LottieTextShaping
-import org.churchpresenter.lottiegen.lottie.TextShaping
 
 /** A named span of a template's timeline, in frames. */
 internal data class LottieSegment(val startFrame: Float, val durationFrames: Float) {
@@ -49,9 +47,8 @@ internal data class LottieTemplateSize(
 
 /**
  * What the generator wrote under `cp` for the player: the text motions it drives, pinned
- * alignments, how long a verse takes to give way to the next — null in files from before
- * that was a setting, which are swapped in the time their text segments take — and whether its
- * text is drawn as whole lines or letter by letter.
+ * alignments, and how long a verse takes to give way to the next — null in files from before
+ * that was a setting, which are swapped in the time their text segments take.
  */
 internal data class BandTemplateMeta(
     val textMotion: BandTextMotion = BandTextMotion.NONE,
@@ -59,7 +56,6 @@ internal data class BandTemplateMeta(
     val textAlign: BandTextAlign? = null,
     val referenceAlign: BandTextAlign? = null,
     val swapMs: Long? = null,
-    val textShaping: TextShaping = TextShaping.AUTO,
 )
 
 /**
@@ -75,13 +71,7 @@ internal class BibleLottieTemplate(
     val slots: Map<String, LottieSlotBox>,
     val layerNames: Set<String>,
     val meta: BandTemplateMeta = BandTemplateMeta(),
-    /**
-     * Each text layer's declared font ascent, as a fraction of the em — see [readTextAscents]. A
-     * layer missing from it declares none, and is placed as if its ascent were 0.
-     */
-    val textAscents: Map<String, Float> = emptyMap(),
 ) {
-
     val frameRate: Float get() = size.frameRate
     val width: Float get() = size.width
     val height: Float get() = size.height
@@ -248,14 +238,12 @@ internal fun parseBibleLottieTemplate(json: String): BibleLottieTemplate? = try 
             segments = readSegments(obj["markers"] as? JsonArray, size.totalFrames),
             slots = readSlots(meta, layers),
             layerNames = layers.mapNotNull { it["nm"]?.jsonPrimitive?.contentOrNull }.toSet(),
-            textAscents = readTextAscents(obj["fonts"] as? JsonObject, layers),
             meta = BandTemplateMeta(
                 textMotion = readTextMotion(meta),
                 tickerPxPerSecond = meta?.get("tickerPxPerSecond")?.jsonPrimitive?.floatOrNull ?: DEFAULT_TICKER_SPEED,
                 textAlign = readAlign(meta, "textAlign"),
                 referenceAlign = readAlign(meta, "referenceAlign"),
                 swapMs = meta?.get("swapMs")?.jsonPrimitive?.longOrNull,
-                textShaping = LottieTextShaping.modeOf(obj),
             ),
         )
     }

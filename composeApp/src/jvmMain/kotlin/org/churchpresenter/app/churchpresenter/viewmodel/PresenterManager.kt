@@ -1,6 +1,5 @@
 package org.churchpresenter.app.churchpresenter.viewmodel
 
-import org.churchpresenter.lottiegen.lottie.LottieTextShaping
 import org.churchpresenter.app.churchpresenter.utils.UsageEvent
 import org.churchpresenter.app.churchpresenter.utils.UsageEvents
 import androidx.compose.runtime.State
@@ -769,11 +768,6 @@ class PresenterManager(showPresenterWindowInitially: Boolean = true) {
     private val _lottieJsonContent = mutableStateOf("")
     val lottieJsonContent: State<String> = _lottieJsonContent
 
-    private val _lottieGroupsText = mutableStateOf(false)
-
-    /** Whether [lottieJsonContent]'s text is drawn as whole lines, as its file asks ([LottieTextShaping]). */
-    val lottieGroupsText: State<Boolean> = _lottieGroupsText
-
     private val _lottiePauseAtFrame = mutableStateOf(false)
     val lottiePauseAtFrame: State<Boolean> = _lottiePauseAtFrame
 
@@ -792,7 +786,6 @@ class PresenterManager(showPresenterWindowInitially: Boolean = true) {
 
     fun setLottieContent(json: String, pauseAtFrame: Boolean, pauseFrame: Float, pauseDurationMs: Long, presetName: String = "") {
         _lottieJsonContent.value = json
-        _lottieGroupsText.value = LottieTextShaping.groupsText(json)
         _lottiePauseAtFrame.value = pauseAtFrame
         _lottiePauseFrame.value = pauseFrame
         _lottiePauseDurationMs.value = pauseDurationMs
