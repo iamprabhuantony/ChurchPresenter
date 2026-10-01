@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import org.churchpresenter.theme.AppShape
-import org.churchpresenter.theme.FixedColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -103,7 +102,7 @@ internal fun LayoutMiniature(
     variant: StageMonitorLayout,
     modifier: Modifier = Modifier,
     /** The zones' color: white, or the accent on the chosen layout's card. */
-    zoneColor: Color = FixedColors.screenWhite.copy(alpha = CELL_ALPHA),
+    zoneColor: Color = Color.White.copy(alpha = CELL_ALPHA),
 ) {
     Column(
         modifier = modifier.padding(3.dp),

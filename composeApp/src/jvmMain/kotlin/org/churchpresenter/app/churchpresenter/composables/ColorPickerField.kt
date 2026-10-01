@@ -28,7 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import org.churchpresenter.theme.FixedColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -107,7 +106,7 @@ fun ColorPickerField(
             ) {
                 Canvas(modifier = Modifier.matchParentSize()) {
                     val sq = size.width / CHECKER_CELLS
-                    drawRect(FixedColors.screenWhite)
+                    drawRect(Color.White)
                     for (row in 0 until CHECKER_CELLS) for (col in 0 until CHECKER_CELLS) {
                         if ((row + col) % 2 == 1) {
                             drawRect(

@@ -12,9 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.awt.SwingDialog
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import org.churchpresenter.theme.FixedColors
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.style.TextAlign
 import org.churchpresenter.theme.components.RaisedButton
@@ -204,7 +205,7 @@ internal fun AboutDialogContent(
                         .background(
                             Brush.linearGradient(
                                 listOf(
-                                    lerp(MaterialTheme.colorScheme.primary, FixedColors.inkDark, GRADIENT_DARKEN),
+                                    lerp(MaterialTheme.colorScheme.primary, Color.Black, GRADIENT_DARKEN),
                                     MaterialTheme.colorScheme.primary
                                 )
                             )
@@ -446,7 +447,7 @@ fun CalendarWindow(
     // use, and on Windows that flag stayed on -- it covered other apps, and the save dialog and its
     // "replace the file?" question opened behind it, so Save seemed to do nothing and overwriting
     // looked like a hang (#651). An owned window needs no flag at all.
-    DialogWindow(
+    SwingDialog(
         create = {
             ComposeDialog(mainWindow, Dialog.ModalityType.MODELESS).apply {
                 this.title = title

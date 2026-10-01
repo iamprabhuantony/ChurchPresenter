@@ -29,7 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import org.churchpresenter.theme.FixedColors
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import churchpresenter.composeapp.generated.resources.Res
@@ -209,7 +209,7 @@ private fun CompanionButtonCell(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(FixedColors.inkDark.copy(alpha = dimAlpha))
+                    .background(Color.Black.copy(alpha = dimAlpha))
             )
         }
     }

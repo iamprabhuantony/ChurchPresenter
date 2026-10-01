@@ -47,7 +47,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
-import org.churchpresenter.theme.FixedColors
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.utf16CodePoint
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -78,6 +78,14 @@ private const val SETTLE_MS = 500L
 
 private val CELL_SIZE = 36.dp
 private const val MAX_LEVELS = 100
+
+// Fixed crossword colours — grid always looks like paper regardless of app theme
+private val CellBackground    = Color.White
+private val CellText          = Color(0xFF1A1A1A)
+private val CellBorder        = Color(0xFF9E9E9E)
+private val BlockedCell       = Color(0xFF1A1A1A)
+private val FocusedBorder     = Color(0xFF1565C0)
+private val FocusedBackground = Color(0xFFBBDEFB)
 
 // Serialise/deserialise user input as "row,col:C|row,col:C|…"
 private fun serializeInput(input: Map<Pair<Int, Int>, Char>): String =
@@ -381,7 +389,7 @@ private fun CrosswordCellBox(
         Box(
             modifier = Modifier
                 .size(CELL_SIZE)
-                .background(FixedColors.paperBlocked)
+                .background(BlockedCell)
         )
         return
     }
@@ -394,9 +402,9 @@ private fun CrosswordCellBox(
             .size(CELL_SIZE)
             .border(
                 width = if (isFocused) 2.dp else 1.dp,
-                color = if (isFocused) FixedColors.paperFocusBorder else FixedColors.paperBorder
+                color = if (isFocused) FocusedBorder else CellBorder
             )
-            .background(if (isFocused) FixedColors.paperFocusFill else FixedColors.paperCell)
+            .background(if (isFocused) FocusedBackground else CellBackground)
             .focusRequester(focusRequester)
             .onFocusChanged { isFocused = it.isFocused }
             .clickable { focusRequester.requestFocus() }
@@ -421,7 +429,7 @@ private fun CrosswordCellBox(
                 text = cell.clueNumber.toString(),
                 fontSize = 7.sp,
                 lineHeight = 7.sp,
-                color = FixedColors.paperInk,
+                color = CellText,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(1.dp)
@@ -430,7 +438,7 @@ private fun CrosswordCellBox(
         Text(
             text = inputChar?.toString() ?: "",
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-            color = FixedColors.paperInk
+            color = CellText
         )
     }
 }

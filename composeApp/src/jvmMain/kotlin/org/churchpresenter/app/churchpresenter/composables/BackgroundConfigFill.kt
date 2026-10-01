@@ -27,7 +27,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import org.churchpresenter.theme.FixedColors
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -117,7 +116,7 @@ internal fun BackgroundConfigFill(
         }
         // The dim wash the presenter lays over every drawn background, never over a transparent one.
         if (config.dim > 0 && config.backgroundType != Constants.BACKGROUND_TRANSPARENT) {
-            Box(Modifier.matchParentSize().background(FixedColors.screenBlack.copy(alpha = config.dim / PERCENT)))
+            Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = config.dim / PERCENT)))
         }
     }
 }
@@ -154,7 +153,7 @@ private fun StillFill(
         when {
             shot != null -> Image(shot, null, contentScale = ContentScale.Crop, modifier = modifier.fillMaxSize())
             glyph -> GlyphFill(modifier, icon)
-            else -> Box(modifier.fillMaxSize().background(FixedColors.screenBlack))
+            else -> Box(modifier.fillMaxSize().background(Color.Black))
         }
     }
 }
@@ -162,12 +161,12 @@ private fun StillFill(
 /** Black with [icon] in the middle: a background the tile deliberately does not draw. */
 @Composable
 private fun GlyphFill(modifier: Modifier, icon: ImageVector) {
-    Box(modifier.fillMaxSize().background(FixedColors.screenBlack), Alignment.Center) {
+    Box(modifier.fillMaxSize().background(Color.Black), Alignment.Center) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(GLYPH_SIZE),
-            tint = FixedColors.inkLight.copy(alpha = VIDEO_GLYPH_ALPHA),
+            tint = Color.White.copy(alpha = VIDEO_GLYPH_ALPHA),
         )
     }
 }

@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import org.churchpresenter.theme.FixedColors
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -105,7 +105,7 @@ fun SceneCanvas(
                 .aspectRatio(drawn.canvasWidth.toFloat() / drawn.canvasHeight.toFloat())
                 .testTag(SCENE_CANVAS_TAG)
                 .clipToBounds()
-                .background(FixedColors.screenBlack)
+                .background(Color.Black)
                 .onSizeChanged { canvasSize = it }
                 .then(
                     if (isInteractive && activeTool == "select") {
@@ -286,7 +286,7 @@ fun SceneCanvas(
                             alpha = t.opacity
                         }
                         .then(
-                            if (isSelected) Modifier.border(2.dp, FixedColors.canvasSelection) else Modifier
+                            if (isSelected) Modifier.border(2.dp, Color.Cyan) else Modifier
                         )
                 ) {
                     SceneSourceRenderer(
@@ -328,7 +328,7 @@ fun SceneCanvas(
                             SnapOrientation.VERTICAL -> {
                                 val px = snap.position * size.width
                                 drawLine(
-                                    color = FixedColors.canvasGuide,
+                                    color = Color.Magenta,
                                     start = Offset(px, 0f),
                                     end = Offset(px, size.height),
                                     strokeWidth = 1f,
@@ -338,7 +338,7 @@ fun SceneCanvas(
                             SnapOrientation.HORIZONTAL -> {
                                 val py = snap.position * size.height
                                 drawLine(
-                                    color = FixedColors.canvasGuide,
+                                    color = Color.Magenta,
                                     start = Offset(0f, py),
                                     end = Offset(size.width, py),
                                     strokeWidth = 1f,
@@ -353,7 +353,7 @@ fun SceneCanvas(
             // Drawing preview overlay
             if (drawingInProgress && cw > 0 && ch > 0) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    val previewColor = FixedColors.canvasSelection.copy(alpha = 0.7f)
+                    val previewColor = Color.Cyan.copy(alpha = 0.7f)
                     val previewStroke = Stroke(width = 2f)
 
                     when (activeTool) {
@@ -572,8 +572,8 @@ private fun ResizeHandles(
             modifier = Modifier
                 .offset(hxDp, hyDp)
                 .size(handleSize)
-                .background(FixedColors.inkLight)
-                .border(1.dp, FixedColors.canvasSelection)
+                .background(Color.White)
+                .border(1.dp, Color.Cyan)
                 .pointerHoverIcon(PointerIcon(Cursor(handle.cursor)))
                 .pointerInput(index) {
                     detectDragGestures { change, dragAmount ->
@@ -631,8 +631,8 @@ private fun RotateHandle(
         modifier = Modifier
             .offset(hxDp, hyDp)
             .size(handleSize)
-            .background(FixedColors.canvasSelection, CircleShape)
-            .border(1.dp, FixedColors.inkLight, CircleShape)
+            .background(Color.Cyan, CircleShape)
+            .border(1.dp, Color.White, CircleShape)
             .pointerHoverIcon(PointerIcon(Cursor(Cursor.HAND_CURSOR)))
             .pointerInput(Unit) {
                 detectDragGestures(

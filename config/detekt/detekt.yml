@@ -1,7 +1,3 @@
-config:
-  validation: true
-  excludes: 'churchpresenter.*'
-
 build:
   maxIssues: 0
 
@@ -107,21 +103,3 @@ exceptions:
 performance:
   SpreadOperator:
     active: true
-
-churchpresenter:
-  active: true
-  HardcodedUiString:
-    active: true
-    excludes: ['**/test/**', '**/jvmTest/**']
-  HardcodedColor:
-    active: true
-    excludes:
-      - '**/test/**'
-      - '**/jvmTest/**'
-      - '**/theme/src/main/**'
-      - '**/lottieGenerator/src/main/**'
-      - '**/crossword/**/CrossTheme.kt'
-      - '**/app/churchpresenter/presenter/**'
-      - '**/app/churchpresenter/PresenterScreen.kt'
-      - '**/app/churchpresenter/PresenterOutputContent.kt'
-      - '**/app/churchpresenter/StageMonitorScreen.kt'

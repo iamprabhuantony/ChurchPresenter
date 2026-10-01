@@ -295,7 +295,7 @@ private fun BackdropPresetRow(current: TextBackdrop, onPick: (TextBackdrop) -> U
                             emptyOutline = outline,
                             emptyInk = ink,
                             modifier = Modifier.fillMaxSize(),
-                            label = TYPE_SAMPLE_TEXT,
+                            label = "Aa",
                         )
                     }
                 }
