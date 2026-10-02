@@ -345,3 +345,6 @@ internal fun getTextAlign(alignment: String): TextAlign {
         else -> TextAlign.Center
     }
 }
+
+/** One crossfade layer's page: the section it draws and the line within it, kept together. */
+internal data class SongCrossfadePage(val section: LyricSection, val lineIndex: Int)

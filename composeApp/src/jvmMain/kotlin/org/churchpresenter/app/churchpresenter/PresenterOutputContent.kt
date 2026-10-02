@@ -88,7 +88,8 @@ internal fun PresenterOutputContent(
     val displayedVerses by presenterManager.displayedVerses
     val nextVerses by presenterManager.nextVerses
     val displayedLyricSection by presenterManager.displayedLyricSection
-    val songPosition by presenterManager.displayedSongPosition
+    val allLyricSections by presenterManager.allLyricSections
+    val songDisplaySectionIndex by presenterManager.songDisplaySectionIndex
     val displayedImagePath by presenterManager.displayedImagePath
     val displayedSlide by presenterManager.displayedSlide
     val announcementText by presenterManager.announcementText
@@ -110,8 +111,8 @@ internal fun PresenterOutputContent(
                     showChords = profile.showChords,
                     announcementActive = effectiveMode == Presenting.ANNOUNCEMENTS,
                     currentLyricSection = displayedLyricSection,
-                    allLyricSections = songPosition.allSections,
-                    songDisplaySectionIndex = songPosition.sectionIndex,
+                    allLyricSections = allLyricSections,
+                    songDisplaySectionIndex = songDisplaySectionIndex,
                     displayedVerses = displayedVerses,
                     nextVerses = nextVerses,
                     announcementText = displayedAnnouncementText,
