@@ -9,8 +9,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import org.churchpresenter.settings.STTSettings
-import org.churchpresenter.stt.HighlightedWord
-import org.churchpresenter.stt.STTSegment
+import org.churchpresenter.app.churchpresenter.viewmodel.HighlightedWord
+import org.churchpresenter.app.churchpresenter.viewmodel.STTSegment
 import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)

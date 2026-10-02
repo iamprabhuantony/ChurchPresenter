@@ -1,6 +1,6 @@
 package org.churchpresenter.app.churchpresenter.presenter
 
-import org.churchpresenter.stt.STTSegment
+import org.churchpresenter.app.churchpresenter.viewmodel.STTSegment
 
 /**
  * The character arithmetic behind the STT drip feed (the letter-by-letter caption reveal).

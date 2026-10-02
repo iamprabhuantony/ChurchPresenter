@@ -90,8 +90,6 @@ import org.churchpresenter.sharedui.composables.bibleListCard
 import org.churchpresenter.sharedui.composables.bibleLiveTint
 import org.churchpresenter.sharedui.composables.bibleRowColors
 import org.churchpresenter.sharedui.composables.rememberRowHover
-import org.churchpresenter.sharedui.composables.rowPad
-import org.churchpresenter.sharedui.composables.rowSpan
 
 @Composable
 internal fun BibleLoadErrorBanner(errors: List<BibleLoadError>, modifier: Modifier = Modifier) {

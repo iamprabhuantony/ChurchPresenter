@@ -1,6 +1,5 @@
 package org.churchpresenter.app.churchpresenter.viewmodel
 
-import org.churchpresenter.announcements.AnnouncementsViewModel
 import org.churchpresenter.settings.AppSettings
 import org.churchpresenter.sharedui.models.Presenting
 import org.churchpresenter.settings.utils.Constants
@@ -13,13 +12,13 @@ import kotlin.test.assertTrue
 /**
  * The play/pause/reset buttons under the countdown, and what they do to the live output.
  *
- * The timer itself ticks on [PresenterManager] (reached through its `announcementsOutput`) rather
- * than here, so that a countdown survives the operator switching away from the Announcements tab.
- * That split is the subtle part: this view model only decides *which* of the manager's four tickers
- * to start, and whether a click means start, resume or pause — and the running-state flag to check
- * differs by mode (Duration and Count-up set `timerRunning`; Specific Time and Clock Display never
- * do, and must be judged by `announcementTickerActive` instead). Reading the wrong flag makes the
- * button stop responding mid-service.
+ * The timer itself ticks on [PresenterManager] rather than here, so that a countdown survives the
+ * operator switching away from the Announcements tab. That split is the subtle part: this view
+ * model only decides *which* of the manager's four tickers to start, and whether a click means
+ * start, resume or pause — and the running-state flag to check differs by mode (Duration and
+ * Count-up set `timerRunning`; Specific Time and Clock Display never do, and must be judged by
+ * `announcementTickerActive` instead). Reading the wrong flag makes the button stop responding
+ * mid-service.
  *
  * Nothing here waits on a tick: every flag the assertions read is set synchronously by the start
  * call, before its coroutine does any work.
@@ -38,8 +37,8 @@ class AnnouncementsTimerControlTest {
 
     /** A view model in [mode] with a five-minute duration configured. */
     private fun vm(mode: String, minutes: Int = 5): AnnouncementsViewModel = vm().apply {
-        timerMode = mode
-        timerMinutes = minutes
+        setTimerMode(mode)
+        setTimerMinutes(minutes)
     }
 
     private fun pm() = PresenterManager()
@@ -51,7 +50,7 @@ class AnnouncementsTimerControlTest {
         val vm = vm(Constants.TIMER_MODE_DURATION)
         val pm = pm()
 
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
         assertTrue(pm.timerRunning.value)
         assertTrue(pm.announcementTickerActive.value)
@@ -68,9 +67,9 @@ class AnnouncementsTimerControlTest {
     fun `clicking again pauses the countdown where it stands`() {
         val vm = vm(Constants.TIMER_MODE_DURATION)
         val pm = pm()
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
         assertFalse(pm.timerRunning.value)
         assertFalse(pm.announcementTickerActive.value)
@@ -90,7 +89,7 @@ class AnnouncementsTimerControlTest {
         // iteration can write the full duration back afterwards.
         pm.pauseAnnouncementTimer(42)
 
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
         assertTrue(
             pm.timerRemainingSeconds.value in 41..42,
@@ -104,7 +103,7 @@ class AnnouncementsTimerControlTest {
         val vm = vm(Constants.TIMER_MODE_DURATION, minutes = 0)
         val pm = pm()
 
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
         assertFalse(pm.timerRunning.value, "an empty timer would go straight to the expired message")
         assertFalse(pm.announcementTickerActive.value)
@@ -118,7 +117,7 @@ class AnnouncementsTimerControlTest {
         val pm = pm()
         pm.pauseAnnouncementTimer(75) // 1:15 already elapsed
 
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
         assertTrue(pm.timerRunning.value)
         assertTrue(pm.announcementTickerActive.value)
@@ -132,9 +131,9 @@ class AnnouncementsTimerControlTest {
     fun `clicking again pauses the stopwatch`() {
         val vm = vm(Constants.TIMER_MODE_COUNT_UP)
         val pm = pm()
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
         assertFalse(pm.timerRunning.value)
         assertFalse(pm.announcementTickerActive.value)
@@ -145,7 +144,7 @@ class AnnouncementsTimerControlTest {
         val vm = vm(Constants.TIMER_MODE_COUNT_UP, minutes = 5)
         val pm = pm()
 
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
         assertTrue(
             pm.timerRemainingSeconds.value in 0..1,
@@ -160,7 +159,7 @@ class AnnouncementsTimerControlTest {
         val vm = vm(Constants.TIMER_MODE_CLOCK)
         val pm = pm()
 
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
         assertTrue(pm.announcementTickerActive.value)
         assertFalse(
@@ -173,9 +172,9 @@ class AnnouncementsTimerControlTest {
     fun `clicking again stops the specific-time ticker`() {
         val vm = vm(Constants.TIMER_MODE_CLOCK)
         val pm = pm()
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
         assertFalse(pm.announcementTickerActive.value, "judged by the ticker flag, since timerRunning is never set")
     }
@@ -187,7 +186,7 @@ class AnnouncementsTimerControlTest {
         val vm = vm(Constants.TIMER_MODE_CLOCK_DISPLAY)
         val pm = pm()
 
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
         assertTrue(pm.announcementTickerActive.value)
         assertFalse(pm.timerRunning.value)
@@ -197,9 +196,9 @@ class AnnouncementsTimerControlTest {
     fun `clicking again stops the live clock`() {
         val vm = vm(Constants.TIMER_MODE_CLOCK_DISPLAY)
         val pm = pm()
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
         assertFalse(pm.announcementTickerActive.value)
     }
@@ -220,9 +219,9 @@ class AnnouncementsTimerControlTest {
     fun `pausing stops whichever ticker is running`() {
         val vm = vm(Constants.TIMER_MODE_CLOCK_DISPLAY)
         val pm = pm()
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
-        vm.pauseTimer(pm.announcementsOutput)
+        vm.pauseTimer(pm)
 
         assertFalse(
             pm.announcementTickerActive.value,
@@ -234,10 +233,10 @@ class AnnouncementsTimerControlTest {
     fun `pausing releases the timer's claim on the live slot`() {
         val vm = vm(Constants.TIMER_MODE_DURATION)
         val pm = pm()
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
         pm.setAnnouncementTickerLive(true)
 
-        vm.pauseTimer(pm.announcementsOutput)
+        vm.pauseTimer(pm)
 
         assertFalse(
             pm.announcementTickerLive.value,
@@ -253,7 +252,7 @@ class AnnouncementsTimerControlTest {
         val pm = pm()
         pm.pauseAnnouncementTimer(42) // paused with 42s left, no ticker running
 
-        vm.resetTimer(pm.announcementsOutput)
+        vm.resetTimer(pm)
 
         assertEquals(300, pm.timerRemainingSeconds.value)
         assertFalse(pm.timerRunning.value)
@@ -265,7 +264,7 @@ class AnnouncementsTimerControlTest {
         val pm = pm()
         pm.pauseAnnouncementTimer(75) // paused at 1:15 elapsed, no ticker running
 
-        vm.resetTimer(pm.announcementsOutput)
+        vm.resetTimer(pm)
 
         assertEquals(0, pm.timerRemainingSeconds.value)
         assertFalse(pm.timerRunning.value)
@@ -275,9 +274,9 @@ class AnnouncementsTimerControlTest {
     fun `resetting a specific-time countdown leaves it running`() {
         val vm = vm(Constants.TIMER_MODE_CLOCK)
         val pm = pm()
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
 
-        vm.resetTimer(pm.announcementsOutput)
+        vm.resetTimer(pm)
 
         assertTrue(
             pm.announcementTickerActive.value,
@@ -290,10 +289,10 @@ class AnnouncementsTimerControlTest {
     @Test
     fun `going live puts the announcement text on screen`() {
         val vm = vm()
-        vm.text = "Welcome to the 10am service"
+        vm.setText("Welcome to the 10am service")
         val pm = pm()
 
-        vm.goLive(pm.announcementsOutput) { }
+        vm.goLive(pm) { }
 
         assertEquals("Welcome to the 10am service", pm.announcementText.value)
         assertEquals(Presenting.ANNOUNCEMENTS, pm.presentingMode.value)
@@ -302,12 +301,12 @@ class AnnouncementsTimerControlTest {
     @Test
     fun `going live stops a running timer from overwriting the text`() {
         val vm = vm(Constants.TIMER_MODE_CLOCK_DISPLAY)
-        vm.text = "Welcome"
+        vm.setText("Welcome")
         val pm = pm()
-        vm.startPauseTimer(pm.announcementsOutput)
+        vm.startPauseTimer(pm)
         pm.setAnnouncementTickerLive(true)
 
-        vm.goLive(pm.announcementsOutput) { }
+        vm.goLive(pm) { }
 
         assertFalse(pm.announcementTickerActive.value, "the clock would replace the text on its next tick")
         assertFalse(pm.announcementTickerLive.value)
@@ -317,11 +316,11 @@ class AnnouncementsTimerControlTest {
     @Test
     fun `going live persists what was on screen`() {
         val vm = vm()
-        vm.text = "Welcome"
-        vm.fontSize = 96
+        vm.setText("Welcome")
+        vm.setFontSize(96)
         var saved = AppSettings()
 
-        vm.goLive(pm().announcementsOutput) { transform -> saved = transform(saved) }
+        vm.goLive(pm()) { transform -> saved = transform(saved) }
 
         assertEquals("Welcome", saved.announcementsSettings.text, "the text must survive a restart mid-service")
         assertEquals(96, saved.announcementsSettings.fontSize)
@@ -330,7 +329,7 @@ class AnnouncementsTimerControlTest {
     @Test
     fun `saving hands over the current settings without going live`() {
         val vm = vm()
-        vm.text = "Draft"
+        vm.setText("Draft")
         var saved = AppSettings()
         val pm = pm()
 
