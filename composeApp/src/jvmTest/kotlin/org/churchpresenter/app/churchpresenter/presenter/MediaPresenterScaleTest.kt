@@ -12,13 +12,14 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import org.churchpresenter.app.churchpresenter.composables.SharedVideoOutput
-import org.churchpresenter.app.churchpresenter.utils.contentScale
+import org.churchpresenter.sharedui.utils.contentScale
 import org.churchpresenter.app.churchpresenter.viewmodel.LocalMediaViewModel
 import org.churchpresenter.app.churchpresenter.viewmodel.MediaViewModel
 import org.churchpresenter.settings.OutputScaleMode
 import org.churchpresenter.settings.utils.Constants
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import org.churchpresenter.sharedui.testing.OutputScaleFixture
 
 /**
  * The Media tab's scale button, as the output draws it: a 4:3 video frame on a 16:9 screen, once per

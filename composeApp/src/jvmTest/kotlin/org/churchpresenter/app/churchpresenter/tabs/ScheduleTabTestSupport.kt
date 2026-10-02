@@ -30,11 +30,14 @@ import org.churchpresenter.app.churchpresenter.TestSingletons
 import org.churchpresenter.calendar.ScheduleServiceLink
 import org.churchpresenter.calendar.model.UpcomingLoad
 import org.churchpresenter.core.models.schedule.ScheduleItem
-import org.churchpresenter.app.churchpresenter.presenter.Presenting
+import org.churchpresenter.sharedui.models.Presenting
 import org.churchpresenter.app.churchpresenter.viewmodel.ScheduleViewModel
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalTime
+import org.churchpresenter.sharedui.testing.renderedText
+import org.churchpresenter.sharedui.testing.showsContainingText
+import org.churchpresenter.sharedui.testing.showsExactly
 
 /**
  * Harness and fixtures shared by the `ScheduleTab` test classes.

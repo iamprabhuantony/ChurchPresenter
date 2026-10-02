@@ -7,7 +7,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
-import androidx.compose.ui.test.runDesktopComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import org.churchpresenter.core.models.songs.SongItem
 import org.churchpresenter.core.models.songs.SongTranslation
 import org.churchpresenter.songlibrary.ui.COMPARE_WINDOW_HEIGHT
@@ -15,6 +15,8 @@ import org.churchpresenter.songlibrary.ui.COMPARE_WINDOW_WIDTH
 import org.churchpresenter.songlibrary.ui.CompareTranslationsContent
 import org.churchpresenter.theme.ChurchPresenterTheme
 import kotlin.test.Test
+import org.churchpresenter.sharedui.screenshot.captureTo
+import org.churchpresenter.sharedui.screenshot.stackedThemes
 
 /**
  * The Compare Translations window the Song Library Manager opens from a row, in both themes.

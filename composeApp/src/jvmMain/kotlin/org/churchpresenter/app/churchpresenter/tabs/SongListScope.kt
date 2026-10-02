@@ -18,11 +18,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import java.awt.Cursor
 import androidx.compose.ui.unit.dp
 import org.churchpresenter.core.models.songs.SongItem
-import org.churchpresenter.app.churchpresenter.presenter.Presenting
+import org.churchpresenter.sharedui.models.Presenting
 import org.churchpresenter.app.churchpresenter.utils.draggedColumnIndex
 import org.churchpresenter.app.churchpresenter.utils.songColumnSortKey
 import org.churchpresenter.app.churchpresenter.viewmodel.SongSearchMatch
 import androidx.compose.ui.unit.Density
+import org.churchpresenter.sharedui.composables.DragHandle
 
 /**
  * Everything the song list's pieces read, for one composition: the pane's parameters and the column

@@ -156,7 +156,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.churchpresenter.app.churchpresenter.LocalMainWindowState
 import org.churchpresenter.app.churchpresenter.centeredOnMainWindow
-import org.churchpresenter.app.churchpresenter.composables.TooltipIconButton
+import org.churchpresenter.sharedui.composables.TooltipIconButton
 import org.churchpresenter.app.churchpresenter.data.ActivityPoint
 import org.churchpresenter.app.churchpresenter.data.ROLLING_MONTHS
 import org.churchpresenter.app.churchpresenter.data.SongKey
@@ -177,7 +177,7 @@ import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 import javax.swing.filechooser.FileNameExtensionFilter
-import org.churchpresenter.app.churchpresenter.dialogs.filechooser.FileChooser
+import org.churchpresenter.sharedui.filechooser.FileChooser
 import org.churchpresenter.theme.semantic
 
 private const val LAST_HOUR = 23

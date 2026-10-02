@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.runDesktopComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.runtime.CompositionLocalProvider
 import org.churchpresenter.app.churchpresenter.dialogs.tabs.LocalDefaultCalendarFolder
 import org.churchpresenter.settings.AppSettings
@@ -22,6 +22,8 @@ import org.churchpresenter.theme.ThemeMode
 import java.io.File
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import org.churchpresenter.sharedui.screenshot.captureTo
+import org.churchpresenter.sharedui.screenshot.stackedThemes
 
 /**
  * The System tab of the settings dialog, in both themes.

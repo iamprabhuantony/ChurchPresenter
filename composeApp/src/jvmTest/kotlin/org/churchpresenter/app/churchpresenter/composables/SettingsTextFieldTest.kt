@@ -28,7 +28,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -344,7 +344,7 @@ class SettingsTextFieldTest {
 
         // Which of two dozen boxes on a settings screen the next keystroke lands in is otherwise
         // invisible: both variants draw the same 1dp outline in every other state.
-        assertTrue(topEdgeHas("field", accent!!), "a focused field must draw its outline in the accent colour")
+        assertTrue(topEdgeHas("field", accent), "a focused field must draw its outline in the accent colour")
     }
 
     @Test
@@ -391,6 +391,6 @@ class SettingsTextFieldTest {
 
         // Both variants share one borderColor, but they are separate BasicTextField call sites and
         // the bare one is what the inline settings rows use.
-        assertTrue(topEdgeHas("bare", accent!!), "the bare variant must show focus as well")
+        assertTrue(topEdgeHas("bare", accent), "the bare variant must show focus as well")
     }
 }

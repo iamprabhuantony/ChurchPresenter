@@ -5,8 +5,8 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.runComposeUiTest
-import org.churchpresenter.app.churchpresenter.dialogs.filechooser.FileChooser
+import androidx.compose.ui.test.v2.runComposeUiTest
+import org.churchpresenter.sharedui.filechooser.FileChooser
 import java.nio.file.Files
 import java.nio.file.Path
 import javax.swing.filechooser.FileNameExtensionFilter

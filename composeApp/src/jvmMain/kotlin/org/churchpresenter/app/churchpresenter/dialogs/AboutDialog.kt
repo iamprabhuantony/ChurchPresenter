@@ -56,7 +56,7 @@ import org.churchpresenter.icons.generated.resources.Res as IconRes
 import org.churchpresenter.strings.generated.resources.Res
 import org.churchpresenter.strings.generated.resources.calendar_choose_logo_title
 import org.churchpresenter.strings.generated.resources.calendar_export_title
-import org.churchpresenter.app.churchpresenter.dialogs.filechooser.OwnedFileDialog
+import org.churchpresenter.sharedui.filechooser.OwnedFileDialog
 import org.churchpresenter.app.churchpresenter.utils.isMacOs
 import org.jetbrains.compose.resources.getString
 import org.churchpresenter.strings.generated.resources.about_copyright
@@ -77,7 +77,7 @@ import org.churchpresenter.strings.generated.resources.style_editor_window_title
 import org.churchpresenter.strings.generated.resources.submit_feature_request
 import org.churchpresenter.app.churchpresenter.BuildConfig
 import org.churchpresenter.settings.AppSettings
-import org.churchpresenter.app.churchpresenter.dialogs.filechooser.FileChooser
+import org.churchpresenter.sharedui.filechooser.FileChooser
 import org.churchpresenter.app.churchpresenter.utils.AppWindowRoot
 import org.churchpresenter.app.churchpresenter.ui.theme.LocalLanguage
 import org.churchpresenter.theme.ThemeMode
@@ -85,7 +85,7 @@ import org.churchpresenter.app.churchpresenter.utils.DeviceInfoReport
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.churchpresenter.icons.generated.resources.ic_app_icon
-import org.churchpresenter.app.churchpresenter.composables.ColorPickerDialog
+import org.churchpresenter.sharedui.composables.ColorPickerDialog
 import org.churchpresenter.calendar.CalendarHost
 import org.churchpresenter.core.models.songs.SongItem
 import org.churchpresenter.calendar.ui.CalendarApp
@@ -106,10 +106,10 @@ import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.writeText
 import org.churchpresenter.app.churchpresenter.composables.CopyLinkIconButton
-import org.churchpresenter.app.churchpresenter.utils.SystemClipboard
+import org.churchpresenter.sharedui.utils.SystemClipboard
 import org.churchpresenter.app.churchpresenter.utils.UrlOpener
-import org.churchpresenter.app.churchpresenter.utils.UsageEvent
-import org.churchpresenter.app.churchpresenter.utils.UsageEvents
+import org.churchpresenter.sharedui.utils.UsageEvent
+import org.churchpresenter.sharedui.utils.UsageEvents
 import org.churchpresenter.app.churchpresenter.utils.converterEvent
 import org.churchpresenter.app.churchpresenter.utils.songLibraryUsageEvent
 

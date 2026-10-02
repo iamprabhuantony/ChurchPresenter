@@ -29,11 +29,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.churchpresenter.strings.generated.resources.Res
 import org.churchpresenter.strings.generated.resources.found_results
-import org.churchpresenter.app.churchpresenter.composables.initialPassClickable
-import org.churchpresenter.app.churchpresenter.utils.highlightedText
+import org.churchpresenter.sharedui.composables.initialPassClickable
+import org.churchpresenter.sharedui.utils.highlightedText
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.layout.ColumnScope
 import org.churchpresenter.bible.BibleSearch
+import org.churchpresenter.sharedui.composables.BibleVerseRowShape
+import org.churchpresenter.sharedui.composables.bibleListCard
+import org.churchpresenter.sharedui.composables.bibleRowColors
+import org.churchpresenter.sharedui.composables.rememberRowHover
 
 /**
  * The list a text search produced, with the matched words picked out of each verse.

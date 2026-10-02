@@ -92,7 +92,7 @@ import org.churchpresenter.strings.generated.resources.schedule_add_files
 import org.churchpresenter.strings.generated.resources.tooltip_new_schedule
 import org.churchpresenter.strings.generated.resources.tooltip_open_schedule
 import org.churchpresenter.strings.generated.resources.tooltip_save_schedule
-import org.churchpresenter.app.churchpresenter.composables.ConditionalTooltipArea
+import org.churchpresenter.sharedui.composables.ConditionalTooltipArea
 import org.churchpresenter.app.churchpresenter.composables.ToolbarKey
 import org.churchpresenter.app.churchpresenter.composables.ToolbarKeyStyle
 import org.churchpresenter.app.churchpresenter.utils.DroppedFileAction
@@ -106,6 +106,8 @@ import java.io.File
 import org.churchpresenter.theme.elevationPalette
 import org.churchpresenter.theme.sunken
 import org.churchpresenter.theme.raised
+import org.churchpresenter.sharedui.composables.bibleListCardFill
+import org.churchpresenter.sharedui.composables.topBarCard
 
 private const val MENU_OFFSET_DP = 8
 private const val DASH_ON_PX = 6f

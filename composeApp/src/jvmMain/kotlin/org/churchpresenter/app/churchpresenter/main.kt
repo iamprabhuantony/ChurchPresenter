@@ -13,12 +13,12 @@ import org.churchpresenter.diagnostics.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import org.churchpresenter.app.churchpresenter.utils.AppWindowIcons
-import org.churchpresenter.app.churchpresenter.utils.addGuardedShutdownHook
+import org.churchpresenter.sharedui.utils.addGuardedShutdownHook
 import org.churchpresenter.app.churchpresenter.utils.deleteLeftoverUpdateInstallers
 import org.churchpresenter.app.churchpresenter.utils.DevFlags
 import org.churchpresenter.app.churchpresenter.utils.GpuInfo
 import org.churchpresenter.app.churchpresenter.utils.LottieFonts
-import org.churchpresenter.app.churchpresenter.utils.SystemFonts
+import org.churchpresenter.sharedui.utils.SystemFonts
 import org.churchpresenter.presentationengine.fonts.SlideFontRegistry
 import churchpresenter.composeapp.generated.resources.Res
 import kotlinx.coroutines.runBlocking
@@ -30,7 +30,7 @@ import org.churchpresenter.app.churchpresenter.presenter.CefManager
 import org.churchpresenter.app.churchpresenter.ui.theme.themeCustomizationFrom
 import org.churchpresenter.theme.LocalThemeCustomization
 import org.churchpresenter.theme.ThemeCustomization
-import org.churchpresenter.app.churchpresenter.composables.FfmpegBinary
+import org.churchpresenter.sharedui.utils.FfmpegBinary
 import org.churchpresenter.app.churchpresenter.composables.vlcCustomPath
 import org.churchpresenter.app.churchpresenter.server.LottieRenderCache
 import org.churchpresenter.app.churchpresenter.server.CalendarSyncService
@@ -42,7 +42,7 @@ import org.churchpresenter.app.churchpresenter.utils.AutoStartManager
 import org.churchpresenter.diagnostics.BuildIdentity
 import org.churchpresenter.diagnostics.CrashReporter
 import org.churchpresenter.app.churchpresenter.utils.LiveMapReporter
-import org.churchpresenter.app.churchpresenter.utils.UsageEvents
+import org.churchpresenter.sharedui.utils.UsageEvents
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.CoroutineExceptionHandler

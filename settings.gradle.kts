@@ -103,3 +103,7 @@ include(":calendar")
 include(":strings")
 
 include(":icons")
+
+include(":shared-ui")
+
+include(":slides")

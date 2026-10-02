@@ -13,7 +13,7 @@ import org.churchpresenter.app.churchpresenter.data.CrossReferenceRepository
 import org.churchpresenter.bible.SpbFixture
 import org.churchpresenter.app.churchpresenter.data.VerseSequenceLog
 import org.churchpresenter.settings.AppSettings
-import org.churchpresenter.app.churchpresenter.presenter.Presenting
+import org.churchpresenter.sharedui.models.Presenting
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest
@@ -22,6 +22,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import org.churchpresenter.sharedui.testing.renderedText
+import org.churchpresenter.sharedui.testing.showsContainingText
+import org.churchpresenter.sharedui.testing.showsExactly
 
 /**
  * The cross-reference column beside the verse list.

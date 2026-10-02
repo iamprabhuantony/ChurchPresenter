@@ -7,14 +7,14 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.test.v2.runComposeUiTest
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.churchpresenter.settings.AppSettings
-import org.churchpresenter.app.churchpresenter.dialogs.filechooser.FileChooser
+import org.churchpresenter.sharedui.filechooser.FileChooser
 import org.churchpresenter.theme.ThemeMode
 import java.awt.Desktop
 import java.io.File
@@ -92,7 +92,7 @@ class AboutContentTest {
     private fun stubDesktop() {
         openedFile = null
         val fakeDesktop = mockk<Desktop>()
-        every { fakeDesktop.open(any()) } answers { openedFile = firstArg(); Unit }
+        every { fakeDesktop.open(any()) } answers { openedFile = firstArg() }
         mockkStatic(Desktop::class)
         every { Desktop.getDesktop() } returns fakeDesktop
     }
@@ -183,7 +183,6 @@ class AboutContentTest {
         mockkStatic(JOptionPane::class)
         every { JOptionPane.showMessageDialog(any(), any(), any(), any()) } answers {
             told += secondArg<Any?>().toString()
-            Unit
         }
     }
 

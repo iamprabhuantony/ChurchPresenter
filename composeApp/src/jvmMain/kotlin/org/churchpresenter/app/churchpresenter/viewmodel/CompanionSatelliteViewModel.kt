@@ -15,11 +15,12 @@ import org.churchpresenter.app.churchpresenter.models.CompanionConnectionUiState
 import org.churchpresenter.core.models.companion.CompanionSurfacePlacement
 import org.churchpresenter.core.models.companion.CompanionSurfaceSlot
 import org.churchpresenter.diagnostics.CrashReporter
-import org.churchpresenter.app.churchpresenter.utils.UsageEvents
-import org.churchpresenter.app.churchpresenter.utils.UsageEvent
+import org.churchpresenter.sharedui.utils.UsageEvents
+import org.churchpresenter.sharedui.utils.UsageEvent
 import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.Image as SkiaImage
 import java.util.concurrent.ConcurrentHashMap
+import org.churchpresenter.slides.viewmodel.PresentationViewModel
 
 private const val ALPHA_BYTE_OFFSET = 3
 private const val RGB_BYTES_PER_PIXEL = 3

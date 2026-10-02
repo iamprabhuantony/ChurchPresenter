@@ -5,10 +5,12 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import org.churchpresenter.app.churchpresenter.composables.SLIDESHOW_HIDE_TOGGLE_TAG
+import org.churchpresenter.sharedui.composables.SLIDESHOW_HIDE_TOGGLE_TAG
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.churchpresenter.slides.tabs.picturesTab
+import org.churchpresenter.slides.tabs.presentationTab
 
 /**
  * The eye on each picture and slide tile (#676), clicked for real.

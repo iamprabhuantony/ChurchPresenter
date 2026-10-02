@@ -4,7 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import org.churchpresenter.strings.generated.resources.canvas_bible_select_verse
 import org.churchpresenter.strings.generated.resources.canvas_browser_no_url
-import org.churchpresenter.app.churchpresenter.utils.PictureDecoder
+import org.churchpresenter.slides.utils.PictureDecoder
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -61,9 +61,9 @@ import org.churchpresenter.strings.generated.resources.canvas_placeholder_screen
 import org.churchpresenter.core.models.scene.ClockModes
 import org.churchpresenter.core.models.scene.SceneSource
 import org.churchpresenter.core.models.text.TextOutline
-import org.churchpresenter.app.churchpresenter.utils.Utils.parseHexColor
+import org.churchpresenter.sharedui.utils.Utils.parseHexColor
 import org.churchpresenter.app.churchpresenter.utils.WindowsWindowCapture
-import org.churchpresenter.app.churchpresenter.utils.Utils.systemFontFamilyOrDefault
+import org.churchpresenter.sharedui.utils.Utils.systemFontFamilyOrDefault
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -97,6 +97,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.Stroke
+import org.churchpresenter.sharedui.composables.OutlinedText
+import org.churchpresenter.sharedui.composables.backdropRoom
+import org.churchpresenter.sharedui.composables.mode
+import org.churchpresenter.sharedui.composables.rememberTextBackdropPainter
+import org.churchpresenter.sharedui.utils.CommandRunner
+import org.churchpresenter.sharedui.utils.readCommandOutput
 
 private const val URL_DEBOUNCE_MS = 800L
 private const val ERROR_TEXT_COLOR = 0xFFFF8888

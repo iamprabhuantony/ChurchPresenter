@@ -4,18 +4,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import org.churchpresenter.app.churchpresenter.models.announcementPresetItem
-import org.churchpresenter.app.churchpresenter.presenter.Presenting
+import org.churchpresenter.sharedui.models.Presenting
 import org.churchpresenter.app.churchpresenter.tabs.AnnouncementsTab
 import org.churchpresenter.app.churchpresenter.tabs.CanvasTab
 import org.churchpresenter.app.churchpresenter.tabs.DictionaryTab
 import org.churchpresenter.app.churchpresenter.tabs.LowerThirdTab
 import org.churchpresenter.app.churchpresenter.tabs.MediaTab
-import org.churchpresenter.app.churchpresenter.tabs.PicturesTab
-import org.churchpresenter.app.churchpresenter.tabs.PresentationTab
-import org.churchpresenter.app.churchpresenter.tabs.Tabs
+import org.churchpresenter.slides.tabs.PicturesTab
+import org.churchpresenter.slides.tabs.PresentationTab
+import org.churchpresenter.app.churchpresenter.dialogs.PresentationRemoteDialog
+import org.churchpresenter.app.churchpresenter.composables.isVlcArchMismatch
+import org.churchpresenter.app.churchpresenter.composables.isVlcAvailable
+import org.churchpresenter.app.churchpresenter.composables.isVlcLoadFailed
+import org.churchpresenter.sharedui.models.Tabs
 import org.churchpresenter.app.churchpresenter.tabs.WebTab
-import org.churchpresenter.app.churchpresenter.utils.UsageEvent
-import org.churchpresenter.app.churchpresenter.utils.UsageEvents
+import org.churchpresenter.sharedui.utils.UsageEvent
+import org.churchpresenter.sharedui.utils.UsageEvents
 import org.churchpresenter.core.models.schedule.ScheduleItem
 import org.churchpresenter.settings.utils.Constants
 import java.util.UUID
@@ -75,16 +79,28 @@ internal fun MainDesktopScope.PresentationTabPane() {
         onSlidesLoaded = publish.onPresentationSlidesLoaded,
         onSettingsChange = onSettingsChange,
         viewModel = presentationViewModel,
-        tunnelStatus = web.tunnelStatus,
-        tunnelUrl = web.tunnelUrl,
-        serverUrl = web.serverUrl,
-        presentationDisplayUrl = web.presentationDisplayUrl,
-        onPresentationDisplayUrlChanged = web.onPresentationDisplayUrlChanged,
-        onStartTunnel = web.onStartTunnel,
-        onStopTunnel = web.onStopTunnel,
+        remoteDialog = { onDismiss ->
+            PresentationRemoteDialog(
+                settings = appSettings,
+                onSettingsChange = onSettingsChange,
+                serverUrl = web.serverUrl,
+                apiKeyEnabled = appSettings.serverSettings.apiKeyEnabled,
+                apiKey = appSettings.serverSettings.apiKey,
+                tunnelStatus = web.tunnelStatus,
+                tunnelUrl = web.tunnelUrl,
+                presentationDisplayUrl = web.presentationDisplayUrl,
+                onPresentationDisplayUrlChanged = web.onPresentationDisplayUrlChanged,
+                onStartTunnel = web.onStartTunnel,
+                onStopTunnel = web.onStopTunnel,
+                onDismiss = onDismiss,
+            )
+        },
         presentationFrozen = web.presentationFrozen,
         onFreezeToggle = web.onFreezeToggle,
-        onClearPresentation = web.onClearPresentation
+        onClearPresentation = web.onClearPresentation,
+        vlcAvailable = isVlcAvailable,
+        vlcArchMismatch = isVlcArchMismatch,
+        vlcLoadFailed = isVlcLoadFailed,
     )
 }
 

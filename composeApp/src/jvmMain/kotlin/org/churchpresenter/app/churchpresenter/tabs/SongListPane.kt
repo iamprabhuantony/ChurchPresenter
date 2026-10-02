@@ -95,7 +95,7 @@ import org.churchpresenter.strings.generated.resources.author
 import org.churchpresenter.strings.generated.resources.composer
 import org.churchpresenter.theme.components.DropdownSelector
 import org.churchpresenter.core.models.songs.SongItem
-import org.churchpresenter.app.churchpresenter.presenter.Presenting
+import org.churchpresenter.sharedui.models.Presenting
 import org.churchpresenter.settings.utils.Constants
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -106,6 +106,8 @@ import org.churchpresenter.theme.sunken
 import org.churchpresenter.theme.raisedHover
 import org.churchpresenter.app.churchpresenter.viewmodel.SongSearchMatch
 import androidx.compose.foundation.layout.ColumnScope
+import org.churchpresenter.sharedui.composables.bibleListCard
+import org.churchpresenter.sharedui.composables.searchBarCard
 
 internal const val SONG_LIST_REBUILD_CLICK_WINDOW_MS = 800
 internal const val SONG_LIST_REBUILD_CLICK_COUNT = 3

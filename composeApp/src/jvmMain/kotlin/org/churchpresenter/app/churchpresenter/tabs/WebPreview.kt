@@ -44,7 +44,7 @@ import org.churchpresenter.strings.generated.resources.web_snapshot_screen_recor
 import org.churchpresenter.strings.generated.resources.web_snapshot_waiting
 import org.churchpresenter.settings.utils.Constants
 import org.churchpresenter.app.churchpresenter.presenter.EmbeddedWebView
-import org.churchpresenter.app.churchpresenter.presenter.Presenting
+import org.churchpresenter.sharedui.models.Presenting
 import org.churchpresenter.app.churchpresenter.composables.PreviewOutputPicker
 import org.jetbrains.compose.resources.stringResource
 import java.awt.event.InputEvent
@@ -56,6 +56,7 @@ import kotlinx.coroutines.delay
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.runtime.State
 import org.cef.browser.CefBrowser
+import org.churchpresenter.sharedui.composables.bibleListCard
 
 /** The output picker and the preview: the live mirror, the embedded browser, or a hint. */
 @Composable

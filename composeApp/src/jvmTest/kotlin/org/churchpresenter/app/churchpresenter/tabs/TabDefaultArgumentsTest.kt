@@ -4,7 +4,7 @@ package org.churchpresenter.app.churchpresenter.tabs
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.test.v2.runComposeUiTest
 import org.churchpresenter.app.churchpresenter.TestSingletons
 import java.io.File
 import java.nio.file.Files
@@ -12,6 +12,8 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import org.churchpresenter.slides.tabs.PicturesTab
+import org.churchpresenter.sharedui.testing.renderedText
 
 class TabDefaultArgumentsTest {
 

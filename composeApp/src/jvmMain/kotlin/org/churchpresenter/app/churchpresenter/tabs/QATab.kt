@@ -55,7 +55,7 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.churchpresenter.app.churchpresenter.dialogs.filechooser.FileChooser
+import org.churchpresenter.sharedui.filechooser.FileChooser
 import org.churchpresenter.diagnostics.CrashReporter
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -128,15 +128,15 @@ import org.churchpresenter.strings.generated.resources.qa_approved
 import org.churchpresenter.strings.generated.resources.qa_denied
 import org.churchpresenter.strings.generated.resources.qa_done
 import org.churchpresenter.strings.generated.resources.qa_incoming_approved
-import org.churchpresenter.app.churchpresenter.composables.ActionIconButton
-import org.churchpresenter.app.churchpresenter.composables.GoLiveButton
+import org.churchpresenter.sharedui.composables.ActionIconButton
+import org.churchpresenter.sharedui.composables.GoLiveButton
 import org.churchpresenter.theme.components.DropdownSelector
 import org.churchpresenter.settings.AppSettings
 import org.churchpresenter.app.churchpresenter.dialogs.QARemoteDialog
 import org.churchpresenter.core.models.qa.Question
 import org.churchpresenter.core.models.qa.QuestionStatus
 import org.churchpresenter.app.churchpresenter.server.TunnelStatus
-import org.churchpresenter.app.churchpresenter.presenter.Presenting
+import org.churchpresenter.sharedui.models.Presenting
 import org.churchpresenter.app.churchpresenter.viewmodel.PresenterManager
 import org.churchpresenter.app.churchpresenter.viewmodel.QAManager
 import org.churchpresenter.theme.semantic
@@ -149,6 +149,10 @@ import javax.swing.filechooser.FileNameExtensionFilter
 import org.churchpresenter.theme.elevationPalette
 import org.churchpresenter.theme.hoverTint
 import org.churchpresenter.theme.sunken
+import org.churchpresenter.sharedui.composables.BibleListRowShape
+import org.churchpresenter.sharedui.composables.bibleListCard
+import org.churchpresenter.sharedui.composables.bibleRowColors
+import org.churchpresenter.sharedui.composables.rememberRowHover
 
 private const val SORT_BY_VOTES = 3
 private const val DISPLAY_PREVIEW_CHARS = 50

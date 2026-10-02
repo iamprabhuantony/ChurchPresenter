@@ -46,8 +46,8 @@ import org.churchpresenter.strings.generated.resources.timer_pm
 import org.churchpresenter.settings.AnnouncementsSettings
 import org.churchpresenter.settings.AppSettings
 import org.churchpresenter.settings.utils.Constants
-import org.churchpresenter.app.churchpresenter.utils.rememberSystemFonts
-import org.churchpresenter.app.churchpresenter.utils.Utils
+import org.churchpresenter.sharedui.utils.rememberSystemFonts
+import org.churchpresenter.sharedui.utils.Utils
 import org.churchpresenter.app.churchpresenter.viewmodel.AnnouncementsViewModel
 import org.churchpresenter.app.churchpresenter.viewmodel.PresenterManager
 import org.jetbrains.compose.resources.stringResource
@@ -56,6 +56,7 @@ import org.churchpresenter.theme.sunken
 import org.churchpresenter.theme.elevationPalette
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.LocalContentColor
+import org.churchpresenter.sharedui.composables.DragHandle
 
 internal val ANNOUNCEMENT_STEP_KEY_HEIGHT = 20.dp
 internal val ANNOUNCEMENT_TRANSPARENT_KEY_PADDING = 10.dp

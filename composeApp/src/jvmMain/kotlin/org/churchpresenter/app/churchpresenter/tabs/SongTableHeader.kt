@@ -44,7 +44,7 @@ import androidx.compose.ui.input.pointer.isSecondary
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import org.churchpresenter.app.churchpresenter.composables.TooltipIconButton
+import org.churchpresenter.sharedui.composables.TooltipIconButton
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,6 +63,8 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.ScrollState
+import org.churchpresenter.sharedui.composables.DragHandle
+import org.churchpresenter.sharedui.composables.bibleListCardFill
 
 /**
  * The column header row: sortable, resizable and reorderable cells that scroll with the list, the

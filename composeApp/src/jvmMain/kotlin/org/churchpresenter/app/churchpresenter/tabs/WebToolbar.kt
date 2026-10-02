@@ -60,17 +60,18 @@ import org.churchpresenter.strings.generated.resources.web_url_hint
 import org.churchpresenter.settings.utils.Constants
 import org.churchpresenter.settings.profileFor
 import org.churchpresenter.settings.WebBookmark
-import org.churchpresenter.app.churchpresenter.presenter.Presenting
-import org.churchpresenter.app.churchpresenter.utils.rememberScreenDevices
-import org.churchpresenter.app.churchpresenter.composables.TooltipIconButton
-import org.churchpresenter.app.churchpresenter.composables.ActionIconButton
-import org.churchpresenter.app.churchpresenter.composables.AddToScheduleButton
-import org.churchpresenter.app.churchpresenter.composables.GoLiveButton
+import org.churchpresenter.sharedui.models.Presenting
+import org.churchpresenter.sharedui.utils.rememberScreenDevices
+import org.churchpresenter.sharedui.composables.TooltipIconButton
+import org.churchpresenter.sharedui.composables.ActionIconButton
+import org.churchpresenter.sharedui.composables.AddToScheduleButton
+import org.churchpresenter.sharedui.composables.GoLiveButton
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.churchpresenter.theme.elevationPalette
 import org.churchpresenter.theme.hoverTint
 import org.churchpresenter.theme.sunken
+import org.churchpresenter.sharedui.composables.searchBarCard
 
 /** The top card: the toolbar, the bookmarks, and while live, the live bar and typing to the page. */
 @Composable

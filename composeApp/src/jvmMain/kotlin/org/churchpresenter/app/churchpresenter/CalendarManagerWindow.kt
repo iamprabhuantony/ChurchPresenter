@@ -21,7 +21,7 @@ import org.churchpresenter.app.churchpresenter.presenter.ScenePresenter
 import org.churchpresenter.core.models.schedule.ScheduleItem
 import org.churchpresenter.app.churchpresenter.dialogs.CalendarEnrollQrDialog
 import org.churchpresenter.app.churchpresenter.server.asInvite
-import org.churchpresenter.app.churchpresenter.dialogs.filechooser.FileChooser
+import org.churchpresenter.sharedui.filechooser.FileChooser
 import org.churchpresenter.app.churchpresenter.server.calendarBibleBooks
 import org.churchpresenter.calendar.CalendarCloudSync
 import org.churchpresenter.calendar.CalendarHost
@@ -30,7 +30,7 @@ import org.churchpresenter.app.churchpresenter.composables.LoopingVideoBackgroun
 import org.churchpresenter.app.churchpresenter.utils.slideThumbnails
 import org.churchpresenter.settings.calendarFolder
 import org.churchpresenter.diagnostics.CrashReporter
-import org.churchpresenter.app.churchpresenter.utils.UsageEvents
+import org.churchpresenter.sharedui.utils.UsageEvents
 import org.churchpresenter.app.churchpresenter.utils.calendarUsageEvent
 import org.churchpresenter.app.churchpresenter.data.BibleBookNames
 import org.jetbrains.compose.resources.stringResource
