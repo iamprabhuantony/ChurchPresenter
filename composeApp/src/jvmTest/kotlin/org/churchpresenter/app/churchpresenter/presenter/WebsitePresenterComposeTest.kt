@@ -22,7 +22,6 @@ import org.churchpresenter.settings.utils.Constants
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import org.churchpresenter.sharedui.testing.assertColorAt
 
 class WebsitePresenterComposeTest {
 

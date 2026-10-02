@@ -88,9 +88,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.churchpresenter.sharedui.composables.FocusLostRescueState
 import androidx.compose.foundation.layout.RowScope
-import org.churchpresenter.sharedui.composables.bibleListCard
-import org.churchpresenter.sharedui.composables.bibleRowColors
-import org.churchpresenter.sharedui.composables.rememberRowHover
 
 /**
  * The lyrics panel down the right of the Songs tab.

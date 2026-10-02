@@ -9,7 +9,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.churchpresenter.sharedui.testing.showsExactly
 
 /**
  * The `BibleTab` action row — Go Live and Add to Schedule — and the history panel that Go Live

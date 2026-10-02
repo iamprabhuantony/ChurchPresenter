@@ -12,8 +12,6 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
-import org.churchpresenter.slides.tabs.PicturesTab
-import org.churchpresenter.sharedui.testing.renderedText
 
 class TabDefaultArgumentsTest {
 

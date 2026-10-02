@@ -34,8 +34,6 @@ import org.churchpresenter.settings.utils.Constants
 import org.churchpresenter.sharedui.utils.contentScale
 import org.churchpresenter.app.churchpresenter.viewmodel.LocalMediaViewModel
 import org.churchpresenter.sharedui.models.Presenting
-import org.churchpresenter.slides.presenter.PicturePresenter
-import org.churchpresenter.slides.presenter.PresentationPresenter
 
 
 /**
@@ -158,8 +156,8 @@ internal fun OffscreenOutputContent(
                     showChords = profile.showChords,
                     transposeSteps = transposeSteps,
                     currentLyricSection = presenterManager.displayedLyricSection.value,
-                    allLyricSections = presenterManager.displayedSongPosition.value.allSections,
-                    songDisplaySectionIndex = presenterManager.displayedSongPosition.value.sectionIndex,
+                    allLyricSections = presenterManager.allLyricSections.value,
+                    songDisplaySectionIndex = presenterManager.songDisplaySectionIndex.value,
                     displayedVerses = presenterManager.displayedVerses.value,
                     nextVerses = presenterManager.nextVerses.value,
                     announcementText = presenterManager.displayedAnnouncementText.value,
@@ -236,10 +234,10 @@ internal fun OffscreenOutputContent(
                                     isLowerThirdVertical = isLowerThirdVertical,
                                     outputRole = outputRole,
                                     transitionAlpha = presenterManager.songTransitionAlpha.value,
-                                    displayLineIndex = presenterManager.displayedSongPosition.value.lineIndex,
+                                    displayLineIndex = presenterManager.songDisplayLineIndex.value,
                                     lookAheadEnabled = profile.songLookAhead,
-                                    allLyricSections = presenterManager.displayedSongPosition.value.allSections,
-                                    displaySectionIndex = presenterManager.displayedSongPosition.value.sectionIndex,
+                                    allLyricSections = presenterManager.allLyricSections.value,
+                                    displaySectionIndex = presenterManager.songDisplaySectionIndex.value,
                                     showBackground = showBg && profile.showSongsBackground,
                                     crossfadeEnabled = appSettings.songSettings.crossfade,
                                     languageOverride = profile.songMode,

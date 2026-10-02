@@ -13,7 +13,6 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import org.churchpresenter.sharedui.testing.showsExactly
 
 /**
  * The buttons: the toolbar across the top and the per-row actions.

@@ -21,9 +21,7 @@ import org.churchpresenter.app.churchpresenter.presenter.BibleBandClock
 import org.churchpresenter.app.churchpresenter.presenter.BibleBandPhase
 import org.churchpresenter.app.churchpresenter.presenter.BibleLottieTemplate
 import org.churchpresenter.sharedui.models.Presenting
-import org.churchpresenter.app.churchpresenter.presenter.isRestatedAs
 import org.churchpresenter.app.churchpresenter.presenter.rememberBibleLottieTemplate
-import org.churchpresenter.app.churchpresenter.viewmodel.DisplayedSongPosition
 import org.churchpresenter.app.churchpresenter.viewmodel.PresenterManager
 
 /**
@@ -138,24 +136,13 @@ LaunchedEffect(presenterManager, bibleTemplate) {
 }
 
 LaunchedEffect(presenterManager, songTemplate, songBandLineMode) {
-    var applied: SongBandTarget? = null
     snapshotFlow {
         SongBandTarget(
             presenterManager.lyricSection.value,
             presenterManager.lyricSectionVersion.value,
             presenterManager.bandLineIndex(songBandLineMode),
-            presenterManager.liveSongPosition(),
         )
-    }.collect { target ->
-        // A move within what is already displayed -- a line the band does not draw, or the
-        // section list re-sent -- only follows the position: no swap, and no reset of a fade.
-        if (applied?.copy(position = target.position) == target) {
-            presenterManager.setDisplayedSongPosition(target.position)
-        } else {
-            presenterManager.applySongTarget(target, songTemplate)
-        }
-        applied = target
-    }
+    }.collect { target -> presenterManager.applySongTarget(target, songTemplate) }
 }
 
 LaunchedEffect(selectedImagePath) {
@@ -341,16 +328,8 @@ private suspend fun PresenterManager.swapBandText(
 /** What the Bible band should be showing, and whether hold is staging the selection instead. */
 private data class BibleBandTarget(val verses: List<SelectedVerse>, val hold: Boolean)
 
-/**
- * What the song band should be showing. The version makes re-picking the same section a change;
- * [position] is published with the section, so no output pairs one with the other's place.
- */
-private data class SongBandTarget(
-    val section: LyricSection,
-    val version: Int,
-    val lineIndex: Int,
-    val position: DisplayedSongPosition,
-)
+/** What the song band should be showing. The version makes re-picking the same section a change. */
+private data class SongBandTarget(val section: LyricSection, val version: Int, val lineIndex: Int)
 
 /** The line the band is on, or [WHOLE_SECTION] when it is not showing one line at a time. */
 private fun PresenterManager.bandLineIndex(lineMode: Boolean): Int =
@@ -376,14 +355,11 @@ private suspend fun PresenterManager.applyBibleTarget(target: BibleBandTarget, t
 /** Moves the song band — and the classic band's displayed section — onto [target]. */
 private suspend fun PresenterManager.applySongTarget(target: SongBandTarget, template: BibleLottieTemplate?) {
     val animating = template?.takeIf {
-        // A section re-sent with only its tuning changed reads the same, and swapping it plays the
-        // band's text out and back in over identical words.
-        val settled = displayedLyricSection.value.isRestatedAs(target.section) &&
-            target.lineIndex == bandSongLineIndex.value
+        val settled = target.section == displayedLyricSection.value && target.lineIndex == bandSongLineIndex.value
         presentingMode.value == Presenting.LYRICS && bandIsUp() && !settled
     }
     if (animating == null) {
-        setDisplayedLyricSection(target.section, target.position)
+        setDisplayedLyricSection(target.section)
         setBandSongLineIndex(target.lineIndex)
         setSongTransitionAlpha(1f)
         return
@@ -393,7 +369,7 @@ private suspend fun PresenterManager.applySongTarget(target: SongBandTarget, tem
         lyricLineIndex = bandSongLineIndex.value,
     )
     swapBandText(animating, outgoing) {
-        setDisplayedLyricSection(target.section, target.position)
+        setDisplayedLyricSection(target.section)
         setBandSongLineIndex(target.lineIndex)
     }
 }
