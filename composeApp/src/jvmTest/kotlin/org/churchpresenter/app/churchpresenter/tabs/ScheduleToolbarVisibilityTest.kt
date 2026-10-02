@@ -8,7 +8,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.churchpresenter.sharedui.testing.renderedText
 
 /**
  * Turning schedule toolbar buttons off from the panel's options menu.

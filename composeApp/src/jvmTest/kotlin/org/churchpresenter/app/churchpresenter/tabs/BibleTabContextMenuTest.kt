@@ -11,8 +11,6 @@ import androidx.compose.ui.test.rightClick
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import org.churchpresenter.sharedui.testing.renderedText
-import org.churchpresenter.sharedui.testing.showsContainingText
 
 class BibleTabContextMenuTest {
 

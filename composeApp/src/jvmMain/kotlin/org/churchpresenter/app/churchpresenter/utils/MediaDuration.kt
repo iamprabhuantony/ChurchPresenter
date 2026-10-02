@@ -1,6 +1,6 @@
 package org.churchpresenter.app.churchpresenter.utils
 
-import org.churchpresenter.sharedui.utils.FfmpegBinary
+import org.churchpresenter.app.churchpresenter.composables.FfmpegBinary
 import java.io.File
 import java.util.concurrent.TimeUnit
 

@@ -46,8 +46,6 @@ import java.util.Locale
 import javax.swing.SwingUtilities
 import androidx.compose.foundation.Image
 import org.churchpresenter.app.churchpresenter.utils.DevFlags
-import org.churchpresenter.sharedui.utils.CommandRunner
-import org.churchpresenter.sharedui.utils.readCommandOutput
 
 private const val POSITION_POLL_MS = 200
 private const val VOLUME_PERCENT_SCALE = 100

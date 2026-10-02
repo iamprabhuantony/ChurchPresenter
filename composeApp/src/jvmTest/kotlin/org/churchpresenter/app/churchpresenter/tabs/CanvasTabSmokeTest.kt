@@ -17,8 +17,6 @@ import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import org.churchpresenter.sharedui.testing.renderedText
-import org.churchpresenter.sharedui.testing.showsExactly
 
 /**
  * That `CanvasTab` composes at all on a machine with no display.

@@ -34,8 +34,6 @@ import org.churchpresenter.settings.utils.Constants
 import org.churchpresenter.sharedui.utils.contentScale
 import org.churchpresenter.app.churchpresenter.viewmodel.LocalMediaViewModel
 import org.churchpresenter.sharedui.models.Presenting
-import org.churchpresenter.slides.presenter.PicturePresenter
-import org.churchpresenter.slides.presenter.PresentationPresenter
 
 
 /**

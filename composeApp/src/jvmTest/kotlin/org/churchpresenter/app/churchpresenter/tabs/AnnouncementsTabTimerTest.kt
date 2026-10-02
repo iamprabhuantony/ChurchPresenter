@@ -12,8 +12,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.churchpresenter.sharedui.testing.renderedText
-import org.churchpresenter.sharedui.testing.showsExactly
 
 /**
  * The timer half of the Announcements tab — the countdown a church puts up before a service starts.

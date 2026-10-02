@@ -10,12 +10,8 @@ import org.churchpresenter.app.churchpresenter.tabs.CanvasTab
 import org.churchpresenter.app.churchpresenter.tabs.DictionaryTab
 import org.churchpresenter.app.churchpresenter.tabs.LowerThirdTab
 import org.churchpresenter.app.churchpresenter.tabs.MediaTab
-import org.churchpresenter.slides.tabs.PicturesTab
-import org.churchpresenter.slides.tabs.PresentationTab
-import org.churchpresenter.app.churchpresenter.dialogs.PresentationRemoteDialog
-import org.churchpresenter.app.churchpresenter.composables.isVlcArchMismatch
-import org.churchpresenter.app.churchpresenter.composables.isVlcAvailable
-import org.churchpresenter.app.churchpresenter.composables.isVlcLoadFailed
+import org.churchpresenter.app.churchpresenter.tabs.PicturesTab
+import org.churchpresenter.app.churchpresenter.tabs.PresentationTab
 import org.churchpresenter.sharedui.models.Tabs
 import org.churchpresenter.app.churchpresenter.tabs.WebTab
 import org.churchpresenter.sharedui.utils.UsageEvent
@@ -49,7 +45,7 @@ internal fun MainDesktopScope.PicturesTabPane() {
         instanceLinkFetchPictureImageBytes = link.fetchPictureImageBytes,
         selectedPictureItem = state.selectedPictureItem,
         selectedPictureItemVersion = state.selectedPictureItemVersion,
-        presenterManager = presenterManager.slidesOutput,
+        presenterManager = presenterManager,
         onSettingsChange = onSettingsChange,
         viewModel = picturesViewModel
     )
@@ -75,32 +71,20 @@ internal fun MainDesktopScope.PresentationTabPane() {
         instanceLinkFetchPresentationSlideBytes = link.fetchPresentationSlideBytes,
         selectedPresentationItem = state.selectedPresentationItem,
         selectedPresentationItemVersion = state.selectedPresentationItemVersion,
-        presenterManager = presenterManager.slidesOutput,
+        presenterManager = presenterManager,
         onSlidesLoaded = publish.onPresentationSlidesLoaded,
         onSettingsChange = onSettingsChange,
         viewModel = presentationViewModel,
-        remoteDialog = { onDismiss ->
-            PresentationRemoteDialog(
-                settings = appSettings,
-                onSettingsChange = onSettingsChange,
-                serverUrl = web.serverUrl,
-                apiKeyEnabled = appSettings.serverSettings.apiKeyEnabled,
-                apiKey = appSettings.serverSettings.apiKey,
-                tunnelStatus = web.tunnelStatus,
-                tunnelUrl = web.tunnelUrl,
-                presentationDisplayUrl = web.presentationDisplayUrl,
-                onPresentationDisplayUrlChanged = web.onPresentationDisplayUrlChanged,
-                onStartTunnel = web.onStartTunnel,
-                onStopTunnel = web.onStopTunnel,
-                onDismiss = onDismiss,
-            )
-        },
+        tunnelStatus = web.tunnelStatus,
+        tunnelUrl = web.tunnelUrl,
+        serverUrl = web.serverUrl,
+        presentationDisplayUrl = web.presentationDisplayUrl,
+        onPresentationDisplayUrlChanged = web.onPresentationDisplayUrlChanged,
+        onStartTunnel = web.onStartTunnel,
+        onStopTunnel = web.onStopTunnel,
         presentationFrozen = web.presentationFrozen,
         onFreezeToggle = web.onFreezeToggle,
-        onClearPresentation = web.onClearPresentation,
-        vlcAvailable = isVlcAvailable,
-        vlcArchMismatch = isVlcArchMismatch,
-        vlcLoadFailed = isVlcLoadFailed,
+        onClearPresentation = web.onClearPresentation
     )
 }
 

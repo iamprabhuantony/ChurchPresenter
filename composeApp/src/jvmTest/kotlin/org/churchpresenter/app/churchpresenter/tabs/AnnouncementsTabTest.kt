@@ -11,8 +11,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.churchpresenter.sharedui.testing.renderedText
-import org.churchpresenter.sharedui.testing.showsExactly
 
 /**
  * The announcement half of the Announcements tab: the text, how it is styled and placed, and how it

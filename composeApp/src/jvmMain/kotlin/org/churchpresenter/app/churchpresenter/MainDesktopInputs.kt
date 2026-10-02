@@ -19,7 +19,6 @@ import org.churchpresenter.core.models.songs.SongItem
 import org.churchpresenter.settings.BibleSyncMode
 import org.churchpresenter.settings.InstanceLinkRole
 import java.io.File
-import org.churchpresenter.slides.PresentationSlidesLoaded
 
 /*
  * The inputs MainDesktop takes, grouped by concern. main.kt builds one of each per composition, so a
@@ -74,6 +73,16 @@ data class MainDesktopPublishers(
 
 /** A picture folder's images, ready to serve to remote clients. */
 typealias PicturesLoaded = (folderId: String, folderName: String, folderPath: String, imageFiles: List<File>) -> Unit
+
+/** A presentation's slides, rendered and ready to serve to remote clients. */
+typealias PresentationSlidesLoaded = (
+    id: String,
+    filePath: String,
+    fileName: String,
+    fileType: String,
+    slideFiles: List<File>,
+    slideNotes: List<String>,
+) -> Unit
 
 /** Requests from remote clients (phones, the REST API, Instance Link) that drive the tabs directly. */
 data class RemoteControlFlows(
