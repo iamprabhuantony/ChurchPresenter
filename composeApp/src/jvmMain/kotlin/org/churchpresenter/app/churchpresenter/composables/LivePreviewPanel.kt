@@ -522,7 +522,9 @@ private fun SingleDisplayPreview(
     val bandOutgoing by presenterManager.bandOutgoing
     val displayedLyricSection by presenterManager.displayedLyricSection
     val songTransitionAlpha by presenterManager.songTransitionAlpha
-    val songPosition by presenterManager.displayedSongPosition
+    val songDisplayLineIndex by presenterManager.songDisplayLineIndex
+    val allLyricSections by presenterManager.allLyricSections
+    val songDisplaySectionIndex by presenterManager.songDisplaySectionIndex
     val displayedImagePath by presenterManager.displayedImagePath
     val previousDisplayedImagePath by presenterManager.previousDisplayedImagePath
     val pictureTransitionAlpha by presenterManager.pictureTransitionAlpha
@@ -647,8 +649,8 @@ private fun SingleDisplayPreview(
                     transposeSteps = transposeSteps,
                     announcementActive = effectiveMode == Presenting.ANNOUNCEMENTS,
                     currentLyricSection = displayedLyricSection,
-                    allLyricSections = songPosition.allSections,
-                    songDisplaySectionIndex = songPosition.sectionIndex,
+                    allLyricSections = allLyricSections,
+                    songDisplaySectionIndex = songDisplaySectionIndex,
                     displayedVerses = displayedVerses,
                     nextVerses = nextVerses,
                     announcementText = displayedAnnouncementText,
@@ -725,10 +727,10 @@ private fun SingleDisplayPreview(
                                     isLowerThirdVertical = isLowerThirdVertical,
                                     outputRole = primaryRole,
                                     transitionAlpha = songTransitionAlpha,
-                                    displayLineIndex = songPosition.lineIndex,
+                                    displayLineIndex = songDisplayLineIndex,
                                     lookAheadEnabled = profile.songLookAhead,
-                                    allLyricSections = songPosition.allSections,
-                                    displaySectionIndex = songPosition.sectionIndex,
+                                    allLyricSections = allLyricSections,
+                                    displaySectionIndex = songDisplaySectionIndex,
                                     showBackground = showsBackground && profile.showSongsBackground,
                                     crossfadeEnabled = outputSettings.songSettings.crossfade,
                                     languageOverride = profile.songMode,
