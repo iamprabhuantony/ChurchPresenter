@@ -14,7 +14,6 @@ import kotlin.test.assertNotSame
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
-import org.churchpresenter.media.utils.VideoFirstFrame
 
 class PreviewStillsTest {
 

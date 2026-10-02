@@ -33,15 +33,3 @@ fun keyDown(
     isAltPressed = alt,
     isShiftPressed = shift,
 )
-
-/** A key-up event, built the same way as [keyDown]. */
-@OptIn(InternalComposeUiApi::class)
-fun keyUp(key: Key): KeyEvent = KeyEvent(
-    key = key,
-    type = KeyEventType.KeyUp,
-    codePoint = 0,
-    isCtrlPressed = false,
-    isMetaPressed = false,
-    isAltPressed = false,
-    isShiftPressed = false,
-)
