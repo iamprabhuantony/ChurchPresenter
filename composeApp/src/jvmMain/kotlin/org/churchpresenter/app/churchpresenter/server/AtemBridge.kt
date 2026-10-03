@@ -1,9 +1,5 @@
 package org.churchpresenter.app.churchpresenter.server
 
-import org.churchpresenter.lowerthird.LowerThirdClip
-import org.churchpresenter.lowerthird.LowerThirdKey
-import org.churchpresenter.lowerthird.LowerThirdSequencer
-import org.churchpresenter.lowerthird.render.LottieRenderCache
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
@@ -19,7 +15,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import org.churchpresenter.settings.AtemSettings
-import org.churchpresenter.lowerthird.render.isLottieFile
+import org.churchpresenter.app.churchpresenter.viewmodel.isLottieFile
 import org.churchpresenter.atem.AtemClient
 import org.churchpresenter.atem.AtemConnectionManager
 import org.churchpresenter.atem.AtemKey
@@ -151,15 +147,16 @@ internal class AtemBridge(private val json: Json) {
         val pauseDurationMs = call.request.queryParameters["pauseDurationMs"]?.toLongOrNull() ?: 2000L
 
         val keyError = LowerThirdSequencer.run(
-            clip = LowerThirdClip(
-                name = file.nameWithoutExtension,
-                json = ltJson,
-                durationMs = durationMs,
-                pauseAtFrame = pause,
-                pauseDurationMs = pauseDurationMs,
-            ),
-            key = LowerThirdKey(mixEffect = mixEffect, keyer = keyer, useDownstreamKey = useDsk),
-            atem = atem, autoEnd = autoEnd,
+            name = file.nameWithoutExtension,
+            json = ltJson,
+            durationMs = durationMs,
+            pauseAtFrame = pause,
+            pauseDurationMs = pauseDurationMs,
+            mixEffect = mixEffect,
+            keyer = keyer,
+            atem = atem,
+            useDownstreamKey = useDsk,
+            autoEnd = autoEnd
         )
         val totalMs = atem.keyPreRollMs + durationMs +
             (if (pause) pauseDurationMs else 0L) + atem.keyPostRollMs

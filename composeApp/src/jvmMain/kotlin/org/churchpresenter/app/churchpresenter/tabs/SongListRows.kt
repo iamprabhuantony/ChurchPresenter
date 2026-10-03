@@ -105,7 +105,6 @@ import androidx.compose.runtime.MutableState
 import org.churchpresenter.sharedui.composables.BibleListRowShape
 import org.churchpresenter.sharedui.composables.bibleRowColors
 import org.churchpresenter.sharedui.composables.rememberRowHover
-import org.churchpresenter.sharedui.composables.rowPad
 
 /** The song rows, their scroll-to-selection, and both scrollbars. */
 @Composable

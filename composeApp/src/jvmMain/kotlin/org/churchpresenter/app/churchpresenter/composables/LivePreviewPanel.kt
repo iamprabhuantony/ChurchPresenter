@@ -106,7 +106,7 @@ import org.churchpresenter.sharedui.utils.OutputSize
 import org.churchpresenter.sharedui.utils.outputSizeOf
 import org.churchpresenter.media.viewmodel.LocalMediaViewModel
 import org.churchpresenter.app.churchpresenter.viewmodel.PresenterManager
-import org.churchpresenter.stt.STTManager
+import org.churchpresenter.app.churchpresenter.viewmodel.STTManager
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.churchpresenter.sharedui.composables.SlimSlider

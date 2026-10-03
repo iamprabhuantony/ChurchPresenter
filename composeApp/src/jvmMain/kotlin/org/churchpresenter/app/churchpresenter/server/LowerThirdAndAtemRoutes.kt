@@ -1,7 +1,5 @@
 package org.churchpresenter.app.churchpresenter.server
 
-import org.churchpresenter.lowerthird.LowerThirdSequencer
-import org.churchpresenter.lowerthird.render.LottieRenderCache
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json

@@ -14,7 +14,7 @@ import org.churchpresenter.sharedui.models.Presenting
 import org.churchpresenter.settings.utils.Constants
 import org.churchpresenter.media.viewmodel.MediaViewModel
 import org.churchpresenter.app.churchpresenter.viewmodel.PresenterManager
-import org.churchpresenter.stt.STTManager
+import org.churchpresenter.app.churchpresenter.viewmodel.STTManager
 import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)
