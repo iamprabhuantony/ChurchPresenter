@@ -11,8 +11,8 @@ import org.churchpresenter.bibletab.BibleViewModel
 import org.churchpresenter.dictionary.DictionaryViewModel
 import org.churchpresenter.slides.viewmodel.PicturesViewModel
 import org.churchpresenter.slides.viewmodel.PresentationViewModel
-import org.churchpresenter.app.churchpresenter.viewmodel.SceneViewModel
-import org.churchpresenter.app.churchpresenter.viewmodel.ScheduleViewModel
+import org.churchpresenter.canvas.SceneViewModel
+import org.churchpresenter.schedule.ScheduleViewModel
 import org.churchpresenter.songs.SongsViewModel
 import org.churchpresenter.server.InstanceLinkLogSide
 import org.churchpresenter.server.InstanceLinkLogger
