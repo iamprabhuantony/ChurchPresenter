@@ -167,6 +167,6 @@ include(":obs")
 // by :composeApp.
 include(":live-show")
 
-// The live output: PresenterManager and what is on air, the output windows and the stage monitor, and
-// the off-screen outputs (NDI, OMT, Browser Source, DeckLink). Depended on by :composeApp.
-include(":live-output")
+// The project's own detekt rules -- HardcodedString. Not a dependency of any module; the root build
+// adds it to every module's detekt run.
+include(":detekt-rules")
