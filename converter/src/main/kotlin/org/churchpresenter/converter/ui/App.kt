@@ -193,12 +193,12 @@ internal fun buildBiblePreview(files: List<File>, outputDir: File?): List<Previe
             val bible = XmlToSpbConverter.parse(file)
             val parts = mutableListOf<String>()
             parts.add("\"${bible.name}\"")
-            parts.add(Strings.biblePreviewBooks(bible.books.size))
+            parts.add("${bible.books.size} book(s)")
             val totalVerses = bible.books.sumOf { b -> b.chapters.sumOf { c -> c.verses.size } }
-            parts.add(Strings.biblePreviewVerses(totalVerses))
-            bible.language?.let { parts.add(Strings.biblePreviewLanguage(it)) }
+            parts.add("$totalVerses verses")
+            if (bible.language != null) parts.add("lang: ${bible.language}")
             parts.joinToString(" | ")
-        } catch (e: Exception) { Strings.parseError(e.message.toString()) }
+        } catch (e: Exception) { "Parse error: ${e.message}" }
         PreviewItem(file.name, file.absolutePath, outFile.name, outFile.absolutePath, details, outFile.exists())
     }
 }

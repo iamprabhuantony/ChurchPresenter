@@ -21,10 +21,7 @@ import org.churchpresenter.app.churchpresenter.utils.GpuInfo
 import org.churchpresenter.lowerthird.render.LottieFonts
 import org.churchpresenter.sharedui.utils.SystemFonts
 import org.churchpresenter.presentationengine.fonts.SlideFontRegistry
-import churchpresenter.composeapp.generated.resources.Res as AppRes
-import org.churchpresenter.strings.generated.resources.Res
-import org.churchpresenter.strings.generated.resources.app_already_running
-import org.jetbrains.compose.resources.getString
+import churchpresenter.composeapp.generated.resources.Res
 import kotlinx.coroutines.runBlocking
 import org.churchpresenter.settings.AppSettings
 import org.churchpresenter.settings.withBundledBible
@@ -107,7 +104,7 @@ private fun bundleDefaultBible(settings: AppSettings) {
         }
         val targetFile = File(defaultBibleDir, BUNDLED_BIBLE_FILE)
         if (!targetFile.exists()) {
-            targetFile.writeBytes(runBlocking { AppRes.readBytes("files/bible_samples/$BUNDLED_BIBLE_FILE") })
+            targetFile.writeBytes(runBlocking { Res.readBytes("files/bible_samples/$BUNDLED_BIBLE_FILE") })
         }
         SettingsManager().saveSettings(
             settings.withBundledBible(defaultBibleDir.absolutePath, BUNDLED_BIBLE_FILE)
@@ -130,7 +127,7 @@ fun main() {
         Log.info("Startup", "ChurchPresenter is already running.")
         javax.swing.JOptionPane.showMessageDialog(
             null,
-            runBlocking { getString(Res.string.app_already_running) },
+            "ChurchPresenter is already running.",
             "ChurchPresenter",
             javax.swing.JOptionPane.WARNING_MESSAGE
         )

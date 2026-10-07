@@ -26,9 +26,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.churchpresenter.diagnostics.CrashReporter
 import org.churchpresenter.settings.utils.Constants
-import org.churchpresenter.strings.generated.resources.Res
-import org.churchpresenter.strings.generated.resources.planning_center_untitled_plan
-import org.jetbrains.compose.resources.getString
 import java.io.File
 import java.io.IOException
 import java.nio.channels.UnresolvedAddressException
@@ -369,13 +366,12 @@ object PlanningCenterClient {
                 return@withContext PlansOutcome.Failure
             }
             val root = json.parseToJsonElement(response.body()).jsonObject
-            val untitledPlan = getString(Res.string.planning_center_untitled_plan)
             val plans = (root["data"] as? JsonArray ?: JsonArray(emptyList())).map { el ->
                 val obj = el.jsonObject
                 val attrs = obj["attributes"]?.jsonObject
                 val title = attrs?.get("title")?.jsonPrimitive?.contentOrNull?.ifBlank { null }
                     ?: attrs?.get("series_title")?.jsonPrimitive?.contentOrNull
-                    ?: untitledPlan
+                    ?: "Untitled Plan"
                 Plan(
                     id = obj["id"]?.jsonPrimitive?.contentOrNull ?: "",
                     title = title,

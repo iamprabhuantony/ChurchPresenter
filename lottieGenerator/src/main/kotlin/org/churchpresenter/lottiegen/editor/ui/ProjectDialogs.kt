@@ -281,7 +281,7 @@ private fun SaveAsDialog(state: EditorState, onClose: () -> Unit) {
         confirmButton = {
             GhostButton(
                 onClick = {
-                    state.saveProjectAs(name.trim().ifEmpty { Strings.untitled })
+                    state.saveProjectAs(name.trim().ifEmpty { "Untitled" })
                     onClose()
                 }
             ) { Text(Strings.editorSave) }

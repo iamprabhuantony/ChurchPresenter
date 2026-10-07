@@ -1,5 +1,0 @@
-# Layered over detekt.yml by `-PhardcodedStrings`: HardcodedString on in every module, report only.
-churchpresenter:
-  HardcodedString:
-    active: true
-    includes: []

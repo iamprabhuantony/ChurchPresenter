@@ -479,6 +479,7 @@ private fun DuplicateFinderState.DuplicateFilters() {
     Text(Strings.filters, style = MaterialTheme.typography.labelMedium)
 
     val allCategories = listOf("Same song number", "Same title", "Similar lyrics")
+    val categoryLabels = mapOf("Same song number" to Strings.catSameNumber, "Same title" to Strings.catSameTitle, "Similar lyrics" to Strings.catSimilarLyrics)
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         allCategories.forEach { cat ->
             RaisedFilterChip(
@@ -487,7 +488,7 @@ private fun DuplicateFinderState.DuplicateFilters() {
                     filterCategories = if (cat in filterCategories)
                         filterCategories - cat else filterCategories + cat
                 },
-                label = { Text(Strings.duplicateReason(cat), style = MaterialTheme.typography.labelSmall) }
+                label = { Text(categoryLabels[cat] ?: cat, style = MaterialTheme.typography.labelSmall) }
             )
         }
     }

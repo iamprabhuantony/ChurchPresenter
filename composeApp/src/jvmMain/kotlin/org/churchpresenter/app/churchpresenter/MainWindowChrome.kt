@@ -31,10 +31,6 @@ import org.churchpresenter.sharedui.utils.UrlOpener
 import org.churchpresenter.calendar.model.UpcomingLoad
 import org.churchpresenter.settings.InstanceLinkSettings
 import org.churchpresenter.calendar.ScheduleServiceLink
-import org.churchpresenter.strings.generated.resources.Res
-import org.churchpresenter.strings.generated.resources.lower_third_no_folder_message
-import org.churchpresenter.strings.generated.resources.lower_third_no_folder_title
-import org.jetbrains.compose.resources.stringResource
 
 /** The menu bar. */
 @Composable
@@ -128,8 +124,6 @@ internal fun MainWindowScope.MainDesktopHost() {
             isControllerConnected(instanceLinkStatus, appSettings.instanceLink.role)
         val instanceLinkUsesRemoteContent =
             shouldUseRemoteContent(instanceLinkStatus, appSettings.instanceLink.role)
-        val noLowerThirdFolderMessage = stringResource(Res.string.lower_third_no_folder_message)
-        val noLowerThirdFolderTitle = stringResource(Res.string.lower_third_no_folder_title)
         MainDesktop(
             hostWindow = window,
             appSettings = appSettings,
@@ -155,8 +149,8 @@ internal fun MainWindowScope.MainDesktopHost() {
                 } else {
                     javax.swing.JOptionPane.showMessageDialog(
                         null,
-                        noLowerThirdFolderMessage,
-                        noLowerThirdFolderTitle,
+                        "Please set a Lower Third folder in Settings first.",
+                        "No Folder Configured",
                         javax.swing.JOptionPane.WARNING_MESSAGE
                     )
                 }

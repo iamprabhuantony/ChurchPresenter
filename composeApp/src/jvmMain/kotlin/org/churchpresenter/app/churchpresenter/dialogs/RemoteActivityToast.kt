@@ -41,7 +41,6 @@ import org.churchpresenter.strings.generated.resources.block_for_session
 import org.churchpresenter.strings.generated.resources.remote_activity_added_to_schedule
 import org.churchpresenter.strings.generated.resources.remote_activity_removed_from_schedule
 import org.churchpresenter.strings.generated.resources.remote_activity_by
-import org.churchpresenter.strings.generated.resources.remote_activity_more_count
 import org.churchpresenter.strings.generated.resources.remote_activity_dismiss
 import org.churchpresenter.strings.generated.resources.remote_activity_dismiss_all
 import org.churchpresenter.strings.generated.resources.remote_activity_projected
@@ -199,7 +198,7 @@ private fun RemoteActivityToast(
                     if (remaining > 0) {
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = stringResource(Res.string.remote_activity_more_count, remaining),
+                            text = "+$remaining more",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary

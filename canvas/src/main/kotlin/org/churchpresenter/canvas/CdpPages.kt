@@ -10,9 +10,6 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.churchpresenter.diagnostics.CrashReporter
-import org.churchpresenter.strings.generated.resources.Res
-import org.churchpresenter.strings.generated.resources.canvas_browser_failed_to_start
-import org.jetbrains.compose.resources.getString
 import java.io.ByteArrayInputStream
 import java.util.Base64
 import javax.imageio.ImageIO
@@ -32,7 +29,7 @@ internal object CdpPages {
                 "BrowserSource: CDP did not become ready in time",
                 tags = mapOf("subsystem" to "browser-source")
             )
-            entry.error.value = getString(Res.string.canvas_browser_failed_to_start)
+            entry.error.value = "Browser failed to start"
             return null
         }
         Log.info("BrowserSource", "CDP ready on port $port")

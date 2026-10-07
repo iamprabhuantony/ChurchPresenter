@@ -35,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.churchpresenter.strings.generated.resources.Res
 import org.churchpresenter.strings.generated.resources.cancel
-import org.churchpresenter.strings.generated.resources.file_filter_text
 import org.churchpresenter.strings.generated.resources.qa_clear_all_questions
 import org.churchpresenter.strings.generated.resources.qa_delete_all_history
 import org.churchpresenter.strings.generated.resources.qa_export_to_file
@@ -84,7 +83,6 @@ internal fun QATabScope.EmptyNotice() {
 /** Export, import and delete, over the history. */
 @Composable
 internal fun QATabScope.HistoryActions(filteredQuestions: List<Question>) {
-    val strTextFiles = stringResource(Res.string.file_filter_text)
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -94,7 +92,7 @@ internal fun QATabScope.HistoryActions(filteredQuestions: List<Question>) {
                 val path = FileChooser.platformInstance.save(
                     location = null,
                     suggestedName = "questions.txt",
-                    filters = listOf(FileNameExtensionFilter(strTextFiles, "txt")),
+                    filters = listOf(FileNameExtensionFilter("Text files", "txt")),
                     title = strExportTitle
                 )
                 if (path != null) {
@@ -123,7 +121,7 @@ internal fun QATabScope.HistoryActions(filteredQuestions: List<Question>) {
             coroutineScope.launch {
                 val path = FileChooser.platformInstance.chooseSingle(
                     path = null,
-                    filters = listOf(FileNameExtensionFilter(strTextFiles, "txt")),
+                    filters = listOf(FileNameExtensionFilter("Text files", "txt")),
                     title = strImportTitle,
                     selectDirectory = false
                 )
@@ -216,7 +214,6 @@ internal fun QATabScope.QuestionList(filteredQuestions: List<Question>) {
 /** Clear All, with the chance to export the questions first. */
 @Composable
 internal fun QATabScope.ClearAllDialog() {
-    val strTextFiles = stringResource(Res.string.file_filter_text)
     AlertDialog(
         onDismissRequest = { showClearConfirm = false },
         title = { Text(stringResource(Res.string.qa_clear_all_questions)) },
@@ -245,7 +242,7 @@ internal fun QATabScope.ClearAllDialog() {
                         val path = FileChooser.platformInstance.save(
                             location = null,
                             suggestedName = "questions.txt",
-                            filters = listOf(FileNameExtensionFilter(strTextFiles, "txt")),
+                            filters = listOf(FileNameExtensionFilter("Text files", "txt")),
                             title = strExportTitle
                         )
                         // Cancelling the save dialog aborts the clear — never delete unexported questions

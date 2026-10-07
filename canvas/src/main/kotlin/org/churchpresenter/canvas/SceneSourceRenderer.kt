@@ -31,7 +31,6 @@ import org.churchpresenter.strings.generated.resources.canvas_video_vlc_not_foun
 import org.churchpresenter.strings.generated.resources.canvas_video_no_selection
 import org.churchpresenter.strings.generated.resources.canvas_video_file_not_found
 import org.churchpresenter.strings.generated.resources.canvas_video_loading
-import org.churchpresenter.strings.generated.resources.canvas_browser_loading
 import org.churchpresenter.core.models.scene.SceneSource
 import org.churchpresenter.sharedui.utils.Utils.parseHexColor
 
@@ -307,7 +306,7 @@ private fun BrowserSourceContent(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = error ?: stringResource(Res.string.canvas_browser_loading, source.url),
+                text = error ?: "Loading: ${source.url}",
                 color = if (error != null) Color(SOURCE_ERROR_TEXT_COLOR) else Color.White,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center

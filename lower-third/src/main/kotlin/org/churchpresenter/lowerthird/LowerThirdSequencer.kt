@@ -17,9 +17,6 @@ import org.churchpresenter.atem.AtemKey
 import org.churchpresenter.diagnostics.CrashReporter
 import org.churchpresenter.diagnostics.Log
 import org.churchpresenter.settings.AtemSettings
-import org.churchpresenter.strings.generated.resources.Res
-import org.churchpresenter.strings.generated.resources.atem_key_unreachable
-import org.jetbrains.compose.resources.getString
 import java.io.IOException
 
 /**
@@ -184,8 +181,8 @@ object LowerThirdSequencer {
     }
 
     /** Reports a key that would not go on air, forgets the target, and returns the reason. */
-    private suspend fun keyOnFailed(e: Exception): String {
-        val reason = e.message ?: getString(Res.string.atem_key_unreachable)
+    private fun keyOnFailed(e: Exception): String {
+        val reason = e.message ?: "ATEM unreachable"
         Log.warn("LowerThirdSequencer", "key on failed: $reason")
         CrashReporter.reportWarning(
             "LowerThirdSequencer: ATEM key on failed",

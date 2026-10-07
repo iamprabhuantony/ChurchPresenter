@@ -16,8 +16,6 @@ import org.churchpresenter.core.models.schedule.ScheduleItem
 import org.churchpresenter.app.churchpresenter.remote.batchEventSummary
 import org.churchpresenter.app.churchpresenter.remote.remoteEventLabel
 import org.churchpresenter.theme.ChurchPresenterTheme
-import kotlinx.coroutines.runBlocking
-import org.churchpresenter.sharedui.testing.ComposeResourceEnvironmentTestSupport
 import kotlin.test.Test
 import org.churchpresenter.sharedui.screenshot.captureTo
 import org.churchpresenter.sharedui.screenshot.stackedThemes
@@ -38,13 +36,6 @@ import org.churchpresenter.sharedui.screenshot.stackedThemes
  * the app itself picks between.
  */
 class RemoteEventDialogScreenshotTest {
-
-    private fun label(item: ScheduleItem) = resolved { remoteEventLabel(item) }
-
-    private fun summary(items: List<ScheduleItem>) = resolved { batchEventSummary(items) }
-
-    private fun <T> resolved(block: suspend () -> T): T =
-        ComposeResourceEnvironmentTestSupport.withFixedEnvironment { runBlocking { block() } }
 
     private fun shoot(
         name: String,
@@ -117,7 +108,7 @@ class RemoteEventDialogScreenshotTest {
     @Test
     fun `removing from the schedule`() = shoot(
         "remove_from_schedule",
-        labelled(RemoteEventType.REMOVE_FROM_SCHEDULE, label(SONG)),
+        labelled(RemoteEventType.REMOVE_FROM_SCHEDULE, remoteEventLabel(SONG)),
     )
 
     // ── Taking control of what is on screen ─────────────────────────────────────────────────────
@@ -233,13 +224,13 @@ class RemoteEventDialogScreenshotTest {
     )
 
     private fun added(item: ScheduleItem) =
-        labelled(RemoteEventType.ADD_TO_SCHEDULE, label(item))
+        labelled(RemoteEventType.ADD_TO_SCHEDULE, remoteEventLabel(item))
 
     private fun projected(item: ScheduleItem) =
-        labelled(RemoteEventType.PROJECT, label(item))
+        labelled(RemoteEventType.PROJECT, remoteEventLabel(item))
 
     private fun batch(vararg items: ScheduleItem) =
-        labelled(RemoteEventType.ADD_TO_SCHEDULE, summary(items.toList()))
+        labelled(RemoteEventType.ADD_TO_SCHEDULE, batchEventSummary(items.toList()))
 
     /** An event carrying a (title, detail) pair as the app's own labelling produced it. */
     private fun labelled(type: RemoteEventType, label: Pair<String, String>) =

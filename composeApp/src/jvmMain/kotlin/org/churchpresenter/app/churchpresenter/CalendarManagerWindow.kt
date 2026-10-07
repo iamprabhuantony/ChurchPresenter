@@ -15,8 +15,6 @@ import org.churchpresenter.app.churchpresenter.dialogs.CalendarWindow
 import org.churchpresenter.strings.generated.resources.calendar_locate_folder_title
 import org.churchpresenter.strings.generated.resources.calendar_choose_logo_title
 import org.churchpresenter.strings.generated.resources.calendar_export_title
-import org.churchpresenter.strings.generated.resources.calendar_export_pdf_filter
-import org.churchpresenter.strings.generated.resources.calendar_logo_images_filter
 import org.churchpresenter.strings.generated.resources.calendar_locate_file_title
 import org.churchpresenter.canvas.ScenePresenter
 import org.churchpresenter.core.models.schedule.ScheduleItem
@@ -183,7 +181,7 @@ private suspend fun chooseCalendarExportFile(suggested: String, folder: File?): 
         location = folder?.toPath(),
         suggestedName = suggested,
         filters = listOf(
-            FileNameExtensionFilter(getString(Res.string.calendar_export_pdf_filter), "pdf")
+            FileNameExtensionFilter("PDF Document (*.pdf)", "pdf")
         ),
         title = getString(Res.string.calendar_export_title)
     )?.toFile()
@@ -193,7 +191,7 @@ private suspend fun chooseCalendarLogoFile(): File? =
         path = null,
         filters = listOf(
             FileNameExtensionFilter(
-                getString(Res.string.calendar_logo_images_filter), "png", "jpg", "jpeg",
+                "Images (*.png, *.jpg)", "png", "jpg", "jpeg",
             )
         ),
         title = getString(Res.string.calendar_choose_logo_title),
