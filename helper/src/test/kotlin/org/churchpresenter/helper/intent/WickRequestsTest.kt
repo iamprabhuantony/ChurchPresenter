@@ -29,11 +29,17 @@ class WickRequestsTest {
     fun `a countdown of so many minutes starts one`() {
         assertEquals(HelperAction.StartCountdown(5), action("5 minute countdown"))
         assertEquals(HelperAction.StartCountdown(10), action("start a 10 min timer"))
+        // Taking it down is not starting one.
+        val takeDown = resolve("take down the 5 minute countdown")
+        assertTrue(takeDown !is Resolution.Act || takeDown.action !is HelperAction.StartCountdown, "$takeDown")
     }
 
     @Test
     fun `an announcement shows the words as typed`() {
-        assertEquals(HelperAction.ShowAnnouncement("Coffee after the service"), action("announce: Coffee after the service"))
+        assertEquals(
+            HelperAction.ShowAnnouncement("Coffee after the service"),
+            action("announce: Coffee after the service"),
+        )
         assertEquals(
             HelperAction.ShowAnnouncement("Parents of Sam, please come to the nursery."),
             action("tell the parents of Sam to come to the nursery"),
@@ -111,6 +117,15 @@ class WickRequestsTest {
         assertEquals(GuideTargets.SONG_LYRICS, tourTargets("how do I change song lyrics").last())
         assertTrue(GuideTargets.lookElement("BIBLE_REFERENCE") in tourTargets("how do I style the bible reference"))
         assertTrue(GuideTargets.PROFILE_BIBLE_PAGE in tourTargets("how do I change how bible verses look"))
+    }
+
+    @Test
+    fun `adding or editing a song starts at its button, not at the tab`() {
+        assertEquals(GuideTargets.NEW_SONG, tourTargets("how do I add song").first())
+        assertEquals(GuideTargets.NEW_SONG, tourTargets("where do I add a song").first())
+        assertEquals(GuideTargets.EDIT_SONG, tourTargets("how do I edit song").first())
+        assertEquals(GuideTargets.EDIT_SONG, tourTargets("how do I change a song").first())
+        assertIs<HelperAction.OpenSongLibrary>(action("batch edit songs"))
     }
 
     @Test
