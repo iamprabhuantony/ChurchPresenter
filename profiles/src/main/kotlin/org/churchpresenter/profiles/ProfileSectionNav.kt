@@ -1,7 +1,6 @@
 package org.churchpresenter.profiles
 
 import androidx.compose.foundation.background
-import org.churchpresenter.sharedui.guide.guideTarget
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -132,7 +131,6 @@ private fun NavItem(
             .background(if (selected) scheme.primaryContainer else scheme.primaryContainer.copy(alpha = 0f))
             .clickable(onClick = onClick)
             .testTag(page.navTag())
-            .then(page.guideTarget()?.let { Modifier.guideTarget(it) } ?: Modifier)
             .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),

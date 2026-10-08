@@ -1,8 +1,6 @@
 package org.churchpresenter.announcements
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import org.churchpresenter.sharedui.guide.GuideTargets
-import org.churchpresenter.sharedui.guide.guideTarget
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.window.WindowPlacement
 import org.churchpresenter.sharedui.utils.LocalMainWindowState
@@ -218,10 +216,9 @@ internal fun TimerModeTrack(
     modes: List<Pair<String, String>>,
     selected: String,
     onSelect: (String) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .sunken(AppShape(10.dp), elevationPalette())
             .padding(3.dp),
@@ -233,10 +230,7 @@ internal fun TimerModeTrack(
                     SegmentTrackItem(
                         selected = mode == selected,
                         onClick = { onSelect(mode) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(30.dp)
-                            .guideTarget(GuideTargets.timerMode(mode)),
+                        modifier = Modifier.weight(1f).height(30.dp),
                     ) {
                         Text(
                             text = label,

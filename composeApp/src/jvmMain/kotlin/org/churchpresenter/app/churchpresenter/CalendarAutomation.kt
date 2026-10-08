@@ -24,12 +24,11 @@ import org.churchpresenter.app.churchpresenter.remote.withAnnouncement
  * kind of item already has its own notion of a repeat, so it is mapped onto that rather than timed
  * from here.
  */
-internal fun AppRootState.projectFromCalendar(item: ScheduleItem, plays: Int, runActions: Boolean = true) {
+internal fun AppRootState.projectFromCalendar(item: ScheduleItem, plays: Int) {
     // Select it as a click would, so the Schedule shows what is live.
     currentScheduleActions.selectItem(item.id)
     liveDurationLog.wentLive(item)
     engineLiveItem = item
-    lastLiveRowId = item.id
     when (item) {
         // Scenes are driven by MainDesktop's own ViewModel; the bridge is
         // the one way there. Everything else is what a phone can project.
@@ -59,8 +58,6 @@ internal fun AppRootState.projectFromCalendar(item: ScheduleItem, plays: Int, ru
             }
         }
     }
-    // Straight to air, never to Preview, so its actions run now rather than waiting on a Take.
-    if (runActions) runRowActionsNow(item)
 }
 
 /** Loads a planned service's rows into the Schedule, with their timing and the service's start. */
@@ -104,6 +101,5 @@ internal fun AppRootState.calendarCueHost(): CalendarHost = CalendarHost(
         liveDurationLog.wentBlank()
         engineLiveItem = null
     },
-    runAction = { showRunner.run(listOf(it)) },
 )
 

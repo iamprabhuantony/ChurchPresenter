@@ -6,8 +6,6 @@
 package org.churchpresenter.slides.tabs
 
 import org.churchpresenter.slides.viewmodel.PicturesViewModel
-import org.churchpresenter.sharedui.guide.GuideTargets
-import org.churchpresenter.sharedui.guide.guideTarget
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.TooltipArea
@@ -104,7 +102,7 @@ private fun PicturesTabScope.PicturesFolderBar(viewModel: PicturesViewModel) {
                     RecentPictureFolders.add(folderPath)
                 }
             },
-            modifier = Modifier.height(32.dp).guideTarget(GuideTargets.PICTURES_SELECT_FOLDER),
+            modifier = Modifier.height(32.dp),
             shape = AppShape(7.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -158,8 +156,7 @@ private fun PicturesTabScope.PicturesFolderBar(viewModel: PicturesViewModel) {
             GoLiveButton(
                 onClick = { viewModel.goLive(presenterManager, onInstanceLinkSendProject, wentLive) },
                 enabled = viewModel.images.isNotEmpty(),
-                tooltipText = stringResource(Res.string.go_live),
-                modifier = Modifier.guideTarget(GuideTargets.PICTURES_GO_LIVE),
+                tooltipText = stringResource(Res.string.go_live)
             )
         }
     }

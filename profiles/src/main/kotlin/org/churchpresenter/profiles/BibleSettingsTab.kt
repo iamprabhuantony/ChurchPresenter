@@ -25,8 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.churchpresenter.icons.generated.resources.Res as IconRes
-import org.churchpresenter.sharedui.guide.GuideTargets
-import org.churchpresenter.sharedui.guide.guideTarget
 import org.churchpresenter.strings.generated.resources.Res
 import org.churchpresenter.strings.generated.resources.add_bible_translation
 import org.churchpresenter.strings.generated.resources.bible_cross_references_enable
@@ -191,7 +189,6 @@ private fun TranslationsSection(
                     ScanningRow(stringResource(Res.string.scanning_directory))
                 } else if (unselectedFiles.isNotEmpty() && translations.size < Constants.MAX_BIBLE_TRANSLATIONS) {
                     DropdownSettingsField(
-                        modifier = Modifier.guideTarget(GuideTargets.BIBLE_ADD_TRANSLATION),
                         width = pickerWidth,
                         label = addTranslationLabel,
                         value = addTranslationLabel,

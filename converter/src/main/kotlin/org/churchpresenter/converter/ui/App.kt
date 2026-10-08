@@ -58,12 +58,7 @@ object ConverterTab {
 }
 
 @Composable
-fun App(
-    initialTab: Int = ConverterTab.BIBLES,
-    /** A [SongSources] id for the Songs tab to open on; a hidden or unknown one opens the default. */
-    initialSongSource: String? = null,
-    onConverted: (sourceId: String) -> Unit = {},
-) {
+fun App(initialTab: Int = ConverterTab.BIBLES, onConverted: (sourceId: String) -> Unit = {}) {
     var selectedTab by remember { mutableStateOf(initialTab) }
     val tabs = listOf(Strings.tabBibles, Strings.tabSongs, Strings.tabDuplicates, Strings.tabRename)
 
@@ -73,7 +68,7 @@ fun App(
 
             when (selectedTab) {
                 0 -> BibleConverterTab(onConverted)
-                1 -> SongsTab(onConverted, initialSongSource)
+                1 -> SongsTab(onConverted)
                 2 -> DuplicateFinderTab()
                 3 -> BulkRenameTab()
             }

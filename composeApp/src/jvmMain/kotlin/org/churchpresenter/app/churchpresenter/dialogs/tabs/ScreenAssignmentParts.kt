@@ -1,8 +1,6 @@
 package org.churchpresenter.app.churchpresenter.dialogs.tabs
 
 import androidx.compose.foundation.BorderStroke
-import org.churchpresenter.sharedui.guide.GuideTargets
-import org.churchpresenter.sharedui.guide.guideTarget
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -205,11 +203,7 @@ internal fun ScreenAssignmentInfoRow(
             )
         }
         Spacer(modifier = Modifier.weight(1f))
-        RaisedButton(
-            shape = AppShape(6.dp),
-            onClick = onIdentifyScreen,
-            modifier = Modifier.guideTarget(GuideTargets.IDENTIFY_SCREENS),
-        ) {
+        RaisedButton(shape = AppShape(6.dp), onClick = onIdentifyScreen) {
             Text(
                 text = stringResource(Res.string.identify_screen),
                 style = MaterialTheme.typography.labelSmall

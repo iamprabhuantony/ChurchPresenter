@@ -1,8 +1,6 @@
 package org.churchpresenter.announcements
 
 import org.churchpresenter.sharedui.composables.ActionIconButton
-import org.churchpresenter.sharedui.guide.GuideTargets
-import org.churchpresenter.sharedui.guide.guideTarget
 import org.churchpresenter.sharedui.composables.AddToScheduleButton
 import org.churchpresenter.sharedui.composables.SavePresetButton
 import org.churchpresenter.sharedui.composables.GoLiveButton
@@ -140,7 +138,6 @@ private fun AnnouncementsTabScope.AnnouncementsTextActions(viewModel: Announceme
         if (output != null) {
             if (canSendToStageMonitor) {
                 ActionIconButton(
-                modifier = Modifier.guideTarget(GuideTargets.ANNOUNCEMENT_TO_STAGE),
                     onClick = { toggleStageMonitor(viewModel, viewModel.text, stopTicker = true) },
                     enabled = viewModel.text.isNotBlank() || isSentToStageMonitor,
                     tooltipText = if (isSentToStageMonitor) stringResource(
@@ -196,7 +193,6 @@ private fun AnnouncementsTabScope.AnnouncementsTextActions(viewModel: Announceme
         }
         if (output != null) {
             GoLiveButton(
-                modifier = Modifier.guideTarget(GuideTargets.ANNOUNCEMENT_GO_LIVE),
                 onClick = { viewModel.goLive(output, onSettingsChange) },
                 enabled = viewModel.text.isNotBlank(),
                 tooltipText = stringResource(Res.string.tooltip_go_live)
@@ -214,7 +210,6 @@ private fun AnnouncementsTabScope.AnnouncementsTextInput(viewModel: Announcement
             .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
             .onSizeChanged { naturalTextHeightPx = it.height }
             .testTag(ANNOUNCEMENTS_TEXT_BOX_TAG)
-            .guideTarget(GuideTargets.ANNOUNCEMENT_TEXT)
             .then(
                 if (shownTextHeightPx > 0f) Modifier.height(with(density) { shownTextHeightPx.toDp() })
                 else Modifier

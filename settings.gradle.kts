@@ -126,10 +126,6 @@ include(":stt")
 include(":announcements")
 include(":lower-third")
 
-// The helper lamp: tips, display setup, typed tasks and the spotlight that points at controls.
-// Depended on by :composeApp, which carries the actions out through HelperActionExecutor.
-include(":helper")
-
 // The Songs tab, SongsViewModel and the song library on disk. Depended on by :composeApp, which
 // hands it the song editor, the title slide, statistics and the Instance Link catalog.
 include(":songs")
@@ -171,10 +167,6 @@ include(":obs")
 // by :composeApp.
 include(":live-show")
 
-// The action vocabulary -- one list of things that change the show -- and the runner that plays
-// action lists through the app's host. Depended on by :composeApp and :calendar.
-include(":show-control")
-include(":control-in")
 // The live output: PresenterManager and what is on air, the output windows and the stage monitor, and
 // the off-screen outputs (NDI, OMT, Browser Source, DeckLink). Depended on by :composeApp.
 include(":live-output")

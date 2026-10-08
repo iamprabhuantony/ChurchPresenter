@@ -1,7 +1,5 @@
 package org.churchpresenter.app.churchpresenter
 
-import org.churchpresenter.sharedui.guide.GuideTargets
-import org.churchpresenter.sharedui.guide.guideTarget
 import org.churchpresenter.app.churchpresenter.tabs.recordBibleWentLive
 import org.churchpresenter.app.churchpresenter.data.sharedCrossReferences
 import androidx.compose.animation.AnimatedContent
@@ -109,7 +107,6 @@ private fun MainDesktopScope.TabBar() {
             onClick = onShowBackgroundSettings,
             style = ToolbarKeyStyle.PANEL_TOGGLE,
             buttonSize = TOOLBAR_KEY_SIZE,
-            modifier = Modifier.guideTarget(GuideTargets.BACKGROUND_BUTTON),
         )
         ToolbarKey(
             painter = painterResource(IconRes.drawable.ic_settings),
@@ -117,7 +114,6 @@ private fun MainDesktopScope.TabBar() {
             onClick = onShowSettings,
             style = ToolbarKeyStyle.PANEL_TOGGLE,
             buttonSize = TOOLBAR_KEY_SIZE,
-            modifier = Modifier.guideTarget(GuideTargets.SETTINGS_BUTTON),
         )
     }
 }

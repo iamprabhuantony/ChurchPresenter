@@ -6,8 +6,6 @@
 
 package org.churchpresenter.songs
 
-import org.churchpresenter.sharedui.guide.GuideTargets
-import org.churchpresenter.sharedui.guide.guideTarget
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import org.churchpresenter.settings.SongColumnId
@@ -192,10 +190,7 @@ private fun SongListScope.SongActionHeaderCell(
             .padding(start = 4.dp, top = 4.dp, bottom = 4.dp)
             .background(cellBg, shape = MaterialTheme.shapes.extraSmall)
             .then(if (isSortable) Modifier.clickable { onSortChange(sk) } else Modifier)
-            .then(reorderDragMod)
-            .then(
-                if (colId == SongColumnId.FAVORITES) Modifier.guideTarget(GuideTargets.SONG_FAVORITES) else Modifier,
-            ),
+            .then(reorderDragMod),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {

@@ -1,7 +1,5 @@
 package org.churchpresenter.web.tabs
 
-import org.churchpresenter.sharedui.guide.guideTarget
-import org.churchpresenter.sharedui.guide.GuideTargets
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -114,7 +112,7 @@ private fun WebTabScope.WebToolbar() {
     }
 
     // Shared composables for URL bar and action buttons
-    val urlBar: @Composable RowScope.() -> Unit = { WebUrlBar(Modifier.weight(1f).widthIn(min = minUrlWidth).guideTarget(GuideTargets.WEB_URL)) }
+    val urlBar: @Composable RowScope.() -> Unit = { WebUrlBar(Modifier.weight(1f).widthIn(min = minUrlWidth)) }
     val actionButtons: @Composable RowScope.() -> Unit = { WebActionButtons(hasSecondaryDisplay, hasWebCapableOutput) }
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -254,8 +252,7 @@ private fun WebTabScope.WebActionButtons(hasSecondaryDisplay: Boolean, hasWebCap
     GoLiveButton(
         onClick = { goLive() },
         enabled = goLiveEnabled,
-        tooltipText = stringResource(Res.string.web_go_live),
-        modifier = Modifier.guideTarget(GuideTargets.WEB_GO_LIVE),
+        tooltipText = stringResource(Res.string.web_go_live)
     )
 }
 

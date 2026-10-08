@@ -1,7 +1,6 @@
 package org.churchpresenter.profiles
 
 import androidx.compose.runtime.Composable
-import org.churchpresenter.sharedui.guide.GuideTargets
 import androidx.compose.runtime.key
 import androidx.compose.ui.unit.dp
 import org.churchpresenter.strings.generated.resources.Res
@@ -62,11 +61,7 @@ internal fun StageTextGroup(
         paths = listOf(base),
         header = {
             AppliesToStrip(
-                // The first zone is the one the helper's stage text tour points at.
-                targets = zones.mapIndexed { index, zone ->
-                    val guide = if (index == 0) GuideTargets.STAGE_TEXT_ZONE else null
-                    RowOption(zone, zoneLabel(zone.toZone()), stageZoneTag(zone), guideTarget = guide)
-                },
+                targets = zones.map { RowOption(it, zoneLabel(it.toZone()), stageZoneTag(it)) },
                 target = zone,
                 onTarget = onSelect,
                 elements = emptyList<RowOption<Unit>>(),

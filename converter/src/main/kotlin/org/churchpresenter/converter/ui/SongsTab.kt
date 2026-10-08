@@ -71,11 +71,9 @@ import java.io.File
 // =============================================================================
 
 @Composable
-fun SongsTab(onConverted: (sourceId: String) -> Unit = {}, initialSourceId: String? = null) {
+fun SongsTab(onConverted: (sourceId: String) -> Unit = {}) {
     var query by remember { mutableStateOf("") }
-    var selectedId by remember {
-        mutableStateOf(initialSourceId?.takeIf { id -> SongSources.visible.any { it.id == id } } ?: SongSources.default.id)
-    }
+    var selectedId by remember { mutableStateOf(SongSources.default.id) }
     val source = SongSources.byId(selectedId)
 
     Row(modifier = Modifier.fillMaxSize()) {

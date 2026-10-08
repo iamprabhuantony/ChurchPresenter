@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.input.key.key
 import androidx.compose.runtime.Composable
 import org.churchpresenter.strings.generated.resources.Res
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.churchpresenter.statistics.asDurationRow
 import org.churchpresenter.app.churchpresenter.dialogs.AboutDialog
@@ -52,10 +53,8 @@ internal fun MainWindowScope.SettingsDialogs() {
     with(root) {
         OptionsDialog(
             isVisible = showOptionsDialog,
-            devMode = devMode,
             initialTab = optionsDialogInitialTab,
             initialSettings = appSettings,
-            showHelperSettings = isDevMode,
             theme = theme,
             settingsManager = settingsManager,
             companionServer = companionServer,
@@ -81,7 +80,13 @@ internal fun MainWindowScope.SettingsDialogs() {
                     updated.streamingSettings.lowerThirdFolder
                 )
             },
-            onIdentifyScreen = ::identifyScreens,
+            onIdentifyScreen = {
+                identifyingScreen = true
+                coroutineScope.launch {
+                    delay(UPDATE_CHECK_DELAY_MS)
+                    identifyingScreen = false
+                }
+            },
             onIdentifyBrowserSource = { index ->
                 presenterManager.identifyBrowserSourceOutput(index)
             },
@@ -97,7 +102,6 @@ internal fun MainWindowScope.SettingsDialogs() {
         KeyboardShortcutsDialog(
             isVisible = showKeyboardShortcutsDialog,
             settings = appSettings,
-            devMode = devMode,
             onSave = { updated ->
                 appSettings = updated
                 settingsManager.saveSettings(updated)
@@ -205,7 +209,6 @@ internal fun MainWindowScope.ToolWindows() {
             ConverterWindow(
                 theme = theme,
                 initialTab = converterInitialTab,
-                initialSongSource = converterInitialSource,
                 onClose = { showConverterWindow = false }
             )
         }

@@ -1,6 +1,5 @@
 package org.churchpresenter.media.utils
 
-import kotlinx.coroutines.runBlocking
 import org.churchpresenter.settings.utils.Constants
 import java.io.File
 import java.nio.file.Files
@@ -19,7 +18,7 @@ class FollowerMediaUrlTest {
     }
 
     @Test
-    fun `media that exists on this machine is played from disk, not streamed from the primary`() = runBlocking {
+    fun `media that exists on this machine is played from disk, not streamed from the primary`() {
         // Built from the real temp dir rather than a POSIX literal: a "/tmp/..." string is not a
         // path on Windows, so exists() would answer false there for the wrong reason and the test
         // would pass while asserting nothing.
@@ -35,7 +34,7 @@ class FollowerMediaUrlTest {
     }
 
     @Test
-    fun `media that exists only on the primary's disk is streamed from there`() = runBlocking {
+    fun `media that exists only on the primary's disk is streamed from there`() {
         val missing = File(tempDir, "not-mounted-here.mp4")
         assertFalse(missing.exists(), "fixture must not exist for this branch to be the one under test")
         assertEquals(
@@ -49,7 +48,7 @@ class FollowerMediaUrlTest {
     }
 
     @Test
-    fun `a missing file with nowhere to stream from keeps its own path`() = runBlocking {
+    fun `a missing file with nowhere to stream from keeps its own path`() {
         // No link (or a Controller, which is handed no stream URL at all): the player must fail on
         // the real path the operator configured, not on a silently substituted one.
         val missing = File(tempDir, "gone.mp4")
@@ -64,7 +63,7 @@ class FollowerMediaUrlTest {
     }
 
     @Test
-    fun `a URL media item is never rewritten to the primary's stream`() = runBlocking {
+    fun `a URL media item is never rewritten to the primary's stream`() {
         // Already reachable from anywhere — routing it through the primary would add a hop and pin
         // the follower's playback to the primary staying up.
         val url = "rtsp://camera.local/stream1"

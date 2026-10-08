@@ -1,6 +1,5 @@
 package org.churchpresenter.app.churchpresenter.dialogs
 
-import org.churchpresenter.app.churchpresenter.dialogs.tabs.LocalSettingsDevMode
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -122,8 +121,7 @@ fun OptionsDialog(
     obsManager: OBSWebSocketManager? = null,
     companionSatelliteViewModel: CompanionSatelliteViewModel? = null,
     initialTab: Int = 0,
-    initialSettings: AppSettings? = null,
-    devMode: Boolean = false,
+    initialSettings: AppSettings? = null
 ) {
     if (!isVisible) return
 
@@ -163,7 +161,6 @@ fun OptionsDialog(
             companionSatelliteViewModel = companionSatelliteViewModel,
             initialTab = initialTab,
             initialSettings = initialSettings,
-            devMode = devMode,
         )
     }
 }
@@ -186,8 +183,7 @@ internal fun OptionsDialogContent(
     companionSatelliteViewModel: CompanionSatelliteViewModel? = null,
     initialTab: Int = 0,
     initialSettings: AppSettings? = null,
-    detectScreens: () -> List<DetectedScreen> = ::detectScreensFromAwt,
-    devMode: Boolean = false,
+    detectScreens: () -> List<DetectedScreen> = ::detectScreensFromAwt
 ) {
     var currentSettings by remember { mutableStateOf(initialSettings ?: settingsManager.loadSettings()) }
     val companionSatelliteTabIndex = if (obsManager != null) 8 else 7
@@ -225,10 +221,7 @@ internal fun OptionsDialogContent(
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.background)
                 ) {
-                    CompositionLocalProvider(
-                        LocalApplySettings provides applySettings,
-                        LocalSettingsDevMode provides devMode,
-                    ) {
+                    CompositionLocalProvider(LocalApplySettings provides applySettings) {
                         SettingsTabContent(
                             tabIndex = safeTabIndex,
                             settings = currentSettings,

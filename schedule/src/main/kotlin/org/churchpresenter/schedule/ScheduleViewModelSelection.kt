@@ -59,5 +59,4 @@ fun ScheduleViewModel.presentItem(
         is ScheduleItem.CueItem -> onPresentCue?.invoke(item)
         is ScheduleItem.MinistryItem -> { /* happens up front, never on screen */ }
     }
-    actionsFor(item.id).takeIf { it.isNotEmpty() }?.let { onRowActions?.invoke(item, it) }
 }

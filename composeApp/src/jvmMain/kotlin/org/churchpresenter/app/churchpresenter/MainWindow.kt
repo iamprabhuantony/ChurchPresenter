@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -19,8 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.key
 import androidx.compose.runtime.Composable
-import org.churchpresenter.helper.ui.GuideSpotlightHost
-import org.churchpresenter.sharedui.guide.LocalGuideSession
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -241,21 +240,19 @@ private fun AppRootState.MainWindow(
                     LocalWentLive provides { item -> liveDurationLog.wentLive(item) },
                     LocalShortcuts provides remember(appSettings.keyboardShortcutSettings) {
                         ShortcutMap.from(appSettings.keyboardShortcutSettings)
-                    },
-                    LocalGuideSession provides helperState.session,
+                    }
                 ) {
-                    GuideSpotlightHost(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.fillMaxSize()) {
                     MainWindowContent(
                         frame = this@Window,
                         bannerModifier = Modifier.align(Alignment.TopCenter),
-                        helperModifier = Modifier.align(Alignment.BottomEnd),
                         effectiveAppSettings,
                         calendarSync,
                         tunnelStatus,
                         tunnelUrl,
                         onThemeCustomizationChange,
                     )
-                    } // end GuideSpotlightHost (window content)
+                    } // end Box (window content)
                 }
             }
         }
@@ -266,7 +263,6 @@ private fun AppRootState.MainWindow(
 private fun AppRootState.MainWindowContent(
     frame: FrameWindowScope,
     bannerModifier: Modifier,
-    helperModifier: Modifier,
     effectiveAppSettings: AppSettings,
     calendarSync: CalendarSyncService,
     tunnelStatus: TunnelStatus,
@@ -323,8 +319,6 @@ private fun AppRootState.MainWindowContent(
         RemoteRemoveRequests()
         RemoteProjectRequests()
         CalendarAutomationWiring()
-        ShowControlEffects()
-        ControlInEffects()
         ServerCommandWiring()
         QaAndPresentationConnectRequests()
         AdminAndMusicianConnectRequests()
@@ -344,7 +338,6 @@ private fun AppRootState.MainWindowContent(
 
         RemoteApprovalDialog()
         ActivityToasts()
-        HelperHost(helperModifier)
     }
 }
 
@@ -387,7 +380,6 @@ private fun AppRootState.FirstRunDialogs() {
             onOpenConverter = {
                 UsageEvents.record(UsageEvent.SETUP_WIZARD_OPENED_CONVERTER)
                 converterInitialTab = ConverterTab.SONGS
-                converterInitialSource = null
                 showConverterWindow = true
             },
             onDismiss = {

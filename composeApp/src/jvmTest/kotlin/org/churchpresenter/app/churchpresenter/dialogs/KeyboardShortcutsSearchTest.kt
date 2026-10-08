@@ -34,7 +34,6 @@ class KeyboardShortcutsSearchTest {
 
     private fun dialog(
         initial: AppSettings = AppSettings(),
-        devMode: Boolean = true,
         block: ComposeUiTest.(result: Saves) -> Unit,
     ) {
         val result = Saves()
@@ -45,7 +44,6 @@ class KeyboardShortcutsSearchTest {
                         initialSettings = initial,
                         onSave = { result.saved += it },
                         onDismiss = { result.dismissed++ },
-                        devMode = devMode,
                     )
                 }
             }
@@ -284,21 +282,5 @@ class KeyboardShortcutsSearchTest {
             emptyList(),
             result.saved.last().keyboardShortcutSettings.overrides[ShortcutAction.MEDIA_MUTE.name],
         )
-    }
-
-    @Test
-    fun `the macro, clear-group and Take keys are offered in dev mode only`() {
-        dialog { _ ->
-            search("macro")
-            assertTrue(rowExists(ShortcutAction.MACRO_1))
-        }
-        dialog(devMode = false) { _ ->
-            search("macro")
-            assertTrue(ShortcutAction.entries.filter { it.devOnly }.none { rowExists(it) })
-        }
-        dialog(devMode = false) { _ ->
-            search("Take")
-            assertTrue(!rowExists(ShortcutAction.TAKE))
-        }
     }
 }

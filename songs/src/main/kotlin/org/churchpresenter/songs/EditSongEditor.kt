@@ -1,8 +1,6 @@
 package org.churchpresenter.songs
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import org.churchpresenter.sharedui.guide.GuideTargets
-import org.churchpresenter.sharedui.guide.guideTarget
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -161,19 +159,13 @@ internal fun EditSongToolbar(
                 }
             }
             if (state.visibleTranslations < MAX_SONG_EXTRA_TRANSLATIONS) {
-                PaneTab(
-                    stringResource(Res.string.song_add_translation),
-                    selected = false,
-                    modifier = Modifier.guideTarget(GuideTargets.ADD_SONG_LANGUAGE),
-                ) {
+                PaneTab(stringResource(Res.string.song_add_translation), selected = false) {
                     state.addTranslationPane()
                 }
             }
         }
         Spacer(Modifier.weight(1f))
-        Box(Modifier.guideTarget(GuideTargets.SONG_BACKGROUND)) {
-            backgroundButton(EditorBackgroundButtonState(state, sectionSlots, scopeNames, onApplyBackgroundToSongbook))
-        }
+        backgroundButton(EditorBackgroundButtonState(state, sectionSlots, scopeNames, onApplyBackgroundToSongbook))
         ChordsToggle(on = showChords, onToggle = onToggleChords)
     }
 }
@@ -275,10 +267,7 @@ private fun LanguageNameField(
 private fun ChordsToggle(on: Boolean, onToggle: () -> Unit) {
     HoverLabel(stringResource(Res.string.song_chords_toggle)) {
         Row(
-            modifier = Modifier
-                .guideTarget(GuideTargets.SONG_CHORDS_SWITCH)
-                .clickable(onClick = onToggle)
-                .padding(start = 6.dp),
+            modifier = Modifier.clickable(onClick = onToggle).padding(start = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {

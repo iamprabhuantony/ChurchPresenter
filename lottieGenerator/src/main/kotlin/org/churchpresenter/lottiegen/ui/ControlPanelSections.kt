@@ -1,8 +1,5 @@
 package org.churchpresenter.lottiegen.ui
 import androidx.compose.foundation.clickable
-import org.churchpresenter.lottiegen.ControlTag
-import org.churchpresenter.lottiegen.GuidedControl
-import org.churchpresenter.lottiegen.NoControlTag
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -386,7 +383,7 @@ internal fun PositionSection(viewModel: LottieGenState) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ActionsSection(viewModel: LottieGenState, controlTag: ControlTag = NoControlTag) {
+internal fun ActionsSection(viewModel: LottieGenState) {
     val cfg = viewModel.config
     // ═══ Actions ═══
     Spacer(Modifier.height(5.dp))
@@ -395,11 +392,7 @@ internal fun ActionsSection(viewModel: LottieGenState, controlTag: ControlTag = 
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         if (viewModel.hasOutputDir) {
-            AccentButton(
-                Strings.saveLowerThird,
-                { viewModel.saveLowerThird() },
-                Modifier.weight(1f).then(controlTag(GuidedControl.SAVE)),
-            )
+            AccentButton(Strings.saveLowerThird, { viewModel.saveLowerThird() }, Modifier.weight(1f))
         } else {
             AccentButton(
                 Strings.downloadJson,

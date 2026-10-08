@@ -1,9 +1,6 @@
 package org.churchpresenter.app.churchpresenter.dialogs
 
 import androidx.compose.foundation.Image
-import org.churchpresenter.sharedui.guide.GuideTargets
-import org.churchpresenter.sharedui.guide.guideTarget
-import org.churchpresenter.helper.ui.GuideSpotlightHost
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -134,27 +131,24 @@ fun QARemoteDialog(
         resizable = false
     ) {
         ProvideUiFontScale {
-            // This window's own spotlight: Wick's Q&A tip rings Enable Public Access.
-            GuideSpotlightHost(Modifier.fillMaxSize()) {
-                QARemoteContent(
-                    serverUrl = serverUrl,
-                    qaDisplayUrl = qaDisplayUrl,
-                    onQaDisplayUrlChanged = onQaDisplayUrlChanged,
-                    apiKeyEnabled = apiKeyEnabled,
-                    apiKey = apiKey,
-                    tunnelStatus = tunnelStatus,
-                    tunnelUrl = tunnelUrl,
-                    onStartTunnel = onStartTunnel,
-                    onStopTunnel = onStopTunnel,
-                    qaSettings = qaSettings,
-                    onSettingsChange = onSettingsChange,
-                    scrollState = scrollState,
-                    copyText = { text ->
-                        SystemClipboard.copy(text)
-                    },
-                    onDismiss = onDismiss
-                )
-            }
+            QARemoteContent(
+                serverUrl = serverUrl,
+                qaDisplayUrl = qaDisplayUrl,
+                onQaDisplayUrlChanged = onQaDisplayUrlChanged,
+                apiKeyEnabled = apiKeyEnabled,
+                apiKey = apiKey,
+                tunnelStatus = tunnelStatus,
+                tunnelUrl = tunnelUrl,
+                onStartTunnel = onStartTunnel,
+                onStopTunnel = onStopTunnel,
+                qaSettings = qaSettings,
+                onSettingsChange = onSettingsChange,
+                scrollState = scrollState,
+                copyText = { text ->
+                    SystemClipboard.copy(text)
+                },
+                onDismiss = onDismiss
+            )
         }
     }
 }
@@ -310,7 +304,7 @@ private fun QaTunnelControls(
         TunnelStatus.Idle -> {
             RaisedButton(
                 onClick = onStartTunnel,
-                modifier = Modifier.fillMaxWidth().guideTarget(GuideTargets.QA_PUBLIC_ACCESS),
+                modifier = Modifier.fillMaxWidth(),
                 shape = AppShape(6.dp)
             ) {
                 Text(

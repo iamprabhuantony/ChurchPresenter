@@ -1,7 +1,6 @@
 package org.churchpresenter.sharedui.composables
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import org.churchpresenter.sharedui.guide.guideTarget
 import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.TooltipPlacement
 import androidx.compose.foundation.background
@@ -228,7 +227,6 @@ private fun <T> Segment(
                 onClick = onClick
             )
             .then(item.testTag?.let { Modifier.testTag(it) } ?: Modifier)
-            .then(item.guideTarget?.let { Modifier.guideTarget(it) } ?: Modifier)
             .padding(style.contentPadding),
         contentAlignment = Alignment.Center
     ) {

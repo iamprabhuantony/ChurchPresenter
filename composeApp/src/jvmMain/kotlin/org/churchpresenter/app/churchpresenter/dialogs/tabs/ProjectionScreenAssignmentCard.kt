@@ -1,8 +1,6 @@
 package org.churchpresenter.app.churchpresenter.dialogs.tabs
 
 import org.churchpresenter.settings.ProjectionSettings
-import org.churchpresenter.sharedui.guide.GuideTargets
-import org.churchpresenter.sharedui.guide.guideTarget
 import org.churchpresenter.settings.mergingProfileOf
 import org.churchpresenter.settings.withScreenUnused
 import androidx.compose.foundation.text.KeyboardOptions
@@ -140,9 +138,7 @@ SettingsSection(title = stringResource(Res.string.screen_assignment)) {
                     Constants.previewOutputKey(Constants.PREVIEW_OUTPUT_SCREEN, i),
                     assignment.activeProfileId,
                 ),
-                // The first screen's is the one the helper's display tours point at.
-                modifier = Modifier.width(langDropdownWidth)
-                    .then(if (i == 0) Modifier.guideTarget(GuideTargets.SCREEN_PROFILE_PICKER) else Modifier),
+                modifier = Modifier.width(langDropdownWidth),
                 onPick = { pickedId ->
                     updateProjection { it.withAssignment(i, assignment.copy(activeProfileId = pickedId)) }
                 },
