@@ -1,6 +1,5 @@
 package org.churchpresenter.helper.intent
 
-import org.churchpresenter.calendar.model.parseReference
 import org.churchpresenter.helper.action.HelperAction
 import org.churchpresenter.sharedui.guide.SettingsPage
 import org.churchpresenter.sharedui.models.ShortcutAction
@@ -49,7 +48,7 @@ internal fun bibleTranslationRule(r: Request): Resolution? =
 internal fun mediaTopicsRule(r: Request): Resolution? {
     // "Clear the announcement", "hide the clock", "stop the video": taking it down is the clear and
     // output rules' to answer, not a tour of how to put it up.
-    if (r.has(Vocabulary.CLEAR) || r.first in Vocabulary.TAKE_DOWN) return null
+    if (r.has(Vocabulary.CLEAR) || r.first in Vocabulary.TAKE_DOWN || r.says("take down")) return null
     val tour = MediaTopics.find(r.text) ?: AnnouncementTopics.find(r.text)
     return tour?.let { act(HelperAction.Highlight(it)) }
 }
@@ -72,12 +71,14 @@ internal fun openSettingsRule(r: Request): Resolution? {
 /** "show John 3:16", "go to psalm 23", "john chapter 3 verse 16", "jn 3 16". */
 internal fun verseRule(r: Request): Resolution? {
     val verb = Vocabulary.VERSE_VERBS.firstOrNull { r.text.startsWith("$it ") }
-    val rest = (verb?.let { r.text.removePrefix("$it ") } ?: r.text)
+    // "یوحنا 3:16 را نشان بده", "ヨハネ 3:16 を表示": the verb comes last in many languages.
+    val verbLast = Vocabulary.VERSE_VERBS.firstOrNull { r.text.endsWith(" $it") }
+    val rest = (verb?.let { r.text.removePrefix("$it ") } ?: verbLast?.let { r.text.removeSuffix(" $it") } ?: r.text)
         .replace(Regex("""\bchapter (\d+) verses? (\d+)"""), "$1:$2")
         .replace(Regex("""^(.*\p{L}) (\d{1,3}) (\d{1,3})$"""), "$1 $2:$3")
         .replace(Regex("""\s*:\s*"""), ":")
         .replace(Regex("""(\d) ?- ?(\d)"""), "$1-$2")
-    val ref = parseReference(rest) ?: return null
+    val ref = readReference(rest) ?: return null
     val lastWord = ref.bookName.split(' ').last()
     if (lastWord in Vocabulary.NOT_A_BOOK || lastWord in Vocabulary.SETTINGS) return null
     val book = ref.bookName.split(' ').joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
