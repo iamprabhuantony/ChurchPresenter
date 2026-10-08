@@ -4,6 +4,7 @@ import org.junit.platform.engine.TestExecutionResult
 import org.junit.platform.launcher.TestExecutionListener
 import org.junit.platform.launcher.TestIdentifier
 import org.junit.platform.launcher.TestPlan
+import org.churchpresenter.diagnostics.ThreadDump
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -60,7 +61,8 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * ## Occurrence five (2026-08-29) proved it, and it is fixed
  *
- * [appendLockInfo] did what it was added for. Run 33269248282 halted `jvmTestSerial` after 159s in
+ * `ThreadDump`'s lock section (once this class's own) did what it was added for. Run 33269248282
+ * halted `jvmTestSerial` after 159s in
  * `AppPreviewLowerThirdScreenshotTest` and printed `=== DEADLOCK CYCLE: 2 threads ===` **with lock
  * owners**, which is the ownership evidence `getAllStackTraces` could not give:
  *
@@ -82,12 +84,13 @@ import java.util.concurrent.atomic.AtomicReference
  * three more times per frame on its own, so hopping only that one line would have closed the door
  * the dump happened to record and left three open.
  *
- * `ComposeScenePump`, which drives Browser Source, NDI and OMT, is confined the same way since
- * (`ComposeScenePumpConfinementTest`), so every off-screen scene the app builds lives on the event
- * queue. A scene composed anywhere else still races them on Compose's global, unsynchronised caches:
- * the soak's own `OffscreenOutput` did, built on the test thread while a lower-third pre-render was
- * being built on the event queue, and hung in its constructor spinning in `ObjectIntMap.findKeyIndex`.
- * It is confined now too. Any new off-screen scene, in production or in a test, belongs there.
+ * **`ComposeScenePump` still has the identical hazard** and is deliberately unfixed: it builds its
+ * `ImageComposeScene` and advances the snapshot on `Dispatchers.Default` too, driving Browser
+ * Source and NDI at 30-60fps, where confining the draw to the event queue costs real UI budget
+ * whenever an output is live. That wants its own change, with a measurement attached. Until then a
+ * narrower form of this deadlock remains reachable while a virtual output is running --
+ * `BrowserSourceVideoRenderer`, which rides that pump, is already the culprit on an open production
+ * `ArrayIndexOutOfBoundsException` raised inside a hash-map resize during scene construction.
  */
 class HungTestReporter internal constructor(
     private val thresholdMs: Long,
@@ -144,10 +147,10 @@ class HungTestReporter internal constructor(
     }
 
     private fun dump(name: String, elapsedMs: Long) {
-        val out = threadDump(
-            "HUNG TEST: $name has been running ${elapsedMs / 1000}s ===",
-            "Every thread in this fork follows. The one blocked in Compose's",
-            "teardown, and whatever the AWT event queue is doing, are the two to read.",
+        val out = ThreadDump.text(
+            "=== HUNG TEST: $name has been running ${elapsedMs / 1000}s ===\n" +
+                "=== Every thread in this fork follows. The one blocked in Compose's\n" +
+                "=== teardown, and whatever the AWT event queue is doing, are the two to read.",
         )
         System.err.println(out)
         System.err.flush()
@@ -157,7 +160,7 @@ class HungTestReporter internal constructor(
         dumpDir?.let { dir ->
             runCatching {
                 val file = java.io.File(dir).apply { mkdirs() }.resolve("hung-test-dump.txt")
-                file.writeText(out)
+                file.writeText(out.toString())
                 System.err.println("=== the dump above is also at ${file.absolutePath}")
             }
         }
@@ -175,7 +178,6 @@ class HungTestReporter internal constructor(
 
         const val DEFAULT_THRESHOLD_MS = 5 * 60 * 1000L
         const val POLL_MS = 10_000L
-        const val STACK_DEPTH = 60
 
         /** Distinctive, so the exit code alone says what happened. */
         const val HUNG_EXIT_CODE = 93
@@ -183,59 +185,4 @@ class HungTestReporter internal constructor(
         /** Set by the Test task; where the dump is written so CI uploads it with the results. */
         const val DUMP_DIR_PROPERTY = "churchpresenter.test.hangDumpDir"
     }
-}
-
-/**
- * Every thread's stack, sorted by name, under [header] -- each line printed after `=== ` -- with any
- * monitor deadlock cycle first. What [HungTestReporter] writes when a fork hangs, and what the soak
- * writes when one frame never finishes.
- */
-internal fun threadDump(vararg header: String): String {
-    val out = StringBuilder()
-    out.appendLine()
-    header.forEach { out.appendLine("=== $it") }
-    appendLockInfo(out)
-    Thread.getAllStackTraces().toSortedMap(compareBy { it.name }).forEach { (thread, stack) ->
-        out.appendLine()
-        out.appendLine("--- \"${thread.name}\" ${thread.state}${if (thread.isDaemon) " (daemon)" else ""}")
-        stack.take(HungTestReporter.STACK_DEPTH).forEach { out.appendLine("        at $it") }
-    }
-    return out.toString()
-}
-
-/**
- * Who owns which monitor, which the stacks alone cannot say.
- *
- * `Thread.getAllStackTraces` returns frames and nothing else, so a dump showing two threads
- * `BLOCKED` inside the same method proves they are both waiting and **not** what they are
- * waiting on or who holds it. The 2026-08-27 dump ended exactly there: `AWT-EventQueue-0` and a
- * `DefaultDispatcher-worker` both blocked in `SnapshotStateObserver.drainChanges`, one of them
- * called from `LowerThirdOffscreenRenderer`'s off-screen render, which *looks* like a lock-order
- * inversion between two Compose scenes on two threads and cannot be shown to be one.
- *
- * [ThreadMXBean.findDeadlockedThreads] answers it outright when the cycle is monitors or owned
- * synchronizers, and [ThreadMXBean.dumpAllThreads] with both flags prints `- locked <id>` and
- * `- waiting to lock <id>` per frame, which settles it when the cycle is something else. Best
- * effort: a JVM may refuse either, and a hang that is not a deadlock reports no cycle, so the
- * plain stacks stay the primary record.
- */
-private fun appendLockInfo(out: StringBuilder) {
-    runCatching {
-        val bean = java.lang.management.ManagementFactory.getThreadMXBean()
-        val deadlocked = bean.findDeadlockedThreads()
-        if (deadlocked == null || deadlocked.isEmpty()) {
-            out.appendLine("=== No monitor/synchronizer deadlock cycle found.")
-            out.appendLine("=== (So this is a wait or a livelock, not a classic lock cycle.)")
-            return@runCatching
-        }
-        out.appendLine()
-        out.appendLine("=== DEADLOCK CYCLE: ${deadlocked.size} threads ===")
-        bean.getThreadInfo(deadlocked, true, true).filterNotNull().forEach { info ->
-            out.appendLine()
-            out.appendLine("--- \"${info.threadName}\" ${info.threadState}")
-            info.lockInfo?.let { out.appendLine("        waiting to lock $it") }
-            info.lockOwnerName?.let { out.appendLine("        held by \"$it\" (id ${info.lockOwnerId})") }
-            info.stackTrace.take(HungTestReporter.STACK_DEPTH).forEach { out.appendLine("        at $it") }
-        }
-    }.onFailure { out.appendLine("=== lock info unavailable: $it") }
 }
