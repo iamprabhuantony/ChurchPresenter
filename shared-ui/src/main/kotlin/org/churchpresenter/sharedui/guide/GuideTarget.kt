@@ -1,0 +1,76 @@
+package org.churchpresenter.sharedui.guide
+
+import org.churchpresenter.sharedui.models.Tabs
+
+/**
+ * A control the helper can point at — a tab, a button, a panel. Tagged on the control with
+ * [guideTarget]; the helper's spotlight draws a ring over it while it is the session's active target.
+ */
+@JvmInline
+value class GuideTarget(val id: String)
+
+/** The pages of the Settings dialog, by what they are rather than by where they sit in its tab row. */
+enum class SettingsPage { SYSTEM, BIBLE, BACKGROUND, PROFILES, PROJECTION, SERVER, ATEM, INTEGRATIONS }
+
+/** Every target the app tags. One place, so the helper and the tagged sites cannot drift apart. */
+object GuideTargets {
+    val SCHEDULE_PANEL = GuideTarget("schedule.panel")
+    val LIVE_PREVIEW = GuideTarget("preview.live")
+    val TOGGLE_OUTPUTS = GuideTarget("preview.toggleOutputs")
+    val CLEAR_OUTPUT = GuideTarget("preview.clear")
+    val TAKE = GuideTarget("preview.take")
+    val BACKGROUND_BUTTON = GuideTarget("toolbar.background")
+    val SETTINGS_BUTTON = GuideTarget("toolbar.settings")
+    val NEW_SONG = GuideTarget("songs.new")
+    val EDIT_SONG = GuideTarget("songs.edit")
+    val ADD_SONG_LANGUAGE = GuideTarget("songEditor.addLanguage")
+    val SONG_CHORDS_SWITCH = GuideTarget("songEditor.chordsSwitch")
+    val SONG_CHORD_PALETTE = GuideTarget("songEditor.chordPalette")
+    val BIBLE_DOWNLOAD = GuideTarget("settings.system.downloadBibles")
+    val BIBLE_ADD_TRANSLATION = GuideTarget("settings.bible.addTranslation")
+    val BIBLE_CATALOG_LIST = GuideTarget("bibleCatalog.list")
+    val PICTURES_SELECT_FOLDER = GuideTarget("pictures.selectFolder")
+    val PICTURES_GO_LIVE = GuideTarget("pictures.goLive")
+    val PICTURES_PLAY = GuideTarget("pictures.play")
+    val PRESENTATION_SELECT_FILE = GuideTarget("presentation.selectFile")
+    val PRESENTATION_GO_LIVE = GuideTarget("presentation.goLive")
+    val MEDIA_SELECT_FILE = GuideTarget("media.selectFile")
+    val MEDIA_GO_LIVE = GuideTarget("media.goLive")
+    val LOWER_THIRD_GENERATE = GuideTarget("lowerThird.generate")
+    val LOWER_THIRD_GO_LIVE = GuideTarget("lowerThird.goLive")
+    val LOWER_THIRD_NAME = GuideTarget("lottieGen.name")
+    val LOWER_THIRD_INFO = GuideTarget("lottieGen.info")
+    val LOWER_THIRD_SAVE = GuideTarget("lottieGen.save")
+    val ANNOUNCEMENT_TEXT = GuideTarget("announcements.text")
+    val ANNOUNCEMENT_GO_LIVE = GuideTarget("announcements.goLive")
+    val TIMER_GO_LIVE = GuideTarget("announcements.timerGoLive")
+    val PROFILE_NEW = GuideTarget("settings.profiles.new")
+    val PROFILE_NAME = GuideTarget("settings.profiles.name")
+    val SCREEN_PROFILE_PICKER = GuideTarget("settings.projection.screenProfile")
+    val PROFILE_CONTENT_PAGE = GuideTarget("settings.profiles.contentPage")
+    val STAGE_LAYOUT_PAGE = GuideTarget("settings.profiles.stageLayoutPage")
+    val STAGE_ZONES = GuideTarget("settings.profiles.stageZones")
+    val STAGE_ARRANGEMENT = GuideTarget("settings.profiles.stageArrangement")
+    val STAGE_SHOW_CHORDS = GuideTarget("settings.profiles.stageShowChords")
+    val STAGE_TEXT_ZONE = GuideTarget("settings.profiles.stageTextZone")
+    val ANNOUNCEMENT_TO_STAGE = GuideTarget("announcements.toStage")
+    val TIMER_TO_STAGE = GuideTarget("announcements.timerToStage")
+
+    /** One choice, [value], of a segmented control or picker named [group] — where to click, exactly. */
+    fun option(group: String, value: String): GuideTarget = GuideTarget("option.$group.$value")
+
+    /** A profile's display mode segment, by its `Constants.DISPLAY_MODE_*` value. */
+    fun displayMode(mode: String): GuideTarget = option("displayMode", mode)
+
+    /** A stage monitor profile's zone picker for one kind of content, by its `StageMonitorContentType` name. */
+    fun stageContent(type: String): GuideTarget = option("stageContent", type)
+
+    /** The Announcements timer's mode segment, by its `Constants.TIMER_MODE_*` value. */
+    fun timerMode(mode: String): GuideTarget = option("timerMode", mode)
+
+    /** The main window's tab for [tab]. */
+    fun mainTab(tab: Tabs): GuideTarget = GuideTarget("tab.${tab.name}")
+
+    /** The Settings dialog's tab for [page]. */
+    fun settingsPage(page: SettingsPage): GuideTarget = GuideTarget("settings.${page.name}")
+}
