@@ -1,5 +1,6 @@
 package org.churchpresenter.app.churchpresenter.dialogs
 
+import org.churchpresenter.app.churchpresenter.dialogs.tabs.LocalSettingsDevMode
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -30,10 +31,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Text
 import org.churchpresenter.theme.components.GhostButton
 import androidx.compose.runtime.Composable
-import org.churchpresenter.helper.ui.GuideSpotlightHost
-import org.churchpresenter.sharedui.guide.GuideTargets
-import org.churchpresenter.sharedui.guide.SettingsPage
-import org.churchpresenter.sharedui.guide.guideTarget
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -107,18 +104,6 @@ private const val TAB_SERVER = 5
 private const val TAB_ATEM = 6
 private const val TAB_INTEGRATIONS = 7
 
-/** Where [page] sits in the dialog's tab row — what [OptionsDialog]'s `initialTab` takes. */
-internal fun optionsTabIndexOf(page: SettingsPage): Int = when (page) {
-    SettingsPage.SYSTEM -> 0
-    SettingsPage.BIBLE -> 1
-    SettingsPage.BACKGROUND -> TAB_BACKGROUND
-    SettingsPage.PROFILES -> TAB_PROFILES
-    SettingsPage.PROJECTION -> TAB_PROJECTION
-    SettingsPage.SERVER -> TAB_SERVER
-    SettingsPage.ATEM -> TAB_ATEM
-    SettingsPage.INTEGRATIONS -> TAB_INTEGRATIONS
-}
-
 @Composable
 fun OptionsDialog(
     isVisible: Boolean,
@@ -138,7 +123,7 @@ fun OptionsDialog(
     companionSatelliteViewModel: CompanionSatelliteViewModel? = null,
     initialTab: Int = 0,
     initialSettings: AppSettings? = null,
-    showHelperSettings: Boolean = false,
+    devMode: Boolean = false,
 ) {
     if (!isVisible) return
 
@@ -178,7 +163,7 @@ fun OptionsDialog(
             companionSatelliteViewModel = companionSatelliteViewModel,
             initialTab = initialTab,
             initialSettings = initialSettings,
-            showHelperSettings = showHelperSettings,
+            devMode = devMode,
         )
     }
 }
@@ -202,7 +187,7 @@ internal fun OptionsDialogContent(
     initialTab: Int = 0,
     initialSettings: AppSettings? = null,
     detectScreens: () -> List<DetectedScreen> = ::detectScreensFromAwt,
-    showHelperSettings: Boolean = false,
+    devMode: Boolean = false,
 ) {
     var currentSettings by remember { mutableStateOf(initialSettings ?: settingsManager.loadSettings()) }
     val companionSatelliteTabIndex = if (obsManager != null) 8 else 7
@@ -218,62 +203,61 @@ internal fun OptionsDialogContent(
     }
 
     AppWindowRoot(theme = theme) {
-        // This window's own spotlight: the helper's tours point at its tabs from the main window.
-        GuideSpotlightHost(Modifier.fillMaxSize()) {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.background
-            ) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    SettingsTabStrip(
-                        selectedIndex = safeTabIndex,
-                        scrollState = tabScrollState,
-                        labelStyle = currentSettings.tabLabelStyle,
-                        labelMargin = currentSettings.tabLabelMargin,
-                        hasObs = obsManager != null,
-                        companionSatelliteTabIndex = companionSatelliteTabIndex,
-                        onSelect = { selectedTabIndex = it },
-                    )
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                SettingsTabStrip(
+                    selectedIndex = safeTabIndex,
+                    scrollState = tabScrollState,
+                    labelStyle = currentSettings.tabLabelStyle,
+                    labelMargin = currentSettings.tabLabelMargin,
+                    hasObs = obsManager != null,
+                    companionSatelliteTabIndex = companionSatelliteTabIndex,
+                    onSelect = { selectedTabIndex = it },
+                )
 
-                    // Tab Content
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.background)
+                // Tab Content
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                ) {
+                    CompositionLocalProvider(
+                        LocalApplySettings provides applySettings,
+                        LocalSettingsDevMode provides devMode,
                     ) {
-                        CompositionLocalProvider(LocalApplySettings provides applySettings) {
-                            SettingsTabContent(
-                                tabIndex = safeTabIndex,
-                                settings = currentSettings,
-                                onSettingsChange = { updateFn -> currentSettings = updateFn(currentSettings) },
-                                settingsManager = settingsManager,
-                                companionServer = companionServer,
-                                remoteClientManager = remoteClientManager,
-                                calendarSync = calendarSync,
-                                onIdentifyScreen = onIdentifyScreen,
-                                onIdentifyBrowserSource = onIdentifyBrowserSource,
-                                onIdentifyNdi = onIdentifyNdi,
-                                onIdentifyOmt = onIdentifyOmt,
-                                scenes = scenes,
-                                obsManager = obsManager,
-                                companionSatelliteViewModel = companionSatelliteViewModel,
-                                companionSatelliteTabIndex = companionSatelliteTabIndex,
-                                detectScreens = detectScreens,
-                                showHelperSettings = showHelperSettings,
-                            )
-                        }
+                        SettingsTabContent(
+                            tabIndex = safeTabIndex,
+                            settings = currentSettings,
+                            onSettingsChange = { updateFn -> currentSettings = updateFn(currentSettings) },
+                            settingsManager = settingsManager,
+                            companionServer = companionServer,
+                            remoteClientManager = remoteClientManager,
+                            calendarSync = calendarSync,
+                            onIdentifyScreen = onIdentifyScreen,
+                            onIdentifyBrowserSource = onIdentifyBrowserSource,
+                            onIdentifyNdi = onIdentifyNdi,
+                            onIdentifyOmt = onIdentifyOmt,
+                            scenes = scenes,
+                            obsManager = obsManager,
+                            companionSatelliteViewModel = companionSatelliteViewModel,
+                            companionSatelliteTabIndex = companionSatelliteTabIndex,
+                            detectScreens = detectScreens,
+                        )
                     }
-
-                    SettingsDialogButtons(
-                        onCancel = onDismiss,
-                        onApply = applySettings,
-                        onOk = {
-                            applySettings()
-                            onDismiss()
-                        },
-                    )
                 }
+
+                SettingsDialogButtons(
+                    onCancel = onDismiss,
+                    onApply = applySettings,
+                    onOk = {
+                        applySettings()
+                        onDismiss()
+                    },
+                )
             }
         }
     }
@@ -314,39 +298,14 @@ private fun SettingsTabStrip(
             // edited on the Profiles tab, and the dictionary's look is one setting per install,
             // reached from the gear on the Dictionary tab itself.
             listOfNotNull(
-                StripTab(0, stringResource(Res.string.appearance), Icons.Filled.Palette, SettingsPage.SYSTEM),
-                StripTab(1, stringResource(Res.string.bible), Icons.AutoMirrored.Filled.MenuBook, SettingsPage.BIBLE),
-                StripTab(
-                    TAB_BACKGROUND,
-                    stringResource(Res.string.background),
-                    Icons.Filled.Wallpaper,
-                    SettingsPage.BACKGROUND,
-                ),
-                StripTab(
-                    TAB_PROFILES,
-                    stringResource(Res.string.output_profiles_tab),
-                    Icons.Filled.Tune,
-                    SettingsPage.PROFILES,
-                ),
-                StripTab(
-                    TAB_PROJECTION,
-                    stringResource(Res.string.projection),
-                    Icons.Filled.DesktopWindows,
-                    SettingsPage.PROJECTION,
-                ),
-                StripTab(TAB_SERVER, stringResource(Res.string.server_settings), Icons.Filled.Dns, SettingsPage.SERVER),
-                StripTab(
-                    TAB_ATEM,
-                    stringResource(Res.string.atem_settings),
-                    Icons.Filled.SwitchVideo,
-                    SettingsPage.ATEM,
-                ),
-                StripTab(
-                    TAB_INTEGRATIONS,
-                    stringResource(Res.string.obs_settings),
-                    Icons.Filled.Videocam,
-                    SettingsPage.INTEGRATIONS,
-                )
+                StripTab(0, stringResource(Res.string.appearance), Icons.Filled.Palette),
+                StripTab(1, stringResource(Res.string.bible), Icons.AutoMirrored.Filled.MenuBook),
+                StripTab(TAB_BACKGROUND, stringResource(Res.string.background), Icons.Filled.Wallpaper),
+                StripTab(TAB_PROFILES, stringResource(Res.string.output_profiles_tab), Icons.Filled.Tune),
+                StripTab(TAB_PROJECTION, stringResource(Res.string.projection), Icons.Filled.DesktopWindows),
+                StripTab(TAB_SERVER, stringResource(Res.string.server_settings), Icons.Filled.Dns),
+                StripTab(TAB_ATEM, stringResource(Res.string.atem_settings), Icons.Filled.SwitchVideo),
+                StripTab(TAB_INTEGRATIONS, stringResource(Res.string.obs_settings), Icons.Filled.Videocam)
                     .takeIf { hasObs },
                 StripTab(
                     companionSatelliteTabIndex,
@@ -354,7 +313,7 @@ private fun SettingsTabStrip(
                     Icons.Filled.SettingsRemote,
                 ),
             ).forEach { tab ->
-                SettingsTab(tab, selectedIndex, labelStyle, labelMargin, onSelect)
+                SettingsTab(tab.index, tab.name, tab.icon, selectedIndex, labelStyle, labelMargin, onSelect)
             }
         }
         TabStripForwardArrow(scrollState)
@@ -379,14 +338,12 @@ private fun SettingsTabContent(
     companionSatelliteViewModel: CompanionSatelliteViewModel?,
     companionSatelliteTabIndex: Int,
     detectScreens: () -> List<DetectedScreen>,
-    showHelperSettings: Boolean,
 ) {
     when (tabIndex) {
         0 -> SystemSettingsTab(
             settings = settings,
             onSettingsChange = onSettingsChange,
-            companionServer = companionServer,
-            showHelperSettings = showHelperSettings
+            companionServer = companionServer
         )
         1 -> BibleSettingsTab(
             settings = settings,
@@ -490,25 +447,25 @@ private fun SettingsDialogButtons(onCancel: () -> Unit, onApply: () -> Unit, onO
 }
 
 /** One tab of [SettingsTabStrip]: where it leads, and what it is called and drawn with. */
-private class StripTab(val index: Int, val name: String, val icon: ImageVector, val page: SettingsPage? = null)
+private class StripTab(val index: Int, val name: String, val icon: ImageVector)
 
 @Composable
 private fun SettingsTab(
-    tab: StripTab,
+    index: Int,
+    name: String,
+    icon: ImageVector,
     selectedIndex: Int,
     labelStyle: TabLabelStyle,
     labelMargin: TabLabelMargin,
     onSelect: (Int) -> Unit,
 ) {
-    val index = tab.index
     LabeledTab(
-        name = tab.name,
-        icon = tab.icon,
+        name = name,
+        icon = icon,
         selected = selectedIndex == index,
         labelStyle = labelStyle,
         labelMargin = labelMargin,
         onClick = { onSelect(index) },
-        modifier = tab.page?.let { Modifier.guideTarget(GuideTargets.settingsPage(it)) } ?: Modifier,
         // The main window's tab labels, so the two tab rows read as one family.
         textStyle = MaterialTheme.typography.titleSmall.copy(
             fontWeight = if (selectedIndex == index) FontWeight.SemiBold else FontWeight.Normal

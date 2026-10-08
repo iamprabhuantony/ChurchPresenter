@@ -1,5 +1,10 @@
 package org.churchpresenter.app.churchpresenter
 
+import org.churchpresenter.sharedui.utils.DevFlags
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import org.churchpresenter.controlin.ControlHub
+import org.churchpresenter.showcontrol.ActionRunner
 import org.churchpresenter.liveoutput.deckLinkOutputCount
 import org.churchpresenter.server.InstanceLinkCommandFailure
 import org.churchpresenter.core.models.songs.SongItem
@@ -43,11 +48,6 @@ import java.util.Locale
 import androidx.compose.runtime.Stable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import org.churchpresenter.helper.HelperState
-import org.churchpresenter.sharedui.utils.DevFlags
-import org.churchpresenter.sharedui.models.Tabs
 
 /**
  * The desktop app's own state and services: the settings it edits, the managers and ViewModels
@@ -105,6 +105,15 @@ internal class AppRootState(
     val sttManager = STTManager()
     val obsManager = OBSWebSocketManager()
     val companionSatelliteViewModel = CompanionSatelliteViewModel()
+
+    /** Runs show-control action lists -- calendar cues today, cue actions and macros later. */
+    // Under a supervisor of its own, so a run that fails cannot take the root scope down with it.
+    val showRunner: ActionRunner by lazy {
+        val supervised = coroutineScope.coroutineContext + SupervisorJob(coroutineScope.coroutineContext[Job])
+        ActionRunner(appShowHost(), CoroutineScope(supervised))
+    }
+    /** The MIDI and OSC ports: what arrives runs actions, and what the show does is sent back out. */
+    val controlHub: ControlHub by lazy { ControlHub(onMapping = ::runControlMapping) }
     val autoConnectedIds = mutableSetOf<String>()
     val lastReconciled = mutableMapOf<String, CompanionSatelliteSettings>()
 
@@ -132,19 +141,14 @@ internal class AppRootState(
         MutableSharedFlow<ScheduleItem.PresentationItem>(extraBufferCapacity = REMOTE_FLOW_BUFFER)
     val remoteSelectMediaFlow = MutableSharedFlow<ScheduleItem.MediaItem>(extraBufferCapacity = REMOTE_FLOW_BUFFER)
 
-    // The helper lamp: its conversation, the tab the main screen is on (so "make it bigger" knows
-    // what "it" is), and the one thing it asks of the main screen that no remote flow already does.
-    val helperState = HelperState()
-    var helperCurrentTab by mutableStateOf<Tabs?>(null)
-    // How many songs the library loaded, or null before it has — "empty" only once it has looked.
-    var helperSongCount by mutableStateOf<Int?>(null)
-    val helperSelectTabFlow = MutableSharedFlow<Tabs>(extraBufferCapacity = REMOTE_FLOW_BUFFER)
-
     // What the automation engine last put on screen, or null once it blanked. The engine yields
     // to a hand on the controls: if the outputs show something other than this -- a Schedule row
     // clicked, a song sent from the Songs tab -- a due cue is skipped rather than fired over the
     // operator. See CueRunner.operatorLive and LiveDurationLog.showing.
     var engineLiveItem by mutableStateOf<ScheduleItem?>(null)
+
+    /** The schedule row last put on air, by any path -- where next and previous count from. */
+    var lastLiveRowId by mutableStateOf<String?>(null)
 
     var dialogDismissSignal by mutableStateOf(0)
     var showOptionsDialog by mutableStateOf(false)
@@ -152,15 +156,6 @@ internal class AppRootState(
     val openOptionsDialog: (Int) -> Unit = { tab ->
         optionsDialogInitialTab = tab
         showOptionsDialog = true
-    }
-
-    /** Puts each output's number on its screen for a few seconds — from Settings and from the helper. */
-    fun identifyScreens() {
-        identifyingScreen = true
-        coroutineScope.launch {
-            delay(UPDATE_CHECK_DELAY_MS)
-            identifyingScreen = false
-        }
     }
     var showStatisticsDialog by mutableStateOf(false)
     var showInstanceLinkDialog by mutableStateOf(false)
@@ -174,8 +169,6 @@ internal class AppRootState(
     // Which tab it opens on. The Help menu wants the converter as a whole; the setup wizard's
     // song step wants Songs, because that is the format problem it just described.
     var converterInitialTab by mutableStateOf(ConverterTab.BIBLES)
-    // The song source its Songs tab opens on, when the helper named one; null opens the default.
-    var converterInitialSource by mutableStateOf<String?>(null)
     var showSongLibraryWindow by mutableStateOf(false)
     var showCalendarWindow by mutableStateOf(false)
     // Raised to have the Calendar Manager open a new service on the Schedule tab's rows.
@@ -193,8 +186,12 @@ internal class AppRootState(
     var showMemoryMonitorWindow by mutableStateOf(false)
     var developerMenuUnlocked by mutableStateOf(false)
 
-    /** Development builds, the forced dev window, or the developer menu unlocked — what Wick waits for. */
-    val isDevMode: Boolean
+    /**
+     * Dev mode: a dev build, the developer menu unlocked, or the forced dev window. The features not
+     * ready for production -- the sidebar's Dev mode only box and what is behind it -- exist only
+     * while it is on.
+     */
+    val devMode: Boolean
         get() = shouldShowDeveloperMenu(BuildConfig.IS_RELEASE, DevFlags.forceDevWindow, developerMenuUnlocked)
     var lottieGenOutputDir by mutableStateOf<File?>(null)
     var lottieGenOnFileSaved by mutableStateOf<(() -> Unit)?>(null)
@@ -225,7 +222,7 @@ internal class AppRootState(
 
         val proj = appSettings.projectionSettings
         val assignments = reconcileScreenAssignments(
-            proj.screenAssignments, nonPrimaryDisplays, deckLinkCount, proj.fallbackProfileId, proj.unusedScreens,
+            proj.screenAssignments, nonPrimaryDisplays, deckLinkCount, proj.fallbackProfileId,
         )
         if (assignments != null) {
             appSettings = appSettings.copy(

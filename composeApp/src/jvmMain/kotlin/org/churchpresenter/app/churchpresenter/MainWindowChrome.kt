@@ -1,7 +1,10 @@
 package org.churchpresenter.app.churchpresenter
 
-import org.churchpresenter.liveoutput.shouldShowPresenterWindowFor
+import org.churchpresenter.schedule.LocalShowControlEnabled
+import androidx.compose.runtime.CompositionLocalProvider
+import org.churchpresenter.schedule.LocalActionChoices
 import org.churchpresenter.liveoutput.cuedModeOf
+import org.churchpresenter.liveoutput.shouldShowPresenterWindowFor
 import org.churchpresenter.server.broadcastFreezeChange
 import org.churchpresenter.server.broadcastSlideChange
 import org.churchpresenter.server.clearPresentationState
@@ -42,7 +45,6 @@ internal fun MainWindowScope.AppMenuBar() {
             onAbout = { showAboutDialog = true },
             onContactUs = { showContactDialog = true },
             onGettingStarted = { showSetupWizard = true },
-            onShowHelper = if (isDevMode) ::showHelper else null,
             onStatistics = { showStatisticsDialog = true },
             onConnectToInstance = { showInstanceLinkDialog = true },
             onDisconnectInstance = { instanceLinkViewModel.disconnect() },
@@ -51,7 +53,6 @@ internal fun MainWindowScope.AppMenuBar() {
             ),
             onConverter = {
                 converterInitialTab = ConverterTab.BIBLES
-                converterInitialSource = null
                 showConverterWindow = true
             },
             onSongLibrary = { showSongLibraryWindow = true },
@@ -100,7 +101,7 @@ internal fun MainWindowScope.AppMenuBar() {
                 currentScheduleActions.clearSchedule()
                 selectedScheduleItemId = null
             },
-            showDeveloperMenu = isDevMode,
+            showDeveloperMenu = devMode,
             isPresenterWindowVisible = presenterManager.showPresenterWindow.value,
             onSetPresenterWindowVisible = { presenterManager.setShowPresenterWindow(it) },
             isDevWindowAlwaysOnTop = presenterManager.devWindowAlwaysOnTop.value,
@@ -123,54 +124,66 @@ internal fun MainWindowScope.MainDesktopHost() {
             isControllerConnected(instanceLinkStatus, appSettings.instanceLink.role)
         val instanceLinkUsesRemoteContent =
             shouldUseRemoteContent(instanceLinkStatus, appSettings.instanceLink.role)
-        MainDesktop(
-            hostWindow = window,
-            appSettings = appSettings,
-            livePreviewAppSettings = effectiveAppSettings,
-            activeQuickBackground = activeQuickBackground,
-            onQuickBackgroundPicked = { activeQuickBackground = it },
-            presenterManager = presenterManager,
-            statisticsManager = statisticsManager,
-            verseSequenceLog = verseSequenceLog,
-            onShowSettings = { openOptionsDialog(0) },
-            onShowBackgroundSettings = { openOptionsDialog(OPTIONS_TAB_BACKGROUND) },
-            onSettingsChange = { updateFn ->
-                appSettings = updateFn(appSettings)
-                settingsManager.saveSettings(appSettings)
-            },
-            theme = theme,
-            qaManager = qaManager,
-            onOpenLottieGen = { outputDir, onSaved ->
-                if (isUsableOutputDir(outputDir)) {
-                    lottieGenOutputDir = File(outputDir)
-                    lottieGenOnFileSaved = onSaved
-                    showLottieGenWindow = true
-                } else {
-                    javax.swing.JOptionPane.showMessageDialog(
-                        null,
-                        "Please set a Lower Third folder in Settings first.",
-                        "No Folder Configured",
-                        javax.swing.JOptionPane.WARNING_MESSAGE
-                    )
-                }
-            },
-            sttManager = sttManager,
-            dialogDismissSignal = dialogDismissSignal,
-            companionSatelliteViewModel = companionSatelliteViewModel,
-            onRequestDeveloperMenuUnlock = { developerMenuUnlocked = true },
-            live = liveOutputCallbacks(),
-            service = servicePlanLink(upcomingServiceLoad, scheduleService),
-            publish = mainDesktopPublishers(),
-            flows = remoteControlFlows(),
-            link = instanceLinkBridge(instanceLinkIsControllerConnected, instanceLinkUsesRemoteContent),
-            web = webAccessState(),
-        )
+        CompositionLocalProvider(
+            LocalActionChoices provides rememberActionChoices(),
+            LocalShowControlEnabled provides devMode,
+        ) {
+            MainDesktop(
+                hostWindow = window,
+                appSettings = appSettings,
+                livePreviewAppSettings = effectiveAppSettings,
+                activeQuickBackground = activeQuickBackground,
+                onQuickBackgroundPicked = { activeQuickBackground = it },
+                presenterManager = presenterManager,
+                statisticsManager = statisticsManager,
+                verseSequenceLog = verseSequenceLog,
+                onShowSettings = { openOptionsDialog(0) },
+                onShowBackgroundSettings = { openOptionsDialog(OPTIONS_TAB_BACKGROUND) },
+                onSettingsChange = { updateFn ->
+                    appSettings = updateFn(appSettings)
+                    settingsManager.saveSettings(appSettings)
+                },
+                theme = theme,
+                qaManager = qaManager,
+                onOpenLottieGen = { outputDir, onSaved ->
+                    if (isUsableOutputDir(outputDir)) {
+                        lottieGenOutputDir = File(outputDir)
+                        lottieGenOnFileSaved = onSaved
+                        showLottieGenWindow = true
+                    } else {
+                        javax.swing.JOptionPane.showMessageDialog(
+                            null,
+                            "Please set a Lower Third folder in Settings first.",
+                            "No Folder Configured",
+                            javax.swing.JOptionPane.WARNING_MESSAGE
+                        )
+                    }
+                },
+                sttManager = sttManager,
+                dialogDismissSignal = dialogDismissSignal,
+                companionSatelliteViewModel = companionSatelliteViewModel,
+                onRequestDeveloperMenuUnlock = { developerMenuUnlocked = true },
+                live = liveOutputCallbacks(),
+                service = servicePlanLink(upcomingServiceLoad, scheduleService),
+                publish = mainDesktopPublishers(),
+                flows = remoteControlFlows(),
+                link = instanceLinkBridge(instanceLinkIsControllerConnected, instanceLinkUsesRemoteContent),
+                web = webAccessState(),
+            )
+        }
     }
 }
 
 private fun MainWindowScope.liveOutputCallbacks(): LiveOutputCallbacks = with(root) {
     LiveOutputCallbacks(
-        onRowWentLive = { item -> liveDurationLog.wentLive(item) },
+        onRowWentLive = { item ->
+            liveDurationLog.wentLive(item)
+            lastLiveRowId = item.id
+        },
+        onRowActions = { item, actions -> runRowActions(item, actions) },
+        onRunMacro = ::runMacro,
+        controlHub = controlHub,
+        devMode = devMode,
         onVerseSelected = { verses -> presenterManager.previewBus.forVerses(verses).setSelectedVerses(verses) },
         // Line mode used to push the section straight to the outputs from
         // here. That put the words on screen behind the transition driver's
@@ -230,11 +243,7 @@ private fun MainWindowScope.mainDesktopPublishers(): MainDesktopPublishers = wit
     MainDesktopPublishers(
         onScheduleActionsReady = { scheduleActions = it },
         onScheduleItemSelected = { itemId -> selectedScheduleItemId = itemId },
-        onSongsLoaded = { songs ->
-            helperSongCount = songs.size
-            companionServer.updateSongs(songs)
-        },
-        onCurrentTabChange = { tab -> helperCurrentTab = tab },
+        onSongsLoaded = { songs -> companionServer.updateSongs(songs) },
         onScenesChanged = { scenes -> scenesForInstanceLink = scenes },
         onBibleLoaded = { bible, translation ->
             primaryBibleForInstanceLink = bible
@@ -309,7 +318,6 @@ private fun MainWindowScope.remoteControlFlows(): RemoteControlFlows = with(root
         remotePresentationPlayPauseFlow = companionServer.onPresentationPlayPause,
         remotePresentationLoopToggleFlow = companionServer.onPresentationLoopToggle,
         remotePresentationGotoFlow = companionServer.onPresentationGoto,
-        selectTabFlow = helperSelectTabFlow,
     )
 }
 
