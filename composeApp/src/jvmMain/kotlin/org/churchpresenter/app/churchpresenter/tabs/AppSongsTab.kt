@@ -1,10 +1,7 @@
 package org.churchpresenter.app.churchpresenter.tabs
 
 import androidx.compose.runtime.Composable
-import org.churchpresenter.helper.ui.GuideSpotlightHost
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import org.churchpresenter.app.churchpresenter.data.StatisticsManager
+import org.churchpresenter.statistics.StatisticsManager
 import org.churchpresenter.app.churchpresenter.dialogs.songEditorBackgroundButton
 import org.churchpresenter.songs.EditSongDialog
 import org.churchpresenter.liveoutput.lottieBandPath
@@ -46,8 +43,6 @@ fun AppSongEditor(request: SongEditorRequest, theme: ThemeMode, appSettings: App
         onLanguageNamesChange = request.onLanguageNamesChange,
         onDismiss = request.onDismiss,
         onSave = request.onSave,
-        // The editor's own spotlight: Wick's song translation and chords tours ring its controls.
-        windowContent = { content -> GuideSpotlightHost(Modifier.fillMaxSize()) { content() } },
     )
 }
 
