@@ -1,4 +1,5 @@
 [versions]
+cyclonedx = "3.4.1"
 jna = "5.18.1"
 vlcj = "4.8.3"
 androidx-lifecycle = "2.11.0"
@@ -40,6 +41,7 @@ pitest = "1.30.0"
 pitestJunit5 = "1.2.3"
 
 [libraries]
+detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
 # The JSON reader BibleEngineClient parses the engine's messages with; pinned to the version socket.io-client brings.
 org-json = { module = "org.json:json", version = "20090211" }
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
@@ -119,3 +121,4 @@ sentry = { id = "io.sentry.jvm.gradle", version.ref = "sentryPlugin" }
 roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 pitest = { id = "info.solidsoft.pitest", version.ref = "pitestPlugin" }
+cyclonedx = { id = "org.cyclonedx.bom", version.ref = "cyclonedx" }

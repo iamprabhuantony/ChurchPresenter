@@ -49,6 +49,11 @@ demand.
 
 ### UI icons
 - **NEVER** use text/emoji as icons (`Text("⏸")`). Use `painterResource()` with real icon assets.
+- **Every control a mouse can press has a name** a screen reader can say: an icon-only control
+  gets a `contentDescription` (its tooltip text is usually right); a toggle gets its role and state
+  (`toggleable(role = …)`). `AccessibleNamesTest` walks every tab of the main window and fails on a
+  clickable node with no name; `KeyboardReachTest` holds Go Live, Add to Schedule, Clear Display and
+  Take reachable with Tab.
 
 ### Debugging and logging
 - Diagnostics go through `Log.info`/`warn`/`error` (`:diagnostics`), never `println` or
@@ -241,6 +246,14 @@ ever raised was fixed in code, and the build configures no `baseline =` anywhere
 Thresholds are deliberately not detekt's defaults: `LongMethod` 100, `LargeClass` 1000, and
 `LongParameterList` with `ignoreDefaultParameters: true` so the `*TestSupport.kt` DSL helpers are
 not flagged.
+
+**Formatting is detekt-formatting (ktlint)**, added to every module once from the root build. The
+rules that are on are clean and auto-correctable — `./gradlew detekt --auto-correct` fixes what it
+finds. Deliberately **off**, each for rewriting a large share of the tree: `Indentation`,
+`ArgumentListWrapping`, `Wrapping`, `ImportOrdering`, `MultiLineIfElse`, `NoMultipleSpaces`,
+`ParameterListWrapping`, `AnnotationOnSeparateLine`, the two `TrailingComma*` rules, `Filename`, and
+`MaximumLineLength` (detekt's own `MaxLineLength` is in force). The measured counts are in the
+`formatting:` block of `config/detekt/detekt.yml`; turn one on only together with its whole fix.
 
 ### Screenshots
 - **Committed, beside the module that shoots them** — `composeApp/screenshots/` for the app's tabs,

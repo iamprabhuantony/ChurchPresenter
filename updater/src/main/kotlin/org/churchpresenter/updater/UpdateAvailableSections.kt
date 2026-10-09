@@ -35,13 +35,13 @@ import org.churchpresenter.strings.generated.resources.update_dialog_download_in
 import org.churchpresenter.strings.generated.resources.update_dialog_downloading
 import org.churchpresenter.strings.generated.resources.update_dialog_install_now
 import org.churchpresenter.strings.generated.resources.update_dialog_open_page
+import org.churchpresenter.strings.generated.resources.update_dialog_unverified
 import org.churchpresenter.strings.generated.resources.update_dialog_release_notes
 import org.churchpresenter.strings.generated.resources.update_dialog_up_to_date_title
 import org.churchpresenter.strings.generated.resources.update_dialog_view_on_github
 import org.jetbrains.compose.resources.stringResource
 import java.io.File
 import org.churchpresenter.sharedui.composables.CopyLinkIconButton
-
 
 /** Whether the offered version is a stable release or a prerelease. */
 @Composable
@@ -127,7 +127,7 @@ internal fun DownloadProgress(downloadState: DownloadState) {
         }
         is DownloadState.Error -> {
             Text(
-                text = state.message,
+                text = if (state.unverified) stringResource(Res.string.update_dialog_unverified) else state.message,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error
             )
@@ -237,5 +237,4 @@ internal fun UpToDateActions(onOpenReleasePage: (String) -> Unit, onDismiss: () 
             Text(stringResource(Res.string.ok))
         }
     }
-
 }
