@@ -1,6 +1,5 @@
 package org.churchpresenter.presenter
 
-import org.churchpresenter.sharedui.utils.FileExists
 import org.churchpresenter.core.models.songs.SongBackground
 import org.churchpresenter.core.models.songs.SongBackgroundType
 import org.churchpresenter.settings.utils.Constants
@@ -25,18 +24,14 @@ class SongBackgroundResolveTest {
     }
 
     @Test
-    fun `a picture resolves only once its file is known to be on this machine`() {
+    fun `a picture resolves only while its file is on this machine`() {
         val file = Files.createTempFile("cp-bg", ".jpg")
         try {
             val present = SongBackground(type = SongBackgroundType.IMAGE, image = file.absolutePathString())
             val missing = SongBackground(type = SongBackgroundType.IMAGE, image = "/nowhere/gone.jpg")
 
-            assertTrue(songBackgroundResolves(present, mediaExists = FileExists.check(present.mediaPath)))
-            assertFalse(
-                songBackgroundResolves(missing, mediaExists = FileExists.check(missing.mediaPath)),
-                "a song travels; the picture it names may not",
-            )
-            assertFalse(songBackgroundResolves(present), "until the disk has answered, it is not there")
+            assertTrue(songBackgroundResolves(present))
+            assertFalse(songBackgroundResolves(missing), "a song travels; the picture it names may not")
         } finally {
             Files.deleteIfExists(file)
         }

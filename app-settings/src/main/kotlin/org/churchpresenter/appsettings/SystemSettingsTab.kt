@@ -1,4 +1,4 @@
-package org.churchpresenter.appsettings
+package org.churchpresenter.app.churchpresenter.dialogs.tabs
 
 import androidx.compose.material3.TextButton
 import org.churchpresenter.strings.generated.resources.settings_helper_title
@@ -7,12 +7,6 @@ import org.churchpresenter.strings.generated.resources.settings_helper_show
 import org.churchpresenter.strings.generated.resources.settings_helper_reset
 import org.churchpresenter.settings.resettingSuggestions
 import org.churchpresenter.settings.HelperSettings
-import androidx.compose.ui.platform.testTag
-import org.churchpresenter.strings.generated.resources.dev_mode_only_hint
-import org.churchpresenter.strings.generated.resources.dev_mode_only
-import org.churchpresenter.strings.generated.resources.preview_mode_hint
-import org.churchpresenter.strings.generated.resources.preview_mode
-import org.churchpresenter.liveoutput.withPreviewMode
 import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.material3.minimumInteractiveComponentSize
 import org.churchpresenter.strings.generated.resources.cancel
@@ -83,6 +77,8 @@ import org.churchpresenter.strings.generated.resources.focus_search_on_tab_open_
 import org.churchpresenter.strings.generated.resources.hide_cursor_on_outputs_hint
 import org.churchpresenter.strings.generated.resources.overlay_end_clears_display
 import org.churchpresenter.strings.generated.resources.overlay_end_clears_display_hint
+import org.churchpresenter.strings.generated.resources.preview_mode
+import org.churchpresenter.strings.generated.resources.preview_mode_hint
 import org.churchpresenter.strings.generated.resources.system_manage_settings
 import org.churchpresenter.strings.generated.resources.test_event_dev_only
 import org.churchpresenter.strings.generated.resources.test_event_failed
@@ -92,17 +88,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.churchpresenter.app.churchpresenter.BuildConfig
+import org.churchpresenter.liveoutput.withPreviewMode
 import org.churchpresenter.sharedui.composables.SettingsScrollbar
 import org.churchpresenter.sharedui.composables.SettingsScrollbarGutter
 import org.churchpresenter.server.CompanionServer
+import org.churchpresenter.app.churchpresenter.utils.AutoStartManager
 import org.churchpresenter.profiles.FileManager
 import org.churchpresenter.diagnostics.CrashReporter
 import org.churchpresenter.settings.AppSettings
 import org.jetbrains.compose.resources.stringResource
 import javax.swing.JOptionPane
 import org.churchpresenter.theme.elevationPalette
-import org.churchpresenter.profiles.LocalSettingsDevMode
-import org.churchpresenter.profiles.SettingsCard
 
 private const val DANGER_EDGE_ALPHA = 0.3f
 
@@ -111,6 +108,7 @@ fun SystemSettingsTab(
     settings: AppSettings = AppSettings(),
     onSettingsChange: ((AppSettings) -> AppSettings) -> Unit = {},
     companionServer: CompanionServer? = null,
+    showHelperSettings: Boolean = false,
 ) {
     val fileManager = FileManager()
 
@@ -160,10 +158,7 @@ fun SystemSettingsTab(
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         GeneralCard(settings, onSettingsChange)
-                        if (LocalSettingsDevMode.current) {
-                            DevModeCard(settings, onSettingsChange)
-                            HelperCard(settings, onSettingsChange)
-                        }
+                        if (showHelperSettings) HelperCard(settings, onSettingsChange)
                         ManageSettingsCard(companionServer)
                     }
                 }
@@ -171,10 +166,7 @@ fun SystemSettingsTab(
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     storage()
                     GeneralCard(settings, onSettingsChange)
-                    if (LocalSettingsDevMode.current) {
-                        DevModeCard(settings, onSettingsChange)
-                        HelperCard(settings, onSettingsChange)
-                    }
+                    if (showHelperSettings) HelperCard(settings, onSettingsChange)
                     ManageSettingsCard(companionServer)
                 }
             }
@@ -318,6 +310,15 @@ private fun GeneralCard(
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             GeneralToggleRow(
+                label = stringResource(Res.string.preview_mode),
+                hint = stringResource(Res.string.preview_mode_hint),
+                checked = settings.projectionSettings.previewModeEnabled,
+                onCheckedChange = { on ->
+                    onSettingsChange { s -> s.withPreviewMode(on) }
+                }
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            GeneralToggleRow(
                 label = stringResource(Res.string.focus_search_on_tab_open),
                 hint = stringResource(Res.string.focus_search_on_tab_open_hint),
                 checked = settings.keyboardShortcutSettings.focusSearchOnTabOpen,
@@ -344,43 +345,18 @@ private fun GeneralCard(
                     onSettingsChange { s -> s.copy(analyticsReportingEnabled = enabled) }
                 }
             )
+            // Send a diagnostic test event to Sentry to verify the crash-reporting pipeline.
+            // Developer-only affordance — hidden in packaged installer releases.
+            if (!BuildConfig.IS_RELEASE && settings.analyticsReportingEnabled) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                TestEventRow(scope)
+            }
         }
     }
 }
 
-/**
- * The options of features that are built but not ready for production (AGENT.md, "Dev mode only"),
- * apart from everything else, and shown only in dev mode: preview mode, and the Sentry test event.
- */
 @Composable
-private fun DevModeCard(
-    settings: AppSettings,
-    onSettingsChange: ((AppSettings) -> AppSettings) -> Unit
-) {
-    val scope = rememberCoroutineScope()
-    SettingsCard(
-        title = stringResource(Res.string.dev_mode_only),
-        subtitle = stringResource(Res.string.dev_mode_only_hint),
-        modifier = Modifier.testTag(DEV_MODE_CARD_TAG),
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            GeneralToggleRow(
-                label = stringResource(Res.string.preview_mode),
-                hint = stringResource(Res.string.preview_mode_hint),
-                checked = settings.projectionSettings.previewModeEnabled,
-                onCheckedChange = { on -> onSettingsChange { s -> s.withPreviewMode(on) } }
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            // Checks the crash-reporting pipeline end to end; there is nothing to send with reporting off.
-            TestEventRow(scope, enabled = settings.analyticsReportingEnabled)
-        }
-    }
-}
-
-internal const val DEV_MODE_CARD_TAG = "system_dev_mode_card"
-
-@Composable
-private fun TestEventRow(scope: CoroutineScope, enabled: Boolean) {
+private fun TestEventRow(scope: CoroutineScope) {
     val testEventTitle = stringResource(Res.string.test_event_title)
     val testEventSentMsg = stringResource(Res.string.test_event_sent)
     val testEventFailedMsg = stringResource(Res.string.test_event_failed)
@@ -414,7 +390,6 @@ private fun TestEventRow(scope: CoroutineScope, enabled: Boolean) {
                     )
                 }
             },
-            enabled = enabled,
             modifier = Modifier.height(32.dp),
             shape = AppShape(8.dp),
             colors = ButtonDefaults.buttonColors(

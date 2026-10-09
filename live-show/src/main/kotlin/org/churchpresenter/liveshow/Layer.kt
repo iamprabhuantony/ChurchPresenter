@@ -14,8 +14,6 @@ enum class Layer {
     SLIDE,
     CAPTIONS,
     GRAPHICS,
-    /** Persistent overlays -- a logo bug, a clock, a badge -- that survive the content changing under them. */
-    PROPS,
     ANNOUNCEMENTS,
     MESSAGES,
     AUDIO,

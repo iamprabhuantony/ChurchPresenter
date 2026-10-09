@@ -334,8 +334,6 @@ private fun AppRootState.MainWindowContent(
         RemoteRemoveRequests()
         RemoteProjectRequests()
         CalendarAutomationWiring()
-        ShowControlEffects()
-        ControlInEffects()
         ServerCommandWiring()
         QaAndPresentationConnectRequests()
         AdminAndMusicianConnectRequests()

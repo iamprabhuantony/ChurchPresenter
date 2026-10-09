@@ -24,10 +24,6 @@ data class OutputLook(
     /** Lower thirds. */
     val graphics: Boolean = true,
     val announcements: Boolean = true,
-    /** Operator messages, e.g. a nursery call. */
-    val messages: Boolean = true,
-    /** Props: a logo bug, a clock, a badge. */
-    val props: Boolean = true,
 ) {
     companion object {
         /** Nothing drawn at all -- see [BLANK_OUTPUT_PROFILE]. */
@@ -38,8 +34,6 @@ data class OutputLook(
             captions = false,
             graphics = false,
             announcements = false,
-            messages = false,
-            props = false,
         )
     }
 }

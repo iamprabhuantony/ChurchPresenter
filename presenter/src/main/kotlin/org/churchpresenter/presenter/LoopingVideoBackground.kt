@@ -1,6 +1,5 @@
 package org.churchpresenter.presenter
 
-import org.churchpresenter.sharedui.utils.rememberFileExists
 import org.churchpresenter.canvas.SceneVideoSpec
 import org.churchpresenter.canvas.SharedSceneVideoCache
 import androidx.compose.foundation.Image
@@ -17,6 +16,7 @@ import androidx.compose.ui.layout.ContentScale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.churchpresenter.diagnostics.CrashReporter
+import java.io.File
 import org.churchpresenter.media.composables.isVlcAvailable
 
 /** A background is silent; the file may still carry an audio track. */
@@ -39,7 +39,8 @@ fun LoopingVideoBackground(
     videoPath: String,
     modifier: Modifier = Modifier
 ) {
-    val playable = rememberFileExists(videoPath) == true &&
+    val file = remember(videoPath) { File(videoPath) }
+    val playable = videoPath.isNotBlank() && file.exists() &&
         isVlcAvailable && !CrashReporter.videoBackgroundsDisabled
 
     val spec = remember(videoPath) { SceneVideoSpec(videoPath, loop = true) }

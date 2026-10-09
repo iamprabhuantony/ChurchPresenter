@@ -106,8 +106,6 @@ internal fun ScheduleRowTitle(
     onPresent: () -> Unit,
     onEditLabel: () -> Unit,
     modifier: Modifier = Modifier,
-    hasActions: Boolean = false,
-    onEditActions: () -> Unit = {},
 ) {
     val isSection = item is ScheduleItem.LabelItem
         Box(modifier = modifier) {
@@ -159,8 +157,6 @@ internal fun ScheduleRowTitle(
                     onRemove = onRemove,
                     onPresent = onPresent,
                     onEditLabel = onEditLabel,
-                    hasActions = hasActions,
-                    onEditActions = onEditActions,
                 )
             }
         }
@@ -221,6 +217,3 @@ internal fun scheduleRowColors(item: ScheduleItem, isSelected: Boolean): Schedul
     }
     return ScheduleRowColors(cardBg, sectionText, cardBorder, leftAccent)
 }
-
-/** A row's note as the card holds it: the saved [text], whether it is open, and what is being typed. */
-internal data class RowNote(val text: String, val expanded: Boolean, val typing: String)

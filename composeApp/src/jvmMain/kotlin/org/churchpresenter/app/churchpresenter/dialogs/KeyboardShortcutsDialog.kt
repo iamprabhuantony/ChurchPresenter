@@ -108,8 +108,6 @@ fun KeyboardShortcutsDialog(
     isVisible: Boolean,
     settings: AppSettings,
     onSave: (AppSettings) -> Unit,
-    /** Off, the actions of features that are dev mode only are left out. */
-    devMode: Boolean = true,
     onDismiss: () -> Unit,
     /** The window it opens in -- see [DialogFrame]. */
     frame: DialogFrame = appDialogFrame,
@@ -134,7 +132,6 @@ fun KeyboardShortcutsDialog(
                 initialSettings = settings,
                 onSave = onSave,
                 onDismiss = onDismiss,
-                devMode = devMode,
             )
         }
     }
@@ -173,7 +170,6 @@ internal fun KeyboardShortcutsDialogContent(
     initialSettings: AppSettings,
     onSave: (AppSettings) -> Unit,
     onDismiss: () -> Unit,
-    devMode: Boolean = true,
 ) {
     var currentSettings by remember { mutableStateOf(initialSettings) }
     // View state only. None of it may reach currentSettings, or what Apply saves would depend on
@@ -191,7 +187,7 @@ internal fun KeyboardShortcutsDialogContent(
     val unsavedCount = remember(shortcuts, savedShortcuts) {
         ShortcutAction.entries.count { shortcuts.chordsFor(it) != savedShortcuts.chordsFor(it) }
     }
-    val visible = rememberVisibleShortcuts(filter, shortcuts, conflicts, devMode)
+    val visible = rememberVisibleShortcuts(filter, shortcuts, conflicts)
 
     fun editOverrides(update: (Map<String, List<KeyChord>>) -> Map<String, List<KeyChord>>) {
         currentSettings = currentSettings.copy(

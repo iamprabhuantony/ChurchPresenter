@@ -52,7 +52,6 @@ internal fun MainWindowScope.SettingsDialogs() {
     with(root) {
         OptionsDialog(
             isVisible = showOptionsDialog,
-            devMode = devMode,
             initialTab = optionsDialogInitialTab,
             initialSettings = appSettings,
             theme = theme,
@@ -96,7 +95,6 @@ internal fun MainWindowScope.SettingsDialogs() {
         KeyboardShortcutsDialog(
             isVisible = showKeyboardShortcutsDialog,
             settings = appSettings,
-            devMode = devMode,
             onSave = { updated ->
                 appSettings = updated
                 settingsManager.saveSettings(updated)
