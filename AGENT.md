@@ -224,7 +224,7 @@ failing, a `NoClassDefFoundError` at runtime — is a stale build. `clean` does 
 
 ### detekt
 **Run `./gradlew :composeApp:detekt` (and the detekt task of every module you touched) as the last
-step of any change that touched Kotlin.** It is the first job in `.github/workflows/test.yml`, and it
+step of any change that touched Kotlin.** It is a job of its own in `.github/workflows/test.yml`, and it
 fails on what the compiler only warns about (an unused import). Every finding it prints is yours to
 fix.
 
@@ -306,7 +306,11 @@ keep passing, and a test your change invalidated is fixed or deleted as part of 
 `composeApp/src/jvmTest/` — run with `./gradlew :composeApp:check`. CI (`.github/workflows/test.yml`)
 runs these on every push, plus each module's suite when the change touched that module or one it
 depends on — worked out from `./gradlew moduleGraph` by `.github/ci/affected_modules.py`, so a new
-`projects.*` dependency needs no CI edit.
+`projects.*` dependency needs no CI edit. The jobs run side by side: `app`, `detekt`, the three-run
+check, and `modules`, whose suites `.github/ci/plan_ci.py` packs into a few runners by their measured
+minutes. **A new module with tests is one row in `plan_ci.py`'s `MODULES`** — until then CI warns
+that it never runs. `test` is the required check: it gathers the results and fails unless every job
+passed.
 
 ### The suite runs in parallel forks
 `jvmTest` runs on up to 4 parallel JVMs (`-PtestForks=N` to override). Breaking these produces
@@ -353,6 +357,11 @@ every `@BeforeClass`.
   timeouts as the success path, or warm-up pauses. When the production delay is the cost, make it an
   injectable defaulted parameter; if that is impossible, don't write the test and note the gap in the
   class doc. Check with the `time=` attributes in `composeApp/build/test-results/jvmTest/TEST-*.xml`.
+- **Three costs that look like waiting and are not:** a `CompanionServer` stopped with its default
+  one-second grace (tests construct it with `shutdownGraceMs = 0`); Swing's `doClick()`, which
+  sleeps 68 ms per press (use `doClick(0)`); and a long `mainClock.advanceTimeBy` while something
+  animates, which composes and draws every frame on the way (jump with `ignoreFrameDuration = true`
+  when nothing between here and the deadline matters).
 - **A route that answers before it finishes leaves a coroutine behind — track it and join it before
   teardown.** `POST /api/atem/still|clip` transfers after responding; route every test in such a suite
   through `AtemBridge.trackUpload`/`cancelUpload` (which joins).
