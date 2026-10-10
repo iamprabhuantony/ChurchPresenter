@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.roborazzi)
     `java-test-fixtures`
     jacoco
 }
@@ -29,11 +30,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.swing)
     // The STT server speaks socket.io; org.json comes with it.
     implementation(libs.socket.io.client)
-    constraints {
-        // engine.io-client, even at its newest, brings okhttp 3.12.12, which can accept the wrong
-        // certificate (GHSA-3cqm-mf7h-prrj). 4.x keeps the okhttp3 API it calls.
-        implementation(libs.okhttp)
-    }
 
     implementation(compose.desktop.currentOs)
     implementation(libs.compose.components.resources)
@@ -56,6 +52,7 @@ dependencies {
     testImplementation(libs.compose.uiTest)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
+    testImplementation(libs.roborazzi.composeDesktop)
 }
 
 // STTManager's capture and the training-data logs write under `user.home`; the suite gets a home of
@@ -65,6 +62,11 @@ tasks.withType<Test>().configureEach {
     doFirst { testHome.mkdirs() }
     systemProperty("user.home", testHome.absolutePath)
     systemProperty("java.awt.headless", "true")
+}
+
+// Committed, beside the module, as the other modules' suites are.
+roborazzi {
+    outputDir.set(layout.projectDirectory.dir("screenshots"))
 }
 
 detekt {
