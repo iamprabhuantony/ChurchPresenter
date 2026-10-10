@@ -26,12 +26,14 @@ class AdjustModelRecompositionTest {
         language = Adjustable(null) {},
     )
 
-    private val pages: Map<CustomizePane, Pair<(AppSettings) -> AppSettings, (AppSettings) -> Map<String, TextBox>>> = mapOf(
+    private val pages: Map<CustomizePane, Pair<(AppSettings) -> AppSettings, (AppSettings) -> Map<String, TextBox>>> =
+        mapOf(
         CustomizePane.CAPTIONS to Pair(
             { s -> s.copy(sttSettings = s.sttSettings.copy(textBoxes = boxes)) }, { s -> s.sttSettings.textBoxes },
         ),
         CustomizePane.SUBTITLES to Pair(
-            { s -> s.copy(mediaSettings = s.mediaSettings.copy(textBoxes = boxes)) }, { s -> s.mediaSettings.textBoxes },
+            { s -> s.copy(mediaSettings = s.mediaSettings.copy(textBoxes = boxes)) },
+            { s -> s.mediaSettings.textBoxes },
         ),
         CustomizePane.QA to Pair(
             { s -> s.copy(qaSettings = s.qaSettings.copy(textBoxes = boxes)) }, { s -> s.qaSettings.textBoxes },
@@ -46,9 +48,8 @@ class AdjustModelRecompositionTest {
         ),
     )
 
-    @Test
-    fun `a single-form page's box writes through whichever callback it was last handed`() {
-        pages.forEach { (pane, access) ->
+    private fun writesThroughLatestCallback(pane: CustomizePane) {
+        pages.getValue(pane).let { access ->
             val (withBoxes, read) = access
             var first = withBoxes(AppSettings())
             var second = withBoxes(AppSettings())
@@ -83,4 +84,24 @@ class AdjustModelRecompositionTest {
             assertEquals(moved, read(second).getValue("TEXT"), "$pane: then the one that replaced it")
         }
     }
+
+    @Test
+    fun `the captions box writes through whichever callback it was last handed`() =
+        writesThroughLatestCallback(CustomizePane.CAPTIONS)
+
+    @Test
+    fun `the subtitles box writes through whichever callback it was last handed`() =
+        writesThroughLatestCallback(CustomizePane.SUBTITLES)
+
+    @Test
+    fun `the Q and A box writes through whichever callback it was last handed`() =
+        writesThroughLatestCallback(CustomizePane.QA)
+
+    @Test
+    fun `the dictionary box writes through whichever callback it was last handed`() =
+        writesThroughLatestCallback(CustomizePane.DICTIONARY)
+
+    @Test
+    fun `the stage monitor box writes through whichever callback it was last handed`() =
+        writesThroughLatestCallback(CustomizePane.STAGE_MONITOR)
 }

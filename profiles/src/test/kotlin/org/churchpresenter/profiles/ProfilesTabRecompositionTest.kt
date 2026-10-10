@@ -13,12 +13,14 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import androidx.compose.ui.unit.Density
 import org.churchpresenter.settings.AppSettings
 import org.churchpresenter.settings.OutputProfile
+import org.churchpresenter.settings.ScreenAssignment
 import org.churchpresenter.settings.utils.Constants
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -133,19 +135,22 @@ class ProfilesTabRecompositionTest {
         return opened
     }
 
-    @Test
-    fun `every page's large preview opens and Esc closes it`() {
-        listOf(
-            Constants.DISPLAY_MODE_FULLSCREEN,
-            Constants.DISPLAY_MODE_LOWER_THIRD_HORIZONTAL,
-            Constants.DISPLAY_MODE_STAGE_MONITOR,
-        ).forEach { mode ->
-            swappableTab(document(mode, advanced = true)) { _, _ ->
-                val expected = customizePanes(mode).size - if (mode == Constants.DISPLAY_MODE_STAGE_MONITOR) 1 else 0
-                assertEquals(expected, openAndEscapeLargePreview(mode), mode)
-            }
-        }
+    private fun largePreviews(mode: String) = swappableTab(document(mode, advanced = true)) { _, _ ->
+        val expected = customizePanes(mode).size - if (mode == Constants.DISPLAY_MODE_STAGE_MONITOR) 1 else 0
+        assertEquals(expected, openAndEscapeLargePreview(mode), mode)
     }
+
+    @Test
+    fun `every full screen page's large preview opens and Esc closes it`() =
+        largePreviews(Constants.DISPLAY_MODE_FULLSCREEN)
+
+    @Test
+    fun `every lower third page's large preview opens and Esc closes it`() =
+        largePreviews(Constants.DISPLAY_MODE_LOWER_THIRD_HORIZONTAL)
+
+    @Test
+    fun `the stage monitor's large previews open and Esc closes them`() =
+        largePreviews(Constants.DISPLAY_MODE_STAGE_MONITOR)
 
     @Test
     fun `the background preview's modes are this session's checking and never written`() {
@@ -155,12 +160,41 @@ class ProfilesTabRecompositionTest {
                 listOf(CustomizePane.BACKGROUND, CustomizePane.BIBLE, CustomizePane.SONGS).forEach { pane ->
                     onNodeWithTag(railTag(pane.name)).performScrollTo().performClick()
                     waitForIdle()
-                    listOf(PreviewBackgroundMode.CHECKER, PreviewBackgroundMode.OFF, PreviewBackgroundMode.ACTUAL).forEach {
+                    listOf(
+                        PreviewBackgroundMode.CHECKER,
+                        PreviewBackgroundMode.OFF,
+                        PreviewBackgroundMode.ACTUAL,
+                    ).forEach {
                         tap(previewBackgroundTag(it))
                     }
                 }
                 assertEquals(before, get(), mode)
             }
+        }
+    }
+
+    @Test
+    fun `merging on the Outputs page writes only the edited profile's merge`() {
+        val ndi = ScreenAssignment(ndiWidth = 1920, ndiHeight = 1080, activeProfileId = PROFILE_ID)
+        val base = document(Constants.DISPLAY_MODE_FULLSCREEN, advanced = true)
+        val doc = base.copy(
+            projectionSettings = base.projectionSettings.copy(
+                ndiOutputs = listOf(ndi, ndi, ScreenAssignment(activeProfileId = PROFILE_ID)),
+                omtOutputs = listOf(ScreenAssignment(activeProfileId = PROFILE_ID)),
+                browserSourceOutputs = listOf(ScreenAssignment(activeProfileId = PROFILE_ID)),
+                outputProfiles = base.projectionSettings.outputProfiles + OutputProfile(id = "other", name = "Other"),
+            ),
+        )
+        swappableTab(doc) { get, _ ->
+            onNodeWithTag(profileRowTag(PROFILE_ID)).performClick()
+            waitForIdle()
+            onNodeWithTag(ProfilePage.Outputs.navTag()).performScrollTo().performClick()
+            waitForIdle()
+            onNodeWithText("Merge this profile's outputs into one picture").performScrollTo().performClick()
+            waitForIdle()
+            val merged = get().projectionSettings.outputProfiles.first { it.id == PROFILE_ID }.merge
+            assertEquals(listOf("ndi:0", "ndi:1", "ndi:2"), merged?.tiles?.map { it.output }, "the kind it has most of")
+            assertEquals(null, get().projectionSettings.outputProfiles.first { it.id == "other" }.merge)
         }
     }
 }

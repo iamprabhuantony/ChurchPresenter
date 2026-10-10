@@ -56,7 +56,8 @@ class DuplicateFinderTabTest {
             assertTrue(isShowing(Strings.labelDelete))
             click(Strings.deleteNSelected(1))
             assertTrue(isShowing(Strings.permanentlyDelete(1)))
-            click(Strings.cancel)
+            clickOutside()
+            assertFalse(isShowing(Strings.permanentlyDelete(1)))
             click(Strings.deleteNSelected(1))
             click(Strings.delete)
             awaitShowing(Strings.doneDeleted(1, 0))
@@ -77,6 +78,8 @@ class DuplicateFinderTabTest {
             click(Strings.scanForDuplicates)
             awaitShowing(Strings.groupSummary(1, 2, 3))
 
+            click(Strings.keepFolder)
+            clickOutside()
             click(Strings.keepFolder)
             click("A")
             awaitShowing(Strings.deleteNSelected(1))
@@ -118,11 +121,11 @@ class DuplicateFinderTabTest {
             click(Strings.scanForDuplicates)
             awaitShowing(Strings.showingGroups(1, 1))
 
-            click(Strings.catSameTitle)
-            click(Strings.catSimilarLyrics)
-            click(Strings.catSameNumber)
+            scrollAndClick(Strings.catSameTitle)
+            scrollAndClick(Strings.catSimilarLyrics)
+            scrollAndClick(Strings.catSameNumber)
             assertTrue(isShowing(Strings.showingGroups(0, 1)))
-            click(Strings.clearFilters)
+            scrollAndClick(Strings.clearFilters)
             assertTrue(isShowing(Strings.showingGroups(1, 1)))
 
             onAllNodes(hasSetTextAction()).onFirst().performTextReplacement("3")
@@ -131,7 +134,7 @@ class DuplicateFinderTabTest {
             onAllNodes(hasSetTextAction()).onFirst().performTextReplacement("1")
             onAllNodes(hasSetTextAction()).onLast().performTextReplacement("5")
             waitForIdle()
-            click(Strings.clearFilters)
+            scrollAndClick(Strings.clearFilters)
             assertTrue(isShowing(Strings.showingGroups(1, 1)))
         }
     }
@@ -143,6 +146,10 @@ class DuplicateFinderTabTest {
         runComposeUiTest {
             setConverterContent(FakePickers(directory = dir)) { DuplicateFinderTab() }
             click(Strings.selectFolder)
+            click(Strings.scanForDuplicates)
+            awaitShowing(Strings.homoglyphDialogTitle)
+            clickOutside()
+            assertFalse(isShowing(Strings.homoglyphDialogTitle))
             click(Strings.scanForDuplicates)
             awaitShowing(Strings.homoglyphDialogTitle)
             click(Strings.skipAndScan)
@@ -200,6 +207,48 @@ class DuplicateFinderTabTest {
             click(Strings.findControlChars)
             awaitShowing(Strings.andNMore(1))
             assertEquals(6, dir.listFiles()!!.size)
+        }
+    }
+
+    @Test
+    fun `a song card shows what its copy is missing and toggles its mark when clicked`() = withTempDir("dupes-card") { dir ->
+        song(File(dir, "A"), "grace", "Amazing Grace", "Amazing grace how sweet the sound")
+        File(dir, "A/grace.song").appendText("\n[Chorus]\nPraise him\n")
+        song(File(dir, "B"), "grace", "Amazing Grace", "Amazing grace how sweet the sound")
+        runComposeUiTest {
+            setConverterContent(FakePickers(directory = dir)) { DuplicateFinderTab() }
+            click(Strings.selectFolder)
+            click(Strings.scanForDuplicates)
+            awaitShowing(Strings.scanAgain)
+            click(Strings.expandAll)
+            assertTrue(isShowing(Strings.missingPrefix("Chorus")))
+
+            click(File(dir, "B/grace.song").absolutePath)
+            assertTrue(isShowing(Strings.labelDelete))
+            click(File(dir, "B/grace.song").absolutePath)
+            assertFalse(isShowing(Strings.labelDelete))
+
+            click(Strings.collapseAll)
+            assertTrue(isShowing(Strings.expandAll))
+        }
+    }
+
+    @Test
+    fun `more than ten files to delete are summarized in the confirmation`() = withTempDir("dupes-many-delete") { dir ->
+        repeat(12) { song(File(dir, "F%02d".format(it)), "joy", "Joy", "Joy to the world the Lord is come") }
+        runComposeUiTest {
+            setConverterContent(FakePickers(directory = dir)) { DuplicateFinderTab() }
+            click(Strings.selectFolder)
+            click(Strings.scanForDuplicates)
+            awaitShowing(Strings.scanAgain)
+            scrollAndClick(Strings.filesPerGroup)
+            onAllNodes(hasSetTextAction()).onLast().performTextReplacement("20")
+            waitForIdle()
+            click(Strings.keepFolder)
+            click("F00")
+            awaitShowing(Strings.deleteNSelected(11))
+            click(Strings.deleteNSelected(11))
+            assertTrue(isShowing(Strings.andNMore(1)))
         }
     }
 }
