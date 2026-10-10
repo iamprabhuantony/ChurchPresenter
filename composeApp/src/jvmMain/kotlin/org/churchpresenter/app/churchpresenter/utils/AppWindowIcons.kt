@@ -4,7 +4,6 @@ import java.awt.AWTEvent
 import java.awt.Image
 import java.awt.Toolkit
 import java.awt.Window
-import java.awt.event.AWTEventListener
 import java.awt.event.WindowEvent
 import java.io.IOException
 import javax.imageio.ImageIO
@@ -36,16 +35,19 @@ internal object AppWindowIcons {
         }
     }
 
-    /** From now on, every window this app opens gets the app icon's frames. */
-    fun install(): AWTEventListener? = install(Toolkit.getDefaultToolkit(), frames)
-
-    internal fun install(toolkit: Toolkit, frames: List<Image>): AWTEventListener? {
-        if (frames.isEmpty()) return null
-        val listener = AWTEventListener { event -> openedWindow(event)?.iconImages = frames }
-        toolkit.addAWTEventListener(listener, AWTEvent.WINDOW_EVENT_MASK)
-        return listener
+    /** Gives [window] the app icon's frames. */
+    internal fun applyTo(window: Window) {
+        if (frames.isNotEmpty()) window.iconImages = frames
     }
 
-    internal fun openedWindow(event: AWTEvent): Window? =
-        if (event.id == WindowEvent.WINDOW_OPENED) event.source as? Window else null
+    /** From now on, every window this app opens gets the app icon's frames. */
+    fun install() {
+        if (frames.isEmpty()) return
+        Toolkit.getDefaultToolkit().addAWTEventListener(
+            { event ->
+                if (event.id == WindowEvent.WINDOW_OPENED) (event.source as? Window)?.let(::applyTo)
+            },
+            AWTEvent.WINDOW_EVENT_MASK,
+        )
+    }
 }
