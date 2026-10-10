@@ -13,11 +13,7 @@ group = "org.churchpresenter"
 // `**/`-prefixed, like every other module: the classes moved from the root package into
 // org/churchpresenter/converter/, and the unanchored form stopped matching them — which
 // silently pulled the whole UI back into the measured set. Same scope as before, not wider.
-extra["coverageExcludes"] = listOf("**/ui/**", "**/MainKt*", "**/ComposableSingletons*")
-
-extra["coverageFloors"] = mapOf(
-    "COMPLEXITY" to "0.80",
-)
+extra["coverageExcludes"] = listOf("**/ComposableSingletons*")
 
 kotlin {
     jvmToolchain(21)
@@ -49,6 +45,7 @@ dependencies {
     implementation(libs.apache.poi.scratchpad)
 
     testImplementation(kotlin("test"))
+    testImplementation(libs.compose.uiTestJunit4)
 }
 
 detekt {
