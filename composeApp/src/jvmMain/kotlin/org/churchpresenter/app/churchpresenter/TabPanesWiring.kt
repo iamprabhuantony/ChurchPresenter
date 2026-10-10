@@ -168,7 +168,7 @@ internal fun MainDesktopScope.PresentationTabPane() {
 }
 
 @Composable
-internal fun MainDesktopScope.MediaTabPane(vlcAvailable: Boolean = isVlcAvailable) {
+internal fun MainDesktopScope.MediaTabPane() {
     MediaTab(
         modifier = Modifier.fillMaxSize(),
         appSettings = appSettings,
@@ -192,7 +192,6 @@ internal fun MainDesktopScope.MediaTabPane(vlcAvailable: Boolean = isVlcAvailabl
             )
             rememberPreviewOutput(appSettings, Constants.PREVIEW_TAB_MEDIA, Presenting.MEDIA)
         },
-        vlcAvailable = vlcAvailable,
     )
 }
 
@@ -211,10 +210,8 @@ internal fun MainDesktopScope.LowerThirdTabPane() {
             presenterManager.previewBus.showLowerThird(json, pauseAtFrame, pauseFrame, pauseDurationMs, presetName)
         },
         onOpenLottieGen = { outputDir, onSaved -> onOpenLottieGen(outputDir, onSaved) },
-        liveLowerThirdName = liveOnly(
-            presenterManager.currentLowerThirdName.value.takeIf { it.isNotEmpty() },
-            presenterManager.isLive(Presenting.LOWER_THIRD),
-        ),
+        liveLowerThirdName = presenterManager.currentLowerThirdName.value
+            .takeIf { it.isNotEmpty() && presenterManager.isLive(Presenting.LOWER_THIRD) },
     )
 }
 
@@ -297,7 +294,7 @@ internal fun MainDesktopScope.CanvasTabPane() {
             presenterManager.setShowPresenterWindow(true)
         },
         sceneViewModel = sceneViewModel,
-        liveSceneId = liveOnly(presenterManager.activeScene.value?.id, presenterManager.isLive(Presenting.CANVAS)),
+        liveSceneId = presenterManager.activeScene.value?.id?.takeIf { presenterManager.isLive(Presenting.CANVAS) },
         onAddToSchedule = { sceneId, sceneName ->
             currentScheduleActions.addScene(sceneId, sceneName)
         },
@@ -322,10 +319,8 @@ internal fun MainDesktopScope.DictionaryTabPane() {
         onAddToSchedule = { number, word, transliteration, definition ->
             state.scheduleActions.addDictionary(number, word, transliteration, definition)
         },
-        liveEntryNumber = liveOnly(
-            presenterManager.displayedDictionaryEntry.value?.number,
-            presenterManager.isLive(Presenting.DICTIONARY),
-        ),
+        liveEntryNumber = presenterManager.displayedDictionaryEntry.value?.number
+            ?.takeIf { presenterManager.isLive(Presenting.DICTIONARY) },
         onGoLive = { entry ->
             presenterManager.setDisplayedDictionaryEntry(entry)
             presenterManager.setShowPresenterWindow(true)
