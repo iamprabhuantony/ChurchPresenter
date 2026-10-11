@@ -32,7 +32,7 @@ dependencies {
     // JCEF -- the embedded Chromium the tab and the output window both browse with. `api` because
     // the app hands a CefBrowser across WebOutput. The platform's Chromium binaries are the app's
     // runtime dependency, not this module's: they are only ever loaded by a packaged or running app.
-    api("me.friwi:jcefmaven:143.0.14")
+    api("me.friwi:jcefmaven:152.0.6")
 
     implementation(compose.desktop.currentOs)
     implementation(libs.compose.components.resources)
