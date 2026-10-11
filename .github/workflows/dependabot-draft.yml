@@ -1,0 +1,25 @@
+name: Dependabot PRs as drafts
+
+# Dependabot has no setting to open its pull requests as drafts, so this turns each one into a
+# draft as it opens. CI still runs on a draft; it waits for someone to mark it ready.
+#
+# pull_request_target, because a Dependabot-triggered pull_request run gets a read-only token. It
+# is safe here: the job never checks out or runs the pull request's code, it only calls the API.
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  draft:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: gh pr ready --undo "$PR" --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
