@@ -16,6 +16,16 @@ updates:
           - "org.jetbrains.kotlin*"
           - "org.jetbrains.compose*"
           - "androidx.compose*"
+    ignore:
+      # Material3 has had no stable release since 1.9.0; the alpha in use is the one paired with
+      # the Compose Multiplatform release in use, and a newer alpha drags all of Compose onto
+      # alphas with it. It moves by hand, together with Compose Multiplatform.
+      - dependency-name: "org.jetbrains.compose.material3*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      # okhttp is held at 4.x for the socket.io client the captions and the Bible engine connect
+      # with (see the root build); no test drives a live socket.io connection over 5.x.
+      - dependency-name: "com.squareup.okhttp3:okhttp"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
