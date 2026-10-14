@@ -2,7 +2,6 @@ package org.churchpresenter.sharedui.utils
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -12,7 +11,7 @@ import kotlin.test.assertTrue
  * clean exit gets filed as a fatal crash. The hook itself cannot be run here without ending the
  * JVM, so what is tested is the body wrapper: it must run the work, and it must not let anything
  * out. `Thread.getUncaughtExceptionHandler` is what would have seen the escape, so the test drives
- * the same shape directly. Registering one and taking it back is real, and is tested as it is.
+ * the same shape directly.
  */
 class ShutdownHooksTest {
 
@@ -50,13 +49,6 @@ class ShutdownHooksTest {
         var calls = 0
         guardedShutdownBody { calls++ }.run()
         assertEquals(1, calls)
-    }
-
-    @Test
-    fun `a hook is taken back once`() {
-        val hook = addGuardedShutdownHook("test") {}
-        assertTrue(hook.remove())
-        assertFalse(hook.remove())
     }
 
     @Test

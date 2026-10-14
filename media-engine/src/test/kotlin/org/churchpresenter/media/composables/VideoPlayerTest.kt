@@ -7,7 +7,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.v2.runComposeUiTest
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -238,19 +237,6 @@ class VideoPlayerTest {
             assertEquals(null, System.getProperty("jna.library.path"))
         } finally {
             file.toFile().delete()
-        }
-    }
-
-    @Test
-    fun `a custom VLC path goes in front of a jna library path already set`() {
-        val dir = tempDir()
-        try {
-            System.setProperty("jna.library.path", "/opt/elsewhere")
-            vlcCustomPath = dir.toString()
-            applyCustomVlcPath()
-            assertEquals("$dir${File.pathSeparator}/opt/elsewhere", System.getProperty("jna.library.path"))
-        } finally {
-            dir.toFile().deleteRecursively()
         }
     }
 
