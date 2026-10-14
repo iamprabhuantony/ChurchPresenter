@@ -2,7 +2,9 @@ package org.churchpresenter.osrproto
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -15,6 +17,7 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
 import org.cef.browser.CefBrowserHeadless
 import org.jetbrains.skia.FilterMipmap
+import org.jetbrains.skia.Image
 import org.jetbrains.skia.FilterMode
 import org.jetbrains.skia.MipmapMode
 import org.jetbrains.skia.Paint
@@ -27,25 +30,28 @@ import java.awt.event.MouseWheelEvent
  * The wheel rotation to hand JCEF for an AWT [preciseWheelRotation][MouseWheelEvent.getPreciseWheelRotation].
  *
  * JCEF passes the rotation to Chromium as a pixel delta, negated and barely scaled: one notch down
- * arrives as `deltaY=-1` on macOS and `deltaY=-2` on Windows, where Chrome scrolls 40 px per line and
- * 100 px per notch. So this sends pre-negated pixels divided by JCEF's own factor, and carries the
- * fraction a touchpad leaves so slow swipes still scroll. Linux is passed through until measured.
+ * arrives as `deltaY=-1` on macOS and `deltaY=-2.5` on Windows (truncated to whole pixels), where
+ * Chrome scrolls 40 px per line and 100 px per notch. So this sends pre-negated units of JCEF's
+ * factor, and carries what is left in pixels — after JCEF's own truncation — so a touchpad's small
+ * steps add up exactly. Linux is passed through until measured.
  */
 internal class WheelScaler(os: String = System.getProperty("os.name")) {
     /** Pixels per AWT rotation unit, and JCEF's native multiplier; null where unmeasured. */
-    private val scale: Pair<Int, Int>? = when {
-        os.startsWith("Mac") -> 40 to 1
-        os.startsWith("Windows") -> 100 to 2
+    private val scale: Pair<Double, Double>? = when {
+        os.startsWith("Mac") -> 40.0 to 1.0
+        os.startsWith("Windows") -> 100.0 to 2.5
         else -> null
     }
-    private var carry = 0.0
+    private var carryPixels = 0.0
 
     fun rotationFor(precise: Double): Int {
         val (pixelsPerUnit, nativeFactor) = scale ?: return precise.toInt()
-        val units = precise * pixelsPerUnit / nativeFactor + carry
-        val whole = units.toInt()
-        carry = units - whole
-        return -whole
+        val wanted = precise * pixelsPerUnit + carryPixels
+        val units = (wanted / nativeFactor).toInt()
+        // What Chromium will actually scroll: JCEF multiplies by its factor and drops the fraction.
+        val sent = (units * nativeFactor).toInt()
+        carryPixels = wanted - sent
+        return -units
     }
 }
 
@@ -61,28 +67,59 @@ internal fun fitRect(box: Size, frameW: Int, frameH: Int): Rect {
 
 /**
  * Draws the latest frame, letterboxed, with the open popup over it, and reports each draw to [stats]
- * under [name]. Every window that shows the page is one of these over the same [store].
+ * under [name]. Every window that shows the page is one of these over the same [store]; a [small]
+ * one draws the frame's scaled-down copy when there is one.
+ */
+/**
+ * What one window draws from a [Frame]: its [picture] (the full view, or for a small window the
+ * scaled-down copy when there is one), and the popup. Two are equivalent when they would draw the
+ * same pixels, so a window is not redrawn when only the other window's picture changed.
+ */
+private class Shown(val frame: Frame, val picture: Image, val pictureSeq: Long) {
+    companion object {
+        fun of(frame: Frame, small: Boolean): Shown {
+            val preview = frame.preview
+            return if (small && preview != null) Shown(frame, preview, frame.previewSeq)
+            else Shown(frame, frame.view, frame.viewSeq)
+        }
+
+        val Policy = object : SnapshotMutationPolicy<Shown?> {
+            override fun equivalent(a: Shown?, b: Shown?): Boolean =
+                a?.picture === b?.picture && a?.frame?.popup === b?.frame?.popup &&
+                    a?.frame?.popupRect == b?.frame?.popupRect
+        }
+    }
+}
+
+/**
+ * Draws the latest frame, letterboxed, with the open popup over it, and reports each draw to [stats]
+ * under [name]. Every window that shows the page is one of these over the same [store]; a [small]
+ * one draws the frame's scaled-down copy when there is one. A window redraws only when what it shows
+ * changed, and its skipped count is of its own pictures.
  */
 @Composable
-fun FrameView(store: FrameStore, stats: Stats, name: String, modifier: Modifier) {
-    val frame by store.frames.collectAsState()
+fun FrameView(store: FrameStore, stats: Stats, name: String, modifier: Modifier, small: Boolean = false) {
+    val frames = store.frames.collectAsState()
+    val shown by remember(small) { derivedStateOf(Shown.Policy) { frames.value?.let { Shown.of(it, small) } } }
     val lastSeq = remember { longArrayOf(-1) }
     val paint = remember { Paint() }
     Canvas(modifier) {
-        val f = frame ?: return@Canvas
+        val current = shown ?: return@Canvas
+        val f = current.frame
+        val picture = current.picture
         val start = System.nanoTime()
-        val dst = fitRect(size, f.view.width, f.view.height)
+        val dst = fitRect(size, picture.width, picture.height)
         val sampling = FilterMipmap(FilterMode.LINEAR, MipmapMode.NONE)
         drawIntoCanvas { c ->
             val canvas = c.skiaCanvas
             canvas.drawImageRect(
-                f.view, Rect.makeWH(f.view.width.toFloat(), f.view.height.toFloat()), dst, sampling, paint, true,
+                picture, Rect.makeWH(picture.width.toFloat(), picture.height.toFloat()), dst, sampling, paint, true,
             )
             val popup = f.popup
             val rect = f.popupRect
             if (popup != null && rect != null) {
-                // The popup rect is in DIPs; the view image is in physical pixels.
-                val dipToDst = dst.width / (f.view.width / f.scale)
+                // The popup rect is in DIPs; the picture is in pixels.
+                val dipToDst = dst.width / f.dipWidth
                 val target = Rect.makeXYWH(
                     dst.left + rect.x * dipToDst, dst.top + rect.y * dipToDst,
                     rect.width * dipToDst, rect.height * dipToDst,
@@ -92,8 +129,8 @@ fun FrameView(store: FrameStore, stats: Stats, name: String, modifier: Modifier)
                 )
             }
         }
-        val gap = if (lastSeq[0] < 0) 0 else (f.seq - lastSeq[0] - 1).coerceAtLeast(0)
-        lastSeq[0] = f.seq
+        val gap = if (lastSeq[0] < 0) 0 else (current.pictureSeq - lastSeq[0] - 1).coerceAtLeast(0)
+        lastSeq[0] = current.pictureSeq
         val now = System.nanoTime()
         stats.draw(name, drawNs = now - start, latencyNs = now - f.paintedAt, gap = gap)
     }
