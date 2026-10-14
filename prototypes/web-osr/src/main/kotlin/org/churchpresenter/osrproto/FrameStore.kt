@@ -49,8 +49,10 @@ class Frame(
  * Chromium waits for each paint callback to return before it goes on, so the callback does only the
  * copy, split across [COPY_THREADS] threads when the whole frame changed.
  *
- * A frame wider than [DOWNSCALE_ABOVE] also gets a [PREVIEW_WIDTH]-wide copy, made on a worker
- * thread, so a small preview window does not upload a 4K texture every frame to draw it at 640 px.
+ * A frame wider than [DOWNSCALE_ABOVE] also gets a half-size copy, made on a worker thread, so a
+ * small preview window does not upload a 4K texture every frame to draw it at 640 px. Exactly half,
+ * because at 2:1 a bilinear sample lands between four pixels and averages them all; at 3:1 it
+ * skipped most of them and small text broke up.
  * The worker takes the newest frame whenever it is free, and every frame carries the latest copy it
  * made, a frame or so behind. At 1080p the downscale costs more CPU than the upload it saves, so a
  * 1080p frame goes to the preview as it is. A frame the worker is reading is not closed until it is
@@ -166,13 +168,13 @@ class FrameStore(private val stats: Stats, private val dipWidth: Int) : Headless
     }
 
     /**
-     * [image] drawn into a [PREVIEW_WIDTH]-wide raster that keeps the last copy, redrawing only the part
+     * [image] drawn at half size into a raster that keeps the last copy, redrawing only the part
      * that covers [dirty] (in view pixels; null or a new raster redraws it all). Only the preview
      * worker calls this.
      */
     private fun downscale(image: Image, dirty: Rectangle?): Image {
-        val w = PREVIEW_WIDTH
-        val h = image.height * w / image.width
+        val w = image.width / 2
+        val h = image.height / 2
         val reused = previewSurface?.takeIf { it.width == w && it.height == h }
         val surface = reused
             ?: Surface.makeRaster(ImageInfo(w, h, ColorType.BGRA_8888, ColorAlphaType.PREMUL))
@@ -276,14 +278,15 @@ class FrameStore(private val stats: Stats, private val dipWidth: Int) : Headless
             val pending = history.toList().takeLast(behind.toInt().coerceAtMost(history.size))
             var full = held[i] < 0 || behind > history.size || pending.any { it == null }
             if (!full) {
-                // Paints that dirty the same rect (a playing video) are copied once, and a set that
-                // covers a large share of the frame goes as one pooled full copy.
-                val rects = pending.flatMap { it!!.asList() }.distinct()
-                val area = rects.sumOf { clip(it)?.let { c -> c.width.toLong() * c.height } ?: 0L }
-                if (area * FULL_COPY_SHARE >= width.toLong() * height) {
+                // The pending paints' rects are reduced to their exact union as non-overlapping rects, so
+                // a repeated or slightly shifting rect (a playing video, a rotating element) is copied
+                // once; a union covering most of the frame goes as one pooled full copy instead.
+                val union = disjointUnion(pending.flatMap { it!!.asList() }.mapNotNull(::clip))
+                val area = union.sumOf { it.width.toLong() * it.height }
+                if (area * FULL_COPY_DENOMINATOR >= width.toLong() * height * FULL_COPY_NUMERATOR) {
                     full = true
                 } else {
-                    rects.forEach { copyRect(it, source, buffer, pool) }
+                    union.forEach { copyRect(it, source, buffer, pool) }
                 }
             }
             if (full) copyAll(source, buffer, pool)
@@ -311,6 +314,34 @@ class FrameStore(private val stats: Stats, private val dipWidth: Int) : Headless
             val others = (1 until COPY_THREADS).map { k -> pool.submit { band(k) } }
             band(0)
             others.forEach { it.get() }
+        }
+
+        /**
+         * The union of [rects] as non-overlapping rects: the plane is cut on every rect edge, and each
+         * horizontal band's covered cells are merged into runs. A paint has only a few rects, so the
+         * grid stays small.
+         */
+        private fun disjointUnion(rects: List<Rectangle>): List<Rectangle> {
+            if (rects.size <= 1) return rects
+            val xs = rects.flatMap { listOf(it.x, it.x + it.width) }.distinct().sorted()
+            val ys = rects.flatMap { listOf(it.y, it.y + it.height) }.distinct().sorted()
+            val out = ArrayList<Rectangle>()
+            for (j in 0 until ys.size - 1) {
+                val y0 = ys[j]
+                val y1 = ys[j + 1]
+                var runStart = -1
+                for (i in 0 until xs.size) {
+                    val covered = i < xs.size - 1 && rects.any { r ->
+                        r.x <= xs[i] && r.x + r.width >= xs[i + 1] && r.y <= y0 && r.y + r.height >= y1
+                    }
+                    if (covered && runStart < 0) runStart = i
+                    if (!covered && runStart >= 0) {
+                        out += Rectangle(xs[runStart], y0, xs[i] - xs[runStart], y1 - y0)
+                        runStart = -1
+                    }
+                }
+            }
+            return out
         }
 
         /** [r] clipped to the frame, or null when nothing of it is inside. */
@@ -353,14 +384,16 @@ class FrameStore(private val stats: Stats, private val dipWidth: Int) : Headless
         /** Frames wider than this get a scaled-down copy for the preview. */
         const val DOWNSCALE_ABOVE = 1920
 
-        /** The width of that copy. */
-        const val PREVIEW_WIDTH = 1280
-
         /** Threads a whole-frame copy is split across, the paint thread included. */
         const val COPY_THREADS = 4
 
-        /** Pending rects covering at least 1/this of the frame are copied as one pooled full copy instead. */
-        const val FULL_COPY_SHARE = 3
+        /**
+         * Pending rects whose union covers at least this share of the frame are copied as one pooled
+         * full copy instead. Large rects are pooled too, so the full copy only pays when the change is
+         * most of the frame.
+         */
+        const val FULL_COPY_NUMERATOR = 3
+        const val FULL_COPY_DENOMINATOR = 4
 
         /** A dirty rect at least this big is split across the copy threads too. */
         const val POOLED_RECT_PIXELS = 1_000_000L

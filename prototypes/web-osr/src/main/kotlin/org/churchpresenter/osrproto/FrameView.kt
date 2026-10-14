@@ -55,6 +55,12 @@ internal class WheelScaler(os: String = System.getProperty("os.name")) {
     }
 }
 
+/** `-PnoMipmaps=1` turns mipmapped sampling off, to measure what it costs. */
+private val noMipmaps = System.getProperty("osr.noMipmaps") != null
+
+/** Drawn smaller than this share of its size, a picture is sampled from mipmaps. */
+private const val MIPMAP_BELOW = 0.67f
+
 /** Where the page's picture sits inside a box of [box]: centred, letterboxed to the frame's aspect. */
 internal fun fitRect(box: Size, frameW: Int, frameH: Int): Rect {
     val scale = minOf(box.width / frameW, box.height / frameH)
@@ -109,11 +115,17 @@ fun FrameView(store: FrameStore, stats: Stats, name: String, modifier: Modifier,
         val picture = current.picture
         val start = System.nanoTime()
         val dst = fitRect(size, picture.width, picture.height)
-        val sampling = FilterMipmap(FilterMode.LINEAR, MipmapMode.NONE)
+        // Shrinking a picture by more than about 1.5× with plain bilinear skips source pixels and
+        // breaks up small text, so a window that does (a small preview) samples from mipmaps, which
+        // the GPU builds as it uploads the picture. Near full size (the Output) it would be wasted work.
+        val shrinking = dst.width < picture.width * MIPMAP_BELOW && !noMipmaps
+        val sampling = FilterMipmap(FilterMode.LINEAR, if (shrinking) MipmapMode.LINEAR else MipmapMode.NONE)
         drawIntoCanvas { c ->
             val canvas = c.skiaCanvas
+            // Not strict: Skia turns mipmapping off for a strict source rect, and the source is the
+            // whole picture anyway, so there is nothing outside it to bleed in.
             canvas.drawImageRect(
-                picture, Rect.makeWH(picture.width.toFloat(), picture.height.toFloat()), dst, sampling, paint, true,
+                picture, Rect.makeWH(picture.width.toFloat(), picture.height.toFloat()), dst, sampling, paint, false,
             )
             val popup = f.popup
             val rect = f.popupRect
@@ -125,7 +137,7 @@ fun FrameView(store: FrameStore, stats: Stats, name: String, modifier: Modifier,
                     rect.width * dipToDst, rect.height * dipToDst,
                 )
                 canvas.drawImageRect(
-                    popup, Rect.makeWH(popup.width.toFloat(), popup.height.toFloat()), target, sampling, paint, true,
+                    popup, Rect.makeWH(popup.width.toFloat(), popup.height.toFloat()), target, sampling, paint, false,
                 )
             }
         }
