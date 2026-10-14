@@ -28,12 +28,16 @@ jobs:
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-read-only: true
-      - name: Run the announcements suite 25 times, each in a fresh JVM
+      - name: Run the announcements suite 25 times, each cold
         run: |
           ./gradlew :announcements:testClasses -q
+          # As test.yml's modules job: the compiler daemon is gone before any suite runs.
+          pkill -f KotlinCompileDaemon || true
           mkdir -p hunt
           fails=0
           for i in $(seq 1 25); do
+            # Every run starts cold, as the first suite on a fresh runner does: nothing in the page cache.
+            sync; echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null
             ./gradlew :announcements:test --rerun --continue > hunt/run.log 2>&1 || true
             if grep -lq 'failures="[1-9]\|errors="[1-9]' announcements/build/test-results/test/TEST-*.xml; then
               fails=$((fails + 1))
