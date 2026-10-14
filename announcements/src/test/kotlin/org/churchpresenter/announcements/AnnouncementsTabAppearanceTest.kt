@@ -5,6 +5,9 @@ package org.churchpresenter.announcements
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.printToString
+import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.onNodeWithText
@@ -160,10 +163,41 @@ class AnnouncementsTabAppearanceTest {
 
     @Test
     fun `the live clock format can be changed`() = announcementsTab { _, reports ->
+        // TEMPORARY (flake hunt): records every window at each step, and keeps it if the menu is missing.
+        val log = StringBuilder()
+        fun snap(stage: String) {
+            val roots = onAllNodes(isRoot())
+            log.appendLine("== $stage: wall=${java.time.LocalTime.now()} roots=${roots.fetchSemanticsNodes(false).size} " +
+                "mode=${reports.settings?.timerMode} format=${reports.settings?.liveClockFormat} " +
+                "settingsChanges=${reports.settingsChanges}")
+            log.appendLine(roots.printToString(maxDepth = 100))
+        }
+        snap("start")
         clickLabel(AnnouncementLabel.CLOCK_DISPLAY_MODE)
-
-        onNodeWithText("FORMAT", substring = true).performClick()
+        snap("after Clock")
+        val field = onNodeWithText("FORMAT", substring = true)
+        log.appendLine("FORMAT bounds=${field.fetchSemanticsNode().boundsInRoot} " +
+            "window=${onAllNodes(isRoot())[0].fetchSemanticsNode().size}")
+        field.performClick()
+        snap("right after the FORMAT click")
         waitForIdle()
+        snap("after waitForIdle")
+        if (onAllNodesWithText("24-Hour (HH:mm)").fetchSemanticsNodes(false).isEmpty()) {
+            Thread.sleep(500)
+            waitForIdle()
+            snap("500 ms later")
+            val dir = java.io.File("build/flake-dump").apply { mkdirs() }
+            val stamp = System.currentTimeMillis()
+            java.io.File(dir, "clock-$stamp.txt").writeText(log.toString())
+            onAllNodes(isRoot()).fetchSemanticsNodes(false).indices.forEach { i ->
+                runCatching {
+                    javax.imageio.ImageIO.write(
+                        onAllNodes(isRoot())[i].captureToImage().toAwtImage(), "png",
+                        java.io.File(dir, "clock-$stamp-root$i.png"),
+                    )
+                }
+            }
+        }
         onAllNodesWithText("24-Hour (HH:mm)")[0].performClick()
         waitForIdle()
 

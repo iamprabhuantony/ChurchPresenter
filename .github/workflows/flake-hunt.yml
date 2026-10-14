@@ -1,0 +1,57 @@
+name: Flake hunt (temporary)
+
+# TEMPORARY: runs the :announcements suite many times on the runners it flakes on, to catch
+# `AnnouncementsTabAppearanceTest > the live clock format can be changed` failing with a record of
+# every window. Lives only on the flake-hunt-clock-format branch, which is deleted afterwards.
+
+on:
+  push:
+    branches: [flake-hunt-clock-format]
+
+permissions:
+  contents: read
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+      - name: Run the announcements suite 25 times, each in a fresh JVM
+        run: |
+          ./gradlew :announcements:testClasses -q
+          mkdir -p hunt
+          fails=0
+          for i in $(seq 1 25); do
+            ./gradlew :announcements:test --rerun --continue > hunt/run.log 2>&1 || true
+            if grep -lq 'failures="[1-9]\|errors="[1-9]' announcements/build/test-results/test/TEST-*.xml; then
+              fails=$((fails + 1))
+              mkdir -p "hunt/fail$i"
+              cp announcements/build/test-results/test/TEST-*.xml "hunt/fail$i/"
+              cp -r announcements/build/flake-dump "hunt/fail$i/" 2>/dev/null || true
+              cp hunt/run.log "hunt/fail$i/"
+              grep -h -o '<testcase name="[^"]*"[^>]*>\s*<failure message="[^"]\{0,200\}' announcements/build/test-results/test/TEST-*.xml \
+                | sed 's/^/  /' >> "$GITHUB_STEP_SUMMARY" || true
+            fi
+            rm -rf announcements/build/flake-dump
+          done
+          rm -f hunt/run.log
+          echo "Shard ${{ matrix.shard }}: $fails of 25 runs failed" | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: hunt-${{ matrix.shard }}
+          path: hunt/
+          if-no-files-found: ignore
+          retention-days: 7
