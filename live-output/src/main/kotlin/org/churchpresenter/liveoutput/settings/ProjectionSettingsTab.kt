@@ -1,6 +1,6 @@
 package org.churchpresenter.liveoutput.settings
 
-import org.churchpresenter.profiles.previewOutputSize
+import org.churchpresenter.sharedui.utils.previewOutputSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -73,13 +73,13 @@ import androidx.compose.runtime.collectAsState
 import org.churchpresenter.sharedui.composables.SettingsScrollbar
 import org.churchpresenter.sharedui.composables.SettingsScrollbarGutter
 import org.churchpresenter.sharedui.composables.SettingsSection
-import org.churchpresenter.profiles.TvScreenBox
-import org.churchpresenter.profiles.tvScreenBoxWidthFor
+import org.churchpresenter.sharedui.composables.TvScreenBox
+import org.churchpresenter.sharedui.composables.tvScreenBoxWidthFor
 import org.churchpresenter.media.composables.detectVlcInstallPath
 import org.churchpresenter.media.composables.isVlcAvailable
 import org.churchpresenter.media.composables.isVlcLoadFailed
 import org.churchpresenter.media.composables.listVlcAudioDevices
-import org.churchpresenter.profiles.ScanningRow
+import org.churchpresenter.sharedui.composables.ScanningRow
 import org.churchpresenter.media.composables.VlcAudioDevice
 import org.churchpresenter.media.composables.recheckVlcAvailability
 import org.churchpresenter.media.composables.vlcCustomPath
@@ -88,7 +88,6 @@ import org.churchpresenter.settings.ProjectionSettings
 import org.churchpresenter.settings.ScreenAssignment
 import org.churchpresenter.settings.isScreenUnused
 import org.churchpresenter.settings.screenKey
-import org.churchpresenter.server.CompanionServer
 import org.churchpresenter.settings.utils.Constants
 import org.churchpresenter.sharedui.utils.DevFlags
 import org.jetbrains.compose.resources.stringResource
@@ -180,7 +179,8 @@ data class DisplayOption(
 fun ProjectionSettingsTab(
     settings: AppSettings,
     onSettingsChange: ((AppSettings) -> AppSettings) -> Unit,
-    companionServer: CompanionServer,
+    /** The companion server's address, which a Browser Source's overlay URL starts with; blank while it is off. */
+    serverUrl: String,
     onIdentifyScreen: () -> Unit = {},
     onIdentifyBrowserSource: (Int) -> Unit = {},
     onIdentifyNdi: (Int) -> Unit = {},
@@ -302,7 +302,7 @@ fun ProjectionSettingsTab(
     BrowserSourceOutputsCard(
         settings = settings,
         onSettingsChange = onSettingsChange,
-        companionServer = companionServer,
+        serverUrl = serverUrl,
         onIdentifyBrowserSource = onIdentifyBrowserSource,
     )
 
