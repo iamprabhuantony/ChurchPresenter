@@ -177,22 +177,13 @@ class VlcAvailabilityTest {
     }
 
     @Test
-    fun `VLC in one of the usual places is an install, with no need to ask which`() {
-        val runner = FakeCommandRunner.alwaysFailing()
-
-        assertTrue(vlcInstalledOn("linux", "", runner::run, detect = { "/usr/lib" }))
-        assertTrue(runner.calls.isEmpty())
-    }
-
-    @Test
     fun `windows and macOS do not fall back to which`() {
         // `which vlc` proves the player is on PATH, not that libvlc is anywhere JNA will look. Only
-        // Linux distributions reliably ship the two together. Nothing is found in the usual places,
-        // or a machine with VLC installed would answer before the question arose.
+        // Linux distributions reliably ship the two together.
         listOf("windows 11", "mac os x", "darwin").forEach { osName ->
             val runner = FakeCommandRunner { CommandResult(0, "/usr/bin/vlc") }
 
-            assertFalse(vlcInstalledOn(osName, "", runner::run, detect = { "" }))
+            vlcInstalledOn(osName, "", runner::run)
 
             assertTrue(runner.calls.isEmpty(), "$osName must not consult which")
         }

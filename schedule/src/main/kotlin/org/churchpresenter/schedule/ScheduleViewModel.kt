@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import org.churchpresenter.sharedui.utils.GuardedShutdownHook
 import org.churchpresenter.sharedui.utils.addGuardedShutdownHook
 import org.churchpresenter.core.models.io.writeTextAtomically
 import org.churchpresenter.core.models.schedule.RowTiming
@@ -83,9 +82,6 @@ class ScheduleViewModel(
 
     @Volatile private var isDirty = false
 
-    /** Cancels [scope] if the JVM exits first; [dispose] takes it back, or it keeps this alive. */
-    internal val shutdownHook: GuardedShutdownHook
-
     init {
         // An autosave the restore prompt can no longer offer — see autoSaveAvailable()'s same-day
         // and four-hour gate — is unreachable for ever, so it is deleted rather than left to sit
@@ -95,7 +91,7 @@ class ScheduleViewModel(
         // exitProcess/System.exit shutdown (e.g. the self-updater relaunching an installer),
         // so this loop could otherwise wake up mid-shutdown and try to classload ScheduleFileV2
         // after the installer has started overwriting the app's own files.
-        shutdownHook = addGuardedShutdownHook("schedule") { scope.cancel() }
+        addGuardedShutdownHook("schedule") { scope.cancel() }
         scope.launch {
             while (true) {
                 delay(autoSaveIntervalMs)
@@ -116,7 +112,6 @@ class ScheduleViewModel(
 
     fun dispose() {
         scope.cancel()
-        shutdownHook.remove()
     }
 
     internal fun notifyChanged() {

@@ -85,12 +85,7 @@ class PlayerEventsEdgeTest {
     @Test
     fun `a mac with no VLC does not fall back to which`() {
         var asked = false
-        vlcInstalledOn(
-            "darwin",
-            "",
-            { _, _ -> asked = true; org.churchpresenter.sharedui.utils.CommandResult(0, "") },
-            detect = { "" },
-        )
+        vlcInstalledOn("darwin", "", { _, _ -> asked = true; org.churchpresenter.sharedui.utils.CommandResult(0, "") })
         assertFalse(asked)
     }
 }
