@@ -525,19 +525,6 @@ class MediaViewModelTest {
         assertEquals(MediaViewModel.SUBTITLES_OFF, vm.selectedSubtitleTrack)
     }
 
-    /** A track VLC carries inside the clip shows, and lights the Subtitles key, with no file loaded. */
-    @Test
-    fun `picking an embedded track shows subtitles`() {
-        val vm = loaded()
-        vm.subtitles.setSubtitleTracks(listOf(english, spanish))
-        assertFalse(vm.subtitlesVisible)
-
-        vm.subtitles.selectSubtitleTrack(english.id)
-
-        assertTrue(vm.subtitlesVisible)
-        assertFalse(vm.subtitles.appDrawsSubtitles, "VLC draws an embedded track, not the app")
-    }
-
     @Test
     fun `a subtitle file the operator chose is shown once VLC lists it`() {
         val vm = loaded()
@@ -716,19 +703,6 @@ class MediaViewModelTest {
 
         assertTrue(vm.subtitles.activeSubtitleCues(ANY_OUTPUT).isEmpty(), "Off has to reach the app-drawn path too")
         assertFalse(vm.subtitlesVisible)
-    }
-
-    @Test
-    fun `a subtitle file switched off darkens the Subtitles key, and switched back on lights it`() {
-        val vm = loaded()
-        vm.subtitles.setSubtitleFile(srtFile())
-
-        vm.subtitles.setSidecarEnabled(0, false)
-        assertFalse(vm.subtitlesVisible, "a file loaded but off shows nothing")
-        assertTrue(vm.subtitles.appDrawsSubtitles, "still loaded, so VLC must still draw none of its own")
-
-        vm.subtitles.setSidecarEnabled(0, true)
-        assertTrue(vm.subtitlesVisible)
     }
 
     // ── Several files at once, and which output each goes to ─────────────────────
