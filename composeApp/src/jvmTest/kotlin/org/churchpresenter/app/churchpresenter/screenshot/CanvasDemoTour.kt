@@ -40,7 +40,12 @@ class CanvasDemoTour {
         moreSources()
         say("live-sources")
         quietClick(find(hasContentDescription("Add source")))
-        note("Live video", "Camera, Screen Capture, NDI and OMT", menuItem("Camera"))
+        tour(
+            stop("Camera", "A camera plugged into this computer", menuItem("Camera")),
+            stop("Screen Capture", "Another screen on this computer", menuItem("Screen Capture")),
+            stop("NDI Source", "Video from your network", menuItem("NDI Source")),
+            stop("OMT Source", "Video from your network", menuItem("OMT Source")),
+        )
         // Closed without adding one: a camera layer would try to open this machine's camera.
         quietClick(text("Scenes"))
         layers()
@@ -84,42 +89,90 @@ class CanvasDemoTour {
     private fun DemoTour.pictureSources() {
         add("image", "Image", "A photo or a logo")
         say("image-props")
-        note("Choose the picture", "Browse, then Fit, Fill or Stretch it", props("Browse"))
+        tour(
+            stop("Choose the picture", "Browse for a photo or your logo", props("Browse")),
+            stop("Scale", "Fit, fill or stretch it", props("Scale")),
+        )
         add("color", "Color", "A solid color or a gradient")
         say("color-props")
-        note("Color or gradient", "Pick two colors and the angle between them", props("Gradient"))
+        tour(
+            stop("Color", "A single solid color", props("Color 1")),
+            stop("Gradient", "Blend two colors, at any angle", props("Gradient")),
+        )
         add("video", "Video", "A video file, looped if you like")
         say("video-props")
-        note("Loop and volume", "Pick the file, then loop it or set its volume", props("Loop"))
+        tour(
+            stop("Choose the file", "Any video on this computer", props("File path")),
+            stop("Loop", "Play it over and over", props("Loop")),
+            stop("Volume", "How loud it plays", props("Volume")),
+        )
     }
 
     /** A text layer, typed and styled. */
     private fun DemoTour.textSource() {
         add("text", "Text", "Words on top of everything else")
         say("text-edit")
-        val fields = findAll(hasSetTextAction()) { it.left > dp(1100f) }
-        type("Type the words", "They appear on the canvas as you type", fields[1], "Welcome Home")
+        val field = reveal { textContentField() }
+        type("Type the words", "They appear on the canvas as you type", field, "Welcome Home")
         say("text-font")
-        note("Font and size", "Any font on this computer", props("Font Size"))
+        tour(
+            stop("Font", "Any font on this computer", props("Font")),
+            stop("Font size", "How big the words are", props("Font Size")),
+        )
+        say("text-styles")
+        tour(
+            stop("Bold", "Heavier letters", style("Bold")),
+            stop("Italic", "Slanted letters", style("Italic")),
+            stop("Underline", "A line under the words", style("Underline")),
+            stop("Strikethrough", "A line through them", style("Strikethrough")),
+            stop("Outline", "An edge around each letter", style("Outline")),
+        )
+        say("text-align")
+        tour(
+            stop("Horizontal", "Left, center or right", props("Horizontal")),
+            stop("Vertical", "Top, middle or bottom", props("Vertical")),
+        )
         say("text-color")
-        note("Font color", "And the background behind the words", props("Font Color"))
+        tour(
+            stop("Font color", "The color of the words", props("Font Color")),
+            stop("Background", "A color behind them, or transparent", props("Transparent background")),
+        )
         say("text-spacing")
-        note("Letter spacing and curve", "Spread the letters, or bend the line", props("Letter Spacing"))
+        tour(
+            stop("Letter spacing", "Spread the letters apart", props("Letter Spacing")),
+            stop("Curve", "Bend the line into an arc", props("Curve")),
+        )
     }
 
     private fun DemoTour.moreSources() {
         add("clock", "Clock & Timer", "The time, or a countdown")
         say("clock-props")
-        note("Clock or timer", "12 or 24 hour, with or without seconds", props("Show Seconds"))
+        tour(
+            stop("Format", "12 or 24 hour", props("Format")),
+            stop("Hours and seconds", "Show them or hide them", props("Show Seconds")),
+            stop("Font and colors", "Make it match the scene", props("Text Color")),
+        )
         add("qr", "QR Code", "People scan it with their phones")
         say("qr-props")
-        note("What the code opens", "A web link, Wi-Fi, a phone number and more", props("Error Correction"))
+        tour(
+            stop("Type", "A link, Wi-Fi, phone, email or contact card", props("Type")),
+            stop("Colors", "Foreground and background", props("Foreground")),
+            stop("Error correction", "How sturdy the code is", props("Error Correction")),
+        )
         add("browser", "Browser", "A live web page as a layer")
         say("browser-props")
-        note("Web address", "Plus its size and custom styling", props("Custom CSS"))
+        tour(
+            stop("Web address", "The page to show", props("URL")),
+            stop("Size", "Its width and height", props("Width")),
+            stop("Custom CSS", "Your own styling", props("Custom CSS")),
+        )
         add("bible", "Bible", "A verse, styled like the rest")
         say("bible-props")
-        note("Pick the verse", "Book, chapter and verses, and the reference", props("Bible Version"))
+        tour(
+            stop("Bible version", "Which translation", props("Bible Version")),
+            stop("Book and verses", "Where the passage starts and ends", props("Start Verse")),
+            stop("Styling", "The verse and the reference, separately", props("Reference")),
+        )
     }
 
     /** What each layer's buttons do. */
@@ -162,6 +215,17 @@ class CanvasDemoTour {
         say("add-$key")
         step("Add $label", sub, menuItem(label))
     }
+
+    /** The text layer's own words: the first field under the properties' "Text" heading, not Name or X. */
+    private fun DemoTour.textContentField(): Target {
+        val heading = findAll(hasText("Text") and !hasSetTextAction()) { it.left > dp(1100f) }.last()
+        return findAll(hasSetTextAction()) { it.left > dp(1100f) && it.top >= heading.bounds.bottom - 1f }.first()
+    }
+
+    private fun stop(title: String, body: String, target: Target) = Triple(title, body, target)
+
+    /** A text-style key (bold, italic…) in the properties, by its name. */
+    private fun DemoTour.style(name: String) = find(hasContentDescription(name)) { it.left > dp(1100f) }
 
     private fun DemoTour.inTab(m: SemanticsMatcher) = find(m) { it.left > dp(380f) }
 
