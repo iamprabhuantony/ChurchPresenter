@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
 
-package org.churchpresenter.app.churchpresenter.screenshot
+package org.churchpresenter.app.churchpresenter.demo
 
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.hasContentDescription
@@ -10,6 +10,8 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.doubleClick
 import java.io.File
 import kotlin.test.Test
+import org.churchpresenter.app.churchpresenter.screenshot.LIBRARY
+import org.churchpresenter.app.churchpresenter.screenshot.library
 
 /** The demo videos — recorded only by `scripts/record_demos.sh`, never in CI (see [recordTour]). */
 class DemoTours {

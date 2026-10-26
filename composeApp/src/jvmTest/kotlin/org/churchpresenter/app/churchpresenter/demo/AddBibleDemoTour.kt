@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
 
-package org.churchpresenter.app.churchpresenter.screenshot
+package org.churchpresenter.app.churchpresenter.demo
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -27,6 +27,8 @@ import org.churchpresenter.profiles.ProfilesSettingsTab
 import org.churchpresenter.settings.withInstalledBible
 import java.io.File
 import kotlin.test.Test
+import org.churchpresenter.app.churchpresenter.screenshot.LIBRARY
+import org.churchpresenter.app.churchpresenter.screenshot.library
 
 /** Adding a Bible: where they are kept, downloading one, naming and ordering them, splitting long verses. */
 class AddBibleDemoTour {

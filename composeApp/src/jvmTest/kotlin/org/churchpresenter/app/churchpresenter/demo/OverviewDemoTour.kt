@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
 
-package org.churchpresenter.app.churchpresenter.screenshot
+package org.churchpresenter.app.churchpresenter.demo
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -40,6 +40,8 @@ import org.churchpresenter.statistics.StatisticsManager
 import org.churchpresenter.theme.ThemeMode
 import java.io.File
 import kotlin.test.Test
+import org.churchpresenter.app.churchpresenter.screenshot.AppPreviewStatisticsScreenshotTest
+import org.churchpresenter.app.churchpresenter.screenshot.LIBRARY
 
 /** A first look around the main window: the schedule, the tabs, going live, the previews and the tools. */
 class OverviewDemoTour {

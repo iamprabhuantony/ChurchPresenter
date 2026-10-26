@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
 
-package org.churchpresenter.app.churchpresenter.screenshot
+package org.churchpresenter.app.churchpresenter.demo
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -17,6 +17,8 @@ import org.churchpresenter.serverui.RemoteClientManager
 import org.churchpresenter.serverui.ServerSettingsTab
 import java.io.File
 import kotlin.test.Test
+import org.churchpresenter.app.churchpresenter.screenshot.LIBRARY
+import org.churchpresenter.app.churchpresenter.screenshot.library
 
 /** The Lower Third tour: a speaker's lower third designed in the generator, saved, and put live. */
 class LowerThirdDemoTour {

@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
 
-package org.churchpresenter.app.churchpresenter.screenshot
+package org.churchpresenter.app.churchpresenter.demo
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -22,6 +22,7 @@ import org.churchpresenter.server.TunnelStatus
 import org.churchpresenter.serverui.RemoteClientManager
 import org.churchpresenter.serverui.ServerSettingsTab
 import kotlin.test.Test
+import org.churchpresenter.app.churchpresenter.screenshot.writeQuestions
 
 /** The Q&A tour: the server, sharing with phones, moderating questions, going live and sessions. */
 class QADemoTour {
