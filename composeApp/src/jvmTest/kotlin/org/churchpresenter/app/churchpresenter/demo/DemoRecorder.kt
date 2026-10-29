@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.State
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -63,6 +64,7 @@ import org.churchpresenter.app.churchpresenter.MainDesktopPublishers
 import org.churchpresenter.app.churchpresenter.ScheduleActions
 import org.churchpresenter.app.churchpresenter.TestSingletons
 import org.churchpresenter.app.churchpresenter.WebAccessState
+import org.churchpresenter.app.churchpresenter.ui.theme.themeCustomizationFrom
 import org.churchpresenter.app.churchpresenter.tabs.LocalWebEngineAvailable
 import org.churchpresenter.companionsurface.CompanionSatelliteViewModel
 import org.churchpresenter.core.models.schedule.ScheduleItem
@@ -78,6 +80,7 @@ import org.churchpresenter.statistics.StatisticsManager
 import org.churchpresenter.sharedui.screenshot.PinnedFonts
 import org.churchpresenter.stt.STTManager
 import org.churchpresenter.theme.ChurchPresenterTheme
+import org.churchpresenter.theme.LocalThemeCustomization
 import org.churchpresenter.theme.ThemeMode
 import org.junit.Assume.assumeTrue
 import java.awt.image.BufferedImage
@@ -164,6 +167,11 @@ internal fun recordTour(
     statistics: StatisticsManager? = null,
     companion: CompanionSatelliteViewModel? = null,
     panel: (@Composable (AppSettings, ((AppSettings) -> AppSettings) -> Unit) -> Unit)? = null,
+    /**
+     * The app's theme, when a tour changes it as it plays; its Custom palette is the one the settings
+     * hold, as the app builds it. The cards around the video keep their own look.
+     */
+    theme: State<ThemeMode>? = null,
     script: DemoTour.() -> Unit,
 ) {
     val root = System.getenv("CP_DEMO_OUT")?.let(::File)
@@ -190,7 +198,9 @@ internal fun recordTour(
         val changeSettings = { change: (AppSettings) -> AppSettings -> current = change(current) }
         setContent {
             PinnedFonts {
-                ChurchPresenterTheme(themeMode = THEME) {
+                val windowTheme = theme?.value ?: THEME
+                val palette = if (theme != null) themeCustomizationFrom(current) else LocalThemeCustomization.current
+                ChurchPresenterTheme(themeMode = windowTheme, customization = palette) {
                     // No browser engine starts here; the Web tab is told it has one, and is shown a page.
                     CompositionLocalProvider(
                         LocalMediaViewModel provides media,
@@ -206,7 +216,7 @@ internal fun recordTour(
                                         ?: remember { CompanionSatelliteViewModel() },
                                     qaManager = QAManager(),
                                     sttManager = demoStt,
-                                    theme = THEME,
+                                    theme = windowTheme,
                                     statisticsManager = statistics,
                                     live = liveCallbacks(presenter),
                                     publish = MainDesktopPublishers(onScheduleActionsReady = { actions = it }),
@@ -413,10 +423,26 @@ internal class DemoTour(
     fun dp(value: Float) = value * d
 
     /** [text] inside the open menu or dropdown — a compose root of its own, listed after the window. */
-    fun menuItem(text: String): Target {
-        val nodes = ui.onAllNodes(hasText(text))
+    fun menuItem(text: String): Target = popupItem(hasText(text))
+
+    /** [matcher] inside the open menu — the last compose root — where the video draws it ([popupShift]). */
+    fun popupItem(matcher: SemanticsMatcher): Target {
+        val nodes = ui.onAllNodes(matcher)
         val hit = nodes.fetchSemanticsNodes().withIndex().last()
-        return Target(nodes[hit.index], hit.value.boundsInWindow)
+        val layer = ui.onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes().last()
+        return Target(nodes[hit.index], hit.value.boundsInWindow.translate(-popupShift(layer), 0f))
+    }
+
+    /**
+     * How far left a main-window menu is drawn: one that opens past the window's right edge is moved
+     * back inside, as a real window keeps it. Under test the window runs on past the app, into the
+     * projector's gap, so the menu is never pushed in by itself.
+     */
+    private fun popupShift(layer: SemanticsNode): Float {
+        if (panelOpen) return 0f
+        // The layer spans the whole window; the menu is the card drawn on it.
+        val card = cardBounds(layer, appW) ?: return 0f
+        return if (card.left < appW && card.right > appW) minOf(card.right - appW, card.left) else 0f
     }
 
     /** Every match, top to bottom. */
@@ -456,6 +482,25 @@ internal class DemoTour(
         presenter.setWebPageTitle(title)
         presenter.setWebSnapshot(page.toComposeImageBitmap())
         ui.waitForIdle()
+    }
+
+    /** Takes the last tooltip down, before what it pointed at changes under it. */
+    fun clearNote() {
+        scene.focus = null
+    }
+
+    /** A tablet's drawing page on the outputs, as `RemoteDrawingShow` puts each one up. */
+    fun showDrawing(page: BufferedImage, paper: Color) {
+        if (presenter.slideContent.value != Presenting.DRAWING) presenter.setPresentingMode(Presenting.DRAWING)
+        presenter.showDrawingFrame(page.toComposeImageBitmap(), paper)
+        ui.waitForIdle()
+    }
+
+    /** The tablet ended its drawing: the outputs clear, as for Clear Display. */
+    fun endDrawing() {
+        presenter.requestClearDisplay()
+        ui.waitForIdle()
+        ui.settleLive(presenter)
     }
 
     /** True once the selected verses lead with [text] — what Go Live would show first. */
@@ -521,11 +566,19 @@ internal class DemoTour(
 
     // ── The storyboard's scenes ───────────────────────────────────────────
 
-    /** 01 Intro, then 02 Establish: the title card, then the whole window with its caption. */
-    fun intro(subtitle: String) {
+    /**
+     * 01 Intro, then 02 Establish: the title card, then the whole window with its caption. Without
+     * [establish] the card is all, for a tour that never uses the main window.
+     */
+    fun intro(subtitle: String, establish: Boolean = true) {
         val start = frame
         val talk = narrate("The $tab tab", subtitle)
         repeat(frames(4.0)) { age -> write(stage.intro(tab, subtitle, age)) }
+        if (!establish) {
+            val card = frames(4.0)
+            repeat(frames(maxOf(0.0, talk + 0.35 - 4.0))) { age -> write(stage.intro(tab, subtitle, card + age)) }
+            return
+        }
         scene.camera = Camera.full(appW, appH).let { full ->
             val c = full.dst.center
             val hw = full.dst.width * 0.47f
@@ -1290,7 +1343,11 @@ internal class DemoTour(
             }
             // A pop-up the open dialog raised (an alert is centered on the whole window) is drawn
             // over that dialog instead, where the viewer is looking.
-            val to = if (relocated(at, panelArea)) dialogPopupOrigin(at, panelArea) else Pt(at.left, at.top)
+            val to = if (relocated(at, panelArea)) {
+                dialogPopupOrigin(at, panelArea)
+            } else {
+                Pt(at.left - popupShift(unmerged.getOrElse(i) { nodes[i] }), at.top)
+            }
             g.drawImage(roots[i].captureToImage().toAwtImage(), to.x.toInt(), to.y.toInt(), null)
         }
         g.dispose()
