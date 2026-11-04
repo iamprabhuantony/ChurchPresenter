@@ -570,6 +570,10 @@
 
     <!-- Background Type Options -->
     <string name="background_default">Default</string>
+    <string name="set_as_background">Set as Background</string>
+    <string name="set_as_background_all_outputs">All outputs</string>
+    <string name="set_as_background_confirm">Set the %1$s background on %2$s to “%3$s”?</string>
+    <string name="set_as_background_set">Set</string>
     <string name="background_video_option">Video Loop</string>
     <string name="background_camera_option">Camera</string>
     <string name="background_transparent_option">Transparent</string>
@@ -674,6 +678,8 @@
     <string name="schedule_add_files_title">Add Files to Schedule</string>
     <string name="tooltip_toggle_displays">Toggle Presenter Displays</string>
     <string name="tooltip_preview_settings">Preview Settings</string>
+    <string name="tooltip_clear_text">Clear Text, Keep Background</string>
+    <string name="tooltip_restore_text">Show Text Again</string>
     <string name="preview_settings_show_labels">Show output labels</string>
     <string name="preview_settings_show_modes">Show display type</string>
     <string name="tooltip_settings">Settings</string>
@@ -4102,6 +4108,12 @@
     <string name="signage_link_idle_prompt_hint">Written at the bottom so people know they can touch it. Leave empty for none.</string>
     <string name="signage_link_idle_hint">A tap on the screen opens this page. After it starts over, the screen goes back to what it showed before.</string>
     <string name="signage_link_idle_no_playlists">Add a folder, picture or video to the list first.</string>
+    <string name="signage_link_page_code">Change how the page looks</string>
+    <string name="signage_link_page_code_hint">Your own CSS and JavaScript, added to every page this link shows: to hide a site's menu or footer, say, or point its Home link back here.</string>
+    <string name="signage_link_page_css">CSS</string>
+    <string name="signage_link_page_script">JavaScript</string>
+    <string name="signage_link_page_script_hint">Runs on each page once it has loaded. A screen with an older player shows the page as its site made it.</string>
+    <string name="signage_link_page_code_idle">Not added to the page shown while nobody is using the screen.</string>
     <string name="signage_remove_playlist">Remove playlist</string>
     <string name="signage_remove_playlist_title">Remove %1$s?</string>
     <string name="signage_remove_playlist_text">Screens playing it go back to the first playlist. The file or page itself is not touched.</string>
