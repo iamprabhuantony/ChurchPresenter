@@ -4,8 +4,14 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import org.churchpresenter.signage.core.Orientation
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import org.churchpresenter.diagnostics.Log
 import org.churchpresenter.signage.core.ScheduleBlock
+import org.churchpresenter.signage.core.ScreenMessage
 import org.churchpresenter.signage.core.SignageJson
 import java.io.IOException
 import java.nio.file.Files
@@ -20,6 +26,8 @@ data class SignageSettings(
     val screens: Map<String, ScreenPlan> = emptyMap(),
     /** The playlists added in the tab, in the order they were added. */
     val added: List<AddedPlaylist> = emptyList(),
+    /** The message written over what the screens show; none when null. */
+    val message: SignageMessage? = null,
 ) {
     fun plan(id: String): ScreenPlan = screens[id] ?: ScreenPlan()
 
@@ -64,6 +72,28 @@ data class ScreenPlan(
     }
 }
 
+/**
+ * A message for the screens: [text] in a band across the top over what plays, or [fullScreen] in its
+ * place, until [untilMs] (epoch milliseconds; until cleared when null), on the screens in [screenIds]
+ * (every screen when null).
+ */
+@Serializable
+data class SignageMessage(
+    val text: String,
+    val fullScreen: Boolean = false,
+    val untilMs: Long? = null,
+    val screenIds: List<String>? = null,
+) {
+    /** Whether [screenId] is one it goes to. */
+    fun reaches(screenId: String): Boolean = screenIds == null || screenId in screenIds
+
+    /** Whether it still shows at [nowMs]. */
+    fun showsAt(nowMs: Long): Boolean = toScreen().showsAt(nowMs)
+
+    /** What a screen is sent. */
+    fun toScreen(): ScreenMessage = ScreenMessage(text.trim(), fullScreen, untilMs)
+}
+
 /** A file's hash, and the size and time it had when it was hashed. */
 @Serializable
 data class HashedFile(val size: Long, val modifiedMs: Long, val sha256: String)
@@ -84,15 +114,32 @@ class SignageStore(private val dir: Path, private val cacheDir: Path = dir) {
      */
     private var settingsSeen: String? = null
 
+    /**
+     * The tab's settings as saved. A playlist of a kind this version does not know (one a newer
+     * ChurchPresenter sharing the folder added) is set aside, not played, and written back as it was
+     * by [saveSettings]: it neither empties the rest nor is lost.
+     */
     fun loadSettings(): SignageSettings {
         settingsSeen = textOf(settingsFile)
-        return read(settingsFile, SignageSettings.serializer()) ?: SignageSettings()
+        val tree = read(settingsFile, JsonObject.serializer()) ?: return SignageSettings()
+        val (settings, unknown) = settingsOf(tree)
+        unknownAdded = unknown
+        if (unknown.isNotEmpty()) {
+            Log.warn(TAG, "${unknown.size} playlist(s) of a kind this version cannot play are kept, not played")
+        }
+        if (settings == null) Log.warn(TAG, "$settingsFile is damaged")
+        return settings ?: SignageSettings()
     }
 
     fun saveSettings(settings: SignageSettings) {
-        write(settingsFile, SignageSettings.serializer(), settings)
+        val tree = SignageJson.encodeToJsonElement(SignageSettings.serializer(), settings).jsonObject
+        val added = JsonArray(tree["added"]?.jsonArray.orEmpty() + unknownAdded)
+        write(settingsFile, JsonObject.serializer(), JsonObject(tree + ("added" to added)))
         settingsSeen = textOf(settingsFile)
     }
+
+    /** The playlists in the settings this version could not read, kept to be written back. */
+    private var unknownAdded: List<JsonElement> = emptyList()
 
     /** The settings again when another computer has changed them since they were read or written here. */
     fun settingsChangedElsewhere(): SignageSettings? =
@@ -122,7 +169,7 @@ class SignageStore(private val dir: Path, private val cacheDir: Path = dir) {
      */
     fun hashAdded(entry: AddedPlaylist): HashedPlaylist = when (entry) {
         is FilePlaylist -> HashedPlaylist(entry, entry.currentFile(dir)?.let { mapOf(it to hashOf(it)) }.orEmpty())
-        is PickedFolderPlaylist -> hashFolder(SignageFolder.read(entry, dir))
+        is FolderBacked -> hashFolder(SignageFolder.read(entry, dir))
         is LinkPlaylist, is RotationPlaylist -> HashedPlaylist(entry)
     }
 
@@ -181,4 +228,17 @@ private fun textOf(file: Path): String? = try {
     if (Files.exists(file)) Files.readString(file) else null
 } catch (_: IOException) {
     null
+}
+
+/**
+ * The settings in [tree], with the playlists this version cannot read taken out and returned beside
+ * them; the settings are null when the rest cannot be read either.
+ */
+private fun settingsOf(tree: JsonObject): Pair<SignageSettings?, List<JsonElement>> {
+    val (known, unknown) = (tree["added"] as? JsonArray).orEmpty().partition { entry ->
+        runCatching { SignageJson.decodeFromJsonElement(AddedPlaylist.serializer(), entry) }.isSuccess
+    }
+    val readable = JsonObject(tree + ("added" to JsonArray(known)))
+    val settings = runCatching { SignageJson.decodeFromJsonElement(SignageSettings.serializer(), readable) }.getOrNull()
+    return settings to unknown
 }

@@ -29,6 +29,8 @@ fun buildManifest(
     diagnostics: Boolean = true,
     /** What the screen's player said it can do, the last time it connected. */
     features: Collection<String> = emptyList(),
+    /** Now, in epoch milliseconds: a message that has run out is not sent. */
+    nowMs: Long = System.currentTimeMillis(),
 ): Pair<Manifest, Map<String, Path>> {
     val files = mutableMapOf<String, Path>()
     fun fileItems(hashed: List<Pair<FolderFile, String?>>, durationMs: (MediaKind) -> Long?) =
@@ -47,7 +49,7 @@ fun buildManifest(
             is FilePlaylist -> fileItems(hashed.hashes.toList()) { null }
             is LinkPlaylist -> listOfNotNull(linkItem(source, features))
             // Sent only once it has been read into a FolderPlaylist.
-            is RotationPlaylist, is PickedFolderPlaylist -> emptyList()
+            is RotationPlaylist, is FolderBacked -> emptyList()
         }
     }
     val sources = playlists.associate { it.playlist.id to it.playlist }
@@ -63,14 +65,14 @@ fun buildManifest(
     if (wanted == ScreenPlan.NOTHING) {
         return Manifest(
             ownerId = ownerId,
-            screen = screenSettings(screen, settings),
+            screen = screenSettings(screen, settings, features, nowMs),
             timeZone = timeZone,
             diagnostics = diagnostics,
         ) to emptyMap()
     }
     val manifest = Manifest(
         ownerId = ownerId,
-        screen = screenSettings(screen, settings),
+        screen = screenSettings(screen, settings, features, nowMs),
         playlists = built,
         defaultPlaylistId = built.firstOrNull { it.id == wanted }?.id ?: built.firstOrNull()?.id,
         // A block that plays what this screen cannot (a playlist gone, or links it cannot rotate) is left
@@ -100,7 +102,7 @@ private fun rotationItems(
     val stepItems = items[step.sourceId].orEmpty()
     val stepMs = step.seconds?.let { it * MS_PER_SECOND }
     when (sources[step.sourceId]) {
-        is FolderPlaylist, is PickedFolderPlaylist -> stepItems
+        is FolderPlaylist, is FolderBacked -> stepItems
         is FilePlaylist -> stepItems.map { item ->
             item.copy(durationMs = stepMs ?: DEFAULT_PICTURE_STEP_MS.takeIf { item.kind == MediaKind.IMAGE })
         }
@@ -173,7 +175,12 @@ private const val DEFAULT_LINK_STEP_MS = 60_000L
 private const val MS_PER_MINUTE = 60_000L
 
 /** The screen's name, size and how it is mounted. */
-private fun screenSettings(screen: PairedScreen, settings: SignageSettings) = ScreenSettings(
+private fun screenSettings(
+    screen: PairedScreen,
+    settings: SignageSettings,
+    features: Collection<String>,
+    nowMs: Long,
+) = ScreenSettings(
     name = screen.name,
     orientation = settings.plan(screen.id).orientation,
     width = screen.screenWidth,
@@ -181,4 +188,8 @@ private fun screenSettings(screen: PairedScreen, settings: SignageSettings) = Sc
     kioskPinHash = settings.plan(screen.id).kioskPinHash,
     kioskGesture = settings.plan(screen.id).kioskGesture,
     kioskGesturePlaylistId = settings.plan(screen.id).kioskGesturePlaylistId,
+    // Only to a player that can show one: an older one is not sent it.
+    message = settings.message
+        ?.takeIf { Features.MESSAGE in features && it.reaches(screen.id) && it.showsAt(nowMs) }
+        ?.toScreen(),
 )
